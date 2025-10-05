@@ -1,0 +1,78 @@
+@model Acadus___Alliance_Project_2025.Models.LoginModel
+@{
+    Layout = "~/Views/Shared/_Landing.cshtml";
+    ViewData["Title"] = "Login";
+}
+
+@section FullWidth { }
+@section Styles {
+    <style>
+        .container { max-width: 100% !important; padding-left: 0 !important; padding-right: 0 !important; }
+    </style>
+}
+
+<div class="min-h-screen flex bg-darker-shade">
+    <div class="w-1/2 bg-white flex items-center justify-center px-16">
+        <div class="w-full max-w-md">
+            <h1 class="text-5xl font-extrabold text-black mb-2 font-poppins text-center">LOGIN</h1>
+            <p class="text-black mb-8 font-geologica text-center">Input your email and password</p>
+            <form method="post" class="space-y-6">
+                @Html.AntiForgeryToken()
+                <div>
+                    <label for="email" class="block text-black font-medium mb-2 font-geologica">Email:</label>
+                    <div class="relative">
+                        <input type="email" id="email" name="Email" asp-for="Email" placeholder="sampleemail@email.com" class="peer w-full px-4 py-3 pl-24 border-2 rounded-full focus:outline-none transition-all duration-300 font-geologica border-gray-300 focus:border-mid-color placeholder-gray-400 bg-white" required>
+                        <div class="absolute left-6 top-1/2 transform -translate-y-1/2 text-gray-400 peer-focus:hidden">
+                            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                                <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z"></path>
+                                <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a 2 2 0 002-2V8.118z"></path>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+                <div>
+                    <label for="password" class="block text-black font-medium mb-2 font-geologica">Password:</label>
+                    <div class="relative">
+                        <input type="password" id="password" name="Password" asp-for="Password" placeholder="Password here" class="peer w-full px-4 py-3 pl-24 border-2 rounded-full focus:outline-none transition-all duration-300 font-geologica border-gray-300 focus:border-mid-color placeholder-gray-400 bg-white" required>
+                        <div class="absolute left-6 top-1/2 transform -translate-y-1/2 text-gray-400 peer-focus:hidden">
+                            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd"></path>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+                <div class="text-right">
+                    <a href="/Auth/EmailVerification" class="text-darker-shade hover:text-mid-color transition-colors duration-300 font-geologica underline">Forgot password?</a>
+                </div>
+                <div class="flex justify-center">
+                    <button type="submit" class="bg-gradient-to-r from-darker-shade to-mid-color text-white font-bold py-3 px-16 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 font-poppins">Login</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    <div class="w-1/2 bg-darker-shade"></div>
+    </div>
+
+@section Scripts {
+    <script>
+        (function() {
+            function toggleIcon(input) {
+                var hasValue = input.value && input.value.length > 0;
+                var icon = input.parentElement.querySelector('div');
+                if (icon) icon.style.display = (hasValue ? 'none' : 'block');
+            }
+            ['email','password'].forEach(function(id){
+                var el = document.getElementById(id);
+                if(!el) return;
+                toggleIcon(el);
+                el.addEventListener('input', function(){ toggleIcon(el); });
+                el.addEventListener('focus', function(){ toggleIcon(el); });
+                el.addEventListener('blur', function(){ toggleIcon(el); });
+            });
+        })();
+    </script>
+}
+
+
+
+

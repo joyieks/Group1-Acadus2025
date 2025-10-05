@@ -1,11 +1,12 @@
-using System;
-
 namespace ASI.Basecode.WebApp.Models
 {
     public class ErrorViewModel
     {
-        public string RequestId { get; set; }
-
+        public string RequestId { get; set; } = string.Empty;
         public bool ShowRequestId => !string.IsNullOrEmpty(RequestId);
     }
 }
+
+
+
+

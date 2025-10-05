@@ -1,5 +1,4 @@
 ﻿using System.IO;
-using ASI.Basecode.Data;
 using ASI.Basecode.WebApp;
 using ASI.Basecode.WebApp.Extensions.Configuration;
 using Microsoft.AspNetCore.Builder;
@@ -7,34 +6,37 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
-var appBuilder = WebApplication.CreateBuilder(new WebApplicationOptions
+var builder = WebApplication.CreateBuilder(new WebApplicationOptions
 {
     ContentRootPath = Directory.GetCurrentDirectory(),
+    WebRootPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot")
 });
 
-appBuilder.Configuration.AddJsonFile("appsettings.json",
+// Ensure wwwroot directory exists
+Directory.CreateDirectory(builder.Environment.WebRootPath);
+
+builder.Configuration.AddJsonFile("appsettings.json",
     optional: true,
     reloadOnChange: true);
 
-appBuilder.WebHost.UseIISIntegration();
+builder.WebHost.UseIISIntegration();
 
-appBuilder.Logging
-    .AddConfiguration(appBuilder.Configuration.GetLoggingSection())
+builder.Logging
+    .AddConfiguration(builder.Configuration.GetLoggingSection())
     .AddConsole()
     .AddDebug();
 
-var configurer = new StartupConfigurer(appBuilder.Configuration);
-configurer.ConfigureServices(appBuilder.Services);
+var configurer = new StartupConfigurer(builder.Configuration);
+configurer.ConfigureServices(builder.Services);
 
-var app = appBuilder.Build();
+var app = builder.Build();
 
 configurer.ConfigureApp(app, app.Environment);
 
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=Account}/{action=Login}");
+    pattern: "{controller=Auth}/{action=Index}/{id?}");
 app.MapControllers();
 app.MapRazorPages();
 
-// Run application
 app.Run();

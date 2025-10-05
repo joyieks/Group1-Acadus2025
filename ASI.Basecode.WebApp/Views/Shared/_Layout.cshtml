@@ -1,4 +1,4 @@
-﻿@using static ASI.Basecode.Resources.Views.Screen
+﻿@using ASI.Basecode.Resources.Views
 
 <!DOCTYPE html>
 <html lang="en">
@@ -11,20 +11,53 @@
     <link rel="stylesheet" href="~/css/main.css" />
     <link rel="stylesheet" href="~/css/style.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/css/toastr.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Geologica:wght@300;400;500;600;700&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'white-fill': '#F0FFF9',
+                        'lighter-shade': '#6CA9BA',
+                        'mid-color': '#77F77F',
+                        'darker-shade': '#337D58',
+                    },
+                    fontFamily: {
+                        'poppins': ['Poppins', 'sans-serif'],
+                        'geologica': ['Geologica', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+    <style type="text/tailwindcss">
+        @@layer utilities {
+            .btn-primary { @@apply bg-gradient-to-r from-darker-shade to-mid-color text-white font-semibold px-6 py-3 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300; }
+            .btn-green { @@apply bg-gradient-to-r from-darker-shade to-mid-color text-white font-semibold px-8 py-3 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300; }
+        }
+    </style>
     @RenderSection("Styles", required: false)
 </head>
 <body>
-    @Html.Partial("_Header")
-    <div class="container">
+    
+    @if (IsSectionDefined("FullWidth"))
+    {
         <main role="main">
             @RenderBody()
         </main>
-    </div>
-    <footer class="border-top footer text-muted">
+    }
+    else
+    {
         <div class="container">
-            @Copyright
+            <main role="main">
+                @RenderBody()
+            </main>
         </div>
-    </footer>
+    }
+    
 
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>

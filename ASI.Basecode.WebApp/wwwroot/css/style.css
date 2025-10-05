@@ -22,7 +22,7 @@
 }
 
 body {
-    background-color: var(--background-color4);
+    background-color: #ffffff; /* remove blue background */
     max-width: 100%;
     overflow-x: hidden;
 }

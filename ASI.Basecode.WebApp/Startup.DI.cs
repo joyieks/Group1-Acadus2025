@@ -11,6 +11,7 @@ using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.EntityFrameworkCore;
 
 namespace ASI.Basecode.WebApp
 {
@@ -26,6 +27,12 @@ namespace ASI.Basecode.WebApp
             this._services.TryAddSingleton<IHttpContextAccessor, HttpContextAccessor>();
             this._services.TryAddSingleton<IActionContextAccessor, ActionContextAccessor>();
 
+            // If no DB configured, use in-memory provider so frontend runs
+            this._services.AddDbContext<AsiBasecodeDBContext>(options =>
+            {
+                options.UseInMemoryDatabase("AsiBasecodeDev");
+            });
+
             // Common
             this._services.AddScoped<TokenProvider>();
             this._services.TryAddSingleton<TokenProviderOptionsFactory>();
@@ -35,11 +42,9 @@ namespace ASI.Basecode.WebApp
             // Services
             this._services.TryAddSingleton<TokenValidationParametersFactory>();
             this._services.AddScoped<IUserService, UserService>();
-            this._services.AddScoped<IBookService, BookService>();
 
             // Repositories
             this._services.AddScoped<IUserRepository, UserRepository>();
-            this._services.AddScoped<IBookRepository, BookRepository>();
 
             // Manager Class
             this._services.AddScoped<SignInManager>();

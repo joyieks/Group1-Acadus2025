@@ -3,8 +3,10 @@ using ASI.Basecode.WebApp.Extensions.Configuration;
 using ASI.Basecode.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Configuration;
 using Serilog;
 using Serilog.Filters;
+using Serilog.Sinks.Seq;
 using ASI.Basecode.Data;
 
 namespace ASI.Basecode.WebApp
@@ -71,9 +73,18 @@ namespace ASI.Basecode.WebApp
 
             loggerFactory.AddSerilog(serilogger);
 
-            var seqConfig = Configuration.GetSection("Seq");
+            // Optional: if Seq settings exist, enrich Serilog with Seq sink
+            var seqUrl = Configuration.GetSection("Seq").GetValue<string>("ServerUrl");
+            var seqApiKey = Configuration.GetSection("Seq").GetValue<string>("ApiKey");
+            if (!string.IsNullOrWhiteSpace(seqUrl))
+            {
+                Log.Logger = new LoggerConfiguration()
+                    .MinimumLevel.Is((Serilog.Events.LogEventLevel)Configuration.GetLoggingLogLevel())
+                    .WriteTo.Seq(seqUrl, apiKey: string.IsNullOrWhiteSpace(seqApiKey) ? null : seqApiKey)
+                    .CreateLogger();
 
-            loggerFactory.AddSeq(seqConfig);
+                loggerFactory.AddSerilog(Log.Logger, dispose: true);
+            }
         }
     }
 }

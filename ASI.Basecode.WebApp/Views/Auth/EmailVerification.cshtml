@@ -1,0 +1,57 @@
+@model Acadus___Alliance_Project_2025.Models.EmailVerificationModel
+@{
+    Layout = "~/Views/Shared/_Landing.cshtml";
+    ViewData["Title"] = "Email Verification - Acadus";
+}
+
+<div class="min-h-screen bg-white flex items-center justify-center px-4">
+    <div class="absolute top-6 left-6">
+        <a href="/Auth/Login" class="flex items-center text-black hover:text-gray-600 transition-colors font-geologica font-bold">
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+            </svg>
+            Back to login
+        </a>
+    </div>
+    
+    <div class="max-w-sm w-full space-y-8">
+        <div class="text-center mb-8">
+            <div class="relative inline-block">
+                <svg class="w-12 h-12 text-green-500 mx-auto" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/>
+                </svg>
+                <div class="absolute -top-1 -right-1 w-2 h-2 bg-green-400 rounded-full"></div>
+            </div>
+        </div>
+
+        <div class="text-center mb-8">
+            <h1 class="text-2xl font-bold text-black mb-2 font-poppins">Email Verification</h1>
+            <p class="text-gray-600 font-geologica">Input the email linked to your account</p>
+        </div>
+
+        <form method="post">
+            @Html.AntiForgeryToken()
+            <div class="mb-8">
+                <label for="email" class="block text-sm font-medium text-gray-700 mb-2 font-geologica">Email:</label>
+                <input id="email" name="Email" asp-for="Email" type="email" required 
+                       class="w-full px-4 py-3 border-2 border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent font-geologica"
+                       placeholder="sampleemail@email.com">
+            </div>
+
+            <button type="submit" 
+                    class="w-full py-3 px-4 border-2 border-black rounded-lg text-black font-bold hover:bg-gray-50 transition-colors font-poppins">
+                Next
+            </button>
+        </form>
+
+        <div class="flex justify-center mt-8 space-x-2">
+            <div class="w-8 h-1 bg-green-500 rounded"></div>
+            <div class="w-8 h-1 bg-gray-300 rounded"></div>
+            <div class="w-8 h-1 bg-gray-300 rounded"></div>
+        </div>
+    </div>
+</div>
+
+
+
+
