@@ -1,0 +1,234 @@
+﻿@model ASI.Basecode.WebApp.Models.StudentCourseDetailsViewModel
+@{
+    ViewData["Title"] = $"{Model.CourseTitle} - Acadus";
+}
+
+<script src="https://cdn.tailwindcss.com"></script>
+
+<main class="max-w-4xl mx-auto px-4 md:px-8 pt-4 pb-12">
+    <!-- Header -->
+    <section class="text-center mb-12">
+        <h1 class="text-4xl font-bold text-[#337D58]  mb-2">@Model.CourseTitle</h1>
+        <p class="text-lg text-gray-600">View your grades, appeals, and feedback for this course</p>
+    </section>
+
+    <!-- Stats Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+        <!-- GPA -->
+        <div class="bg-white rounded-xl p-6 shadow-lg text-center">
+            <h3 class="text-gray-600 font-medium mb-2">Overall GPA</h3>
+            @if (Model.OverallGPA > 0)
+            {
+                <div class="text-3xl font-bold text-gray-800">@Model.OverallGPA.ToString("F1")</div>
+            }
+            else
+            {
+                <p class="text-gray-500 text-sm">No GPA available yet</p>
+            }
+        </div>
+
+        <!-- Completed -->
+        <div class="bg-white rounded-xl p-6 shadow-lg text-center">
+            <h3 class="text-gray-600 font-medium mb-2">Completed</h3>
+            @if (Model.TotalTasks > 0)
+            {
+                <div class="text-3xl font-bold text-gray-800">@Model.CompletedTasks/@Model.TotalTasks</div>
+            }
+            else
+            {
+                <p class="text-gray-500 text-sm">No completed tasks yet</p>
+            }
+        </div>
+
+        <!-- Pending -->
+        <div class="bg-white rounded-xl p-6 shadow-lg text-center">
+            <h3 class="text-gray-600 font-medium mb-2">Pending</h3>
+            @if (Model.PendingTasks > 0)
+            {
+                <div class="text-3xl font-bold text-gray-800">@Model.PendingTasks</div>
+            }
+            else
+            {
+                <p class="text-gray-500 text-sm">No pending tasks yet</p>
+            }
+        </div>
+    </div>
+
+    <!-- Tabs Section -->
+    <div class="bg-white rounded-xl shadow-lg p-6">
+        <!-- Tab Buttons -->
+        <div class="flex space-x-6 border-b mb-6">
+            <button class="tab-btn active" data-tab="grades">All Grades</button>
+            <button class="tab-btn" data-tab="appeals">Appeals</button>
+            <button class="tab-btn" data-tab="feedback">Feedback</button>
+        </div>
+
+        <!-- Tab Content -->
+        <!-- All Grades Tab -->
+        <div id="tab-grades" class="tab-content">
+            @if (Model.Activities == null || !Model.Activities.Any())
+            {
+                <div class="text-center py-12 text-gray-500">No activities yet for this course.</div>
+            }
+            else
+            {
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead class="bg-gray-50 border-b">
+                            <tr>
+                                <th class="text-left py-4 px-6 font-semibold text-gray-700">Term</th>
+                                <th class="text-left py-4 px-6 font-semibold text-gray-700">Activity Name</th>
+                                <th class="text-left py-4 px-6 font-semibold text-gray-700">Score</th>
+                                <th class="text-left py-4 px-6 font-semibold text-gray-700">Date</th>
+                                <th class="text-left py-4 px-6 font-semibold text-gray-700">Status</th>
+                                <th class="text-left py-4 px-6 font-semibold text-gray-700">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var activity in Model.Activities)
+                            {
+                                <tr class="border-b hover:bg-gray-50 transition-colors">
+                                    <td class="py-4 px-6">@activity.Term</td>
+                                    <td class="py-4 px-6">
+                                        <div class="font-medium text-gray-800">@activity.Name</div>
+                                        <div class="text-sm text-gray-500">@activity.Description</div>
+                                    </td>
+                                    <td class="py-4 px-6">@activity.Score</td>
+                                    <td class="py-4 px-6 text-gray-500">@activity.Date.ToString("MMM dd, yyyy")</td>
+                                    <td class="py-4 px-6">
+                                        @if (activity.Status == "Graded")
+                                        {
+                                            <span class="bg-green-100 text-green-800 px-3 py-1 rounded-full text-xs font-medium">Graded</span>
+                                        }
+                                        else if (activity.Status == "Under Review")
+                                        {
+                                            <span class="bg-gray-100 text-gray-800 px-3 py-1 rounded-full text-xs font-medium">Under Review</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-xs font-medium">@activity.Status</span>
+                                        }
+                                    </td>
+                                    <td class="py-4 px-6">
+                                        @if (activity.CanAppeal)
+                                        {
+                                            <button class="bg-acadus-green text-white px-3 py-1 rounded text-xs hover:bg-acadus-light-green transition-colors">
+                                                Appeal
+                                            </button>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-gray-400 text-xs">Appeal</span>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </div>
+
+        <!-- Appeals Tab -->
+        <div id="tab-appeals" class="tab-content hidden">
+            @if (Model.Appeals == null || !Model.Appeals.Any())
+            {
+                <div class="text-center py-12">
+                    <h3 class="text-lg font-medium text-gray-700 mb-2">No Appeals Submitted</h3>
+                    <p class="text-gray-500">You haven't submitted any appeals for this course yet.</p>
+                </div>
+            }
+            else
+            {
+                <div class="space-y-4">
+                    @foreach (var appeal in Model.Appeals)
+                    {
+                        <div class="border rounded-lg p-4 bg-white shadow-sm">
+                            <div class="flex justify-between items-center mb-2">
+                                <h4 class="font-semibold text-gray-800">@appeal.ActivityName</h4>
+                                <span class="text-sm px-3 py-1 rounded-full
+                                            @(appeal.Status == "Reviewed" ? "bg-green-100 text-green-700" : "bg-yellow-100 text-yellow-700")">
+                                    @appeal.Status
+                                </span>
+                            </div>
+                            <p class="text-gray-600 text-sm mb-1">@appeal.Reason</p>
+                            <p class="text-gray-400 text-xs">Submitted on @appeal.DateSubmitted.ToString("MMM dd, yyyy")</p>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+
+        <!-- Feedback Tab -->
+        <div id="tab-feedback" class="tab-content hidden">
+            @if (Model.Feedbacks == null || !Model.Feedbacks.Any())
+            {
+                <div class="text-center py-12">
+                    <h3 class="text-lg font-medium text-gray-700 mb-2">No Feedback Available</h3>
+                    <p class="text-gray-500">Feedback from instructors will appear here once available.</p>
+                </div>
+            }
+            else
+            {
+                <div class="space-y-4">
+                    @foreach (var feedback in Model.Feedbacks)
+                    {
+                        <div class="border rounded-lg p-4 bg-white shadow-sm">
+                            <div class="flex justify-between items-center mb-2">
+                                <h4 class="font-semibold text-gray-800">@feedback.ActivityName</h4>
+                                <span class="text-sm text-gray-500">by @feedback.Instructor</span>
+                            </div>
+                            <p class="text-gray-700 text-sm mb-1">@feedback.Comment</p>
+                            <p class="text-gray-400 text-xs">Given on @feedback.DateGiven.ToString("MMM dd, yyyy")</p>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+    </div>
+</main>
+
+<!-- Styles for Tabs -->
+<style>
+    .tab-btn {
+        padding-top: 0.5rem;
+        padding-bottom: 0.5rem;
+        padding-left: 1rem;
+        padding-right: 1rem;
+        font-weight: 500;
+        border-bottom-width: 2px;
+        border-color: transparent;
+        color: #4B5563; /* text-gray-600 */
+        transition: all 0.2s;
+    }
+
+    .tab-btn:hover {
+        color: #22C55E; /* text-acadus-green */
+        border-color: #22C55E; /* border-acadus-green */
+    }
+
+    .tab-btn.active {
+        color: #22C55E; /* text-acadus-green */
+        border-color: #22C55E; /* border-acadus-green */
+    }
+</style>
+
+<!-- JavaScript for Tabs -->
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+        const tabs = document.querySelectorAll(".tab-btn");
+        const contents = document.querySelectorAll(".tab-content");
+
+        tabs.forEach(tab => {
+            tab.addEventListener("click", () => {
+                const target = tab.getAttribute("data-tab");
+
+                tabs.forEach(t => t.classList.remove("active"));
+                tab.classList.add("active");
+
+                contents.forEach(c => c.classList.add("hidden"));
+                document.getElementById(`tab-${target}`).classList.remove("hidden");
+            });
+        });
+    });
+</script>

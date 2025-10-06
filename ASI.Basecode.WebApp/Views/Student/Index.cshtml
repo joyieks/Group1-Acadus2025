@@ -1,14 +1,70 @@
+﻿@model ASI.Basecode.WebApp.Models.StudentDashboardViewModel
 @{
-    Layout = "~/Views/Shared/_Landing.cshtml";
+    Layout = "~/Views/Student/Navigation.cshtml";
     ViewData["Title"] = "Student Home";
 }
 
-<section class="min-h-screen flex items-center justify-center bg-white">
-    <div class="text-center">
-        <h1 class="text-3xl font-bold mb-4">Student</h1>
-        <p class="text-gray-600">This is the Student UI placeholder.</p>
-    </div>
-    @section Scripts {}
+<section class="text-center mb-12">
+    <h1 class="text-4xl font-bold text-acadus-green mb-2">Welcome!</h1>
+    <p class="text-lg text-gray-600">See what's happening in your workspace today</p>
 </section>
 
+<div class="grid md:grid-cols-2 gap-8 mb-12 relative">
 
+    <!-- Recently graded -->
+    <section class="relative bg-white/90 backdrop-blur-sm rounded-xl p-6 shadow-lg">
+        <div class="flex justify-between items-center mb-6">
+            <h2 class="text-xl font-semibold text-gray-800">Recently graded</h2>
+        </div>
+
+        @if (Model.RecentlyGradedTasks != null && Model.RecentlyGradedTasks.Any())
+        {
+            <div class="flex flex-col gap-3">
+                @foreach (var task in Model.RecentlyGradedTasks)
+                {
+                    <div class="bg-acadus-green/5 border border-acadus-green/10 rounded-lg p-4 flex justify-between items-center hover:bg-acadus-green/10 hover:-translate-y-0.5 transition-all duration-200 z-0">
+                        <div>
+                            <h4 class="text-base font-medium text-gray-800 mb-1">@task.Title</h4>
+                            <p class="text-sm text-gray-600">@task.UserAction</p>
+                        </div>
+                        <div class="text-sm font-semibold text-acadus-green">@task.Score</div>
+                    </div>
+                }
+            </div>
+        }
+        else
+        {
+            <p class="text-gray-500 text-sm italic">No recently graded tasks available yet.</p>
+        }
+    </section>
+
+    <!-- To be graded -->
+    <section class="relative bg-white/90 backdrop-blur-sm rounded-xl p-6 shadow-lg">
+        <div class="flex justify-between items-center mb-6">
+            <h2 class="text-xl font-semibold text-gray-800">To be graded</h2>
+        </div>
+
+        @if (Model.ToBeGradedTasks != null && Model.ToBeGradedTasks.Any())
+        {
+            <div class="flex flex-col gap-3">
+                @foreach (var task in Model.ToBeGradedTasks)
+                {
+                    <div class="bg-acadus-green/5 border border-acadus-green/10 rounded-lg p-4 flex justify-between items-center hover:bg-acadus-green/10 hover:-translate-y-0.5 transition-all duration-200 z-0">
+                        <div>
+                            <h4 class="text-base font-medium text-gray-800 mb-1">@task.Title</h4>
+                            <p class="text-sm text-gray-600">@task.UserAction</p>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+        else
+        {
+            <p class="text-gray-500 text-sm italic">No tasks to be graded yet.</p>
+        }
+    </section>
+</div>
+
+<div class="absolute right-0 mt-2 w-96 bg-white rounded-2xl shadow-xl z-50">
+    <!-- Dropdown content -->
+</div>
