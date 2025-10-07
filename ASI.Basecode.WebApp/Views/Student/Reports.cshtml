@@ -1,0 +1,114 @@
+﻿@model ASI.Basecode.WebApp.Models.StudentReportViewModel
+@{
+    Layout = "~/Views/Student/Navigation.cshtml";
+    ViewData["Title"] = "Reports";
+}
+
+<div class="p-8 font-[Poppins]">
+    <div class="flex justify-between items-center mb-6 print:hidden">
+        <h2 class="text-2xl font-bold text-[#337D58]">Grade Reports</h2>
+
+        <!-- Print Button -->
+        <button onclick="window.print()" 
+            class="flex items-center gap-2 bg-[#337D58] text-white px-5 py-2 rounded-lg text-sm font-medium hover:bg-[#2a6648] transition-all duration-200 shadow-sm active:scale-95">
+            <img src="@Url.Content("~/img/printer.png")" alt="Print Icon" class="w-5 h-5" />
+            Print Grades
+        </button>
+    </div>
+
+    <div class="bg-white shadow-md rounded-2xl p-6">
+        @if (Model.Reports != null && Model.Reports.Any())
+        {
+            <table class="w-full border-collapse text-sm">
+                <thead class="bg-[#337D58] text-white">
+                    <tr>
+                        <th class="py-3 px-4 text-left rounded-tl-2xl">Course Code</th>
+                        <th class="py-3 px-4 text-left">Course Title</th>
+                        <th class="py-3 px-4 text-left">Midterm Grade</th>
+                        <th class="py-3 px-4 text-left rounded-tr-2xl">Final Grade</th>
+                    </tr>
+                </thead>
+                <tbody class="text-gray-700">
+                    @foreach (var item in Model.Reports)
+                    {
+                        <tr class="border-b hover:bg-gray-50 transition">
+                            <td class="py-3 px-4 font-medium">@item.CourseCode</td>
+                            <td class="py-3 px-4">@item.CourseTitle</td>
+                            <td class="py-3 px-4">@item.MidtermGrade</td>
+                            <td class="py-3 px-4">@item.FinalGrade</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+        else
+        {
+            <div class="flex flex-col items-center justify-center py-10 text-gray-500">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-12 h-12 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" 
+                          d="M9 13h6m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h7l5 5v13a2 2 0 01-2 2z" />
+                </svg>
+                <p class="text-lg">No report data available yet.</p>
+                <p class="text-sm text-gray-400">Your grades will appear here once available.</p>
+            </div>
+        }
+    </div>
+
+</div>
+
+<style>
+    @@media print {
+        /* Hide footer and mobile-only elements */
+        footer, nav, /* hides navigation links */
+        #mobileMenuBtn, #mobileMenu, #notifPanel, #userMenu, .print\:hidden
+
+    {
+        display: none !important;
+    }
+
+    /* Show user info in header (name + avatar) */
+    header .flex.items-center.relative {
+        display: flex !important;
+        gap: 1rem !important;
+    }
+
+    /* Keep main content full width */
+    main {
+        width: 100% !important;
+        max-width: 100% !important;
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+    }
+
+    /* Tables print cleanly */
+    table {
+        page-break-inside: auto;
+        border-collapse: collapse;
+        width: 100% !important;
+    }
+
+    tr {
+        page-break-inside: avoid;
+        page-break-after: auto;
+    }
+
+    th, td {
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+
+    /* Remove shadows / rounded corners for print */
+    .shadow, .shadow-md, .rounded-2xl {
+        box-shadow: none !important;
+        border-radius: 0 !important;
+    }
+
+    /* Optional: readable fonts */
+    body {
+        font-size: 12pt !important;
+        line-height: 1.4 !important;
+    }
+
+    }
+</style>
+

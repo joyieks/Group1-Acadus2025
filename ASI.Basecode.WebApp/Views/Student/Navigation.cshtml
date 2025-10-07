@@ -1,0 +1,291 @@
+﻿@*
+    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+*@
+@{
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Acadus</title>
+    <link href="~/css/site.css" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'acadus-green': '#337D58',
+                        'white-fill': '#F0FFF9',
+                        'lighter-shade': '#6CA9BA',
+                        'mid-color': '#77F77F',
+                        'darker-shade': '#337D58',
+                    },
+                    fontFamily: {
+                        'poppins': ['Poppins', 'sans-serif'],
+                        'geologica': ['Geologica', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+
+</head>
+<body class="min-h-screen flex flex-col bg-gray-50">
+    <!-- Header / Navbar -->
+    <header class="bg-white/90 backdrop-blur-sm border-b border-black/10 px-4 md:px-8 py-4 flex justify-between items-center sticky top-0 z-">
+        <!-- Logo -->
+        <div class="flex items-center gap-2 text-xl font-semibold text-acadus-green">
+            <img src="~/img/acaduslogo.png" alt="Acadus Logo" class="h-12" />
+            <div class="text-[#295239] font-bold text-2xl">
+                Acadus
+            </div>
+        </div>
+
+        <!-- Center Nav (desktop) -->
+        <nav class="hidden md:flex gap-4 font-[Poppins]">
+            <!-- Courses -->
+            <a asp-controller="Student" asp-action="Courses"
+               class="px-4 py-2 rounded-md text-sm transition-all duration-200 no-underline 
+                    @(ViewContext.RouteData.Values["controller"]?.ToString() == "Student" && 
+                    ViewContext.RouteData.Values["action"]?.ToString() == "Courses" ? 
+                    "bg-acadus-green text-white font-bold shadow-sm" : "text-[#337D58] hover:bg-acadus-green/10")">
+                Courses
+            </a>
+
+            <!-- Dashboard -->
+            <a asp-controller="Student" asp-action="Index"
+               class="px-4 py-2 rounded-md text-sm transition-all duration-200 no-underline 
+                    @(ViewContext.RouteData.Values["controller"]?.ToString() == "Student" && 
+                    ViewContext.RouteData.Values["action"]?.ToString() == "Index" ? 
+                    "bg-acadus-green text-white font-bold shadow-sm" : "text-[#337D58] hover:bg-acadus-green/10")">
+                Dashboard
+            </a>
+
+            <!-- Reports -->
+            <a asp-controller="Student" asp-action="Reports"
+               class="px-4 py-2 rounded-md text-sm transition-all duration-200 no-underline
+                    @(ViewContext.RouteData.Values["controller"]?.ToString() == "Student" && 
+                    ViewContext.RouteData.Values["action"]?.ToString() == "Reports" ? 
+                    "bg-acadus-green text-white font-bold shadow-sm" : "text-[#337D58] hover:bg-acadus-green/10")">
+               Reports
+            </a>
+        </nav>
+
+
+        <!-- Mobile Menu Toggle -->
+        <button id="mobileMenuBtn" class="md:hidden inline-flex items-center justify-center p-2 rounded-md text-[#337D58] hover:bg-acadus-green/10 focus:outline-none" aria-controls="mobileMenu" aria-expanded="false">
+            <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+        </button>
+
+        <!-- Right side: User + Notifications (desktop) -->
+        <div class="hidden md:flex items-center gap-4 relative">
+            <!-- Notifications Icon Button -->
+            <button id="notifBtn" type="button" class="relative text-gray-600 hover:text-gray-800 transition-colors">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002
+                         6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67
+                         6.165 6 8.388 6 11v3.159c0 .538-.214
+                         1.055-.595 1.436L4 17h5m6 0v1a3
+                         3 0 11-6 0 0-1m6 0H9" />
+                </svg>
+                <!-- Dot indicator (shown when there are notifications) -->
+                <span id="notifDot" class="absolute -top-1 -right-1 bg-red-500 w-2 h-2 rounded-full"></span>
+            </button>
+
+            <!-- Dropdown Panel Container (fixed to overlay page content) -->
+            <div id="notifPanel" class="hidden fixed right-6 top-16 z-[100000]"></div>
+
+            <!-- User Info -->
+            <div class="flex items-center gap-3 relative">
+                <!-- First Name Text -->
+                @* <span>@Model.UserName</span> *@
+                <button id="userMenuBtn" type="button" class="text-left"> Username </button>
+                <!-- Avatar Circle -->
+                <button id="userAvatarBtn" type="button" class="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center overflow-hidden">
+                    <!-- If you have user image -->
+                    <!-- <img src="user-avatar.jpg" alt="User" class="w-full h-full object-cover"> -->
+                    <!-- Or placeholder with initials -->
+                    <span class="text-gray-500 text-sm font-semibold">U</span>
+                </button>
+
+                <!-- User Menu Dropdown -->
+                <div id="userMenu" class="hidden absolute right-0 top-12 z-[9999] bg-white shadow-lg rounded-xl border border-gray-100 w-48">
+                    <a href="/Home/Profile" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">Edit Profile</a>
+                    <a href="/Auth/Index" class="block px-4 py-2 text-sm text-red-600 hover:bg-gray-50">Logout</a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Mobile Menu (collapsed) -->
+    <div id="mobileMenu" class="md:hidden fixed inset-0 z-50 hidden bg-white bg-opacity-95 backdrop-blur-sm flex flex-col p-6">
+        <button id="mobileMenuCloseBtn" class="self-end mb-4 text-acadus-green hover:text-acadus-green/80">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+        </button>
+
+        <div class="px-4 pt-2 pb-3 space-y-1">
+            <a asp-controller="Student" asp-action="Courses" class="block px-3 py-2 rounded-md text-base @(ViewContext.RouteData.Values["controller"]?.ToString() == "Student" && ViewContext.RouteData.Values["action"]?.ToString() == "Courses" ? "bg-acadus-green text-white font-semibold" : "text-[#337D58] hover:bg-acadus-green/10")">Courses</a>
+            <a asp-controller="Student" asp-action="Index" class="block px-3 py-2 rounded-md text-base @(ViewContext.RouteData.Values["controller"]?.ToString() == "Student" && ViewContext.RouteData.Values["action"]?.ToString() == "Index" ? "bg-acadus-green text-white font-semibold" : "text-[#337D58] hover:bg-acadus-green/10")">Dashboard</a>
+            <a asp-controller="Student" asp-action="Reports" class="block px-3 py-2 rounded-md text-base @(ViewContext.RouteData.Values["controller"]?.ToString() == "Student" && ViewContext.RouteData.Values["action"]?.ToString() == "Reports" ? "bg-acadus-green text-white font-semibold" : "text-[#337D58] hover:bg-acadus-green/10")">Reports</a>
+        </div>
+        <div class="px-4 pt-2 pb-4 border-t border-gray-100 space-y-1">
+            <a href="/Student/Notifications" class="block px-3 py-2 rounded-md text-base text-[#337D58] hover:bg-acadus-green/10">Notifications</a>
+            <a href="/Home/Profile" class="block px-3 py-2 rounded-md text-base text-[#337D58] hover:bg-acadus-green/10">Edit Profile</a>
+            <a href="/Auth/Index" class="block px-3 py-2 rounded-md text-base text-red-600 hover:bg-red-50">Logout</a>
+        </div>
+    </div>
+
+    <!-- Main Body -->
+    <main class="flex-grow container mx-auto px-4 md:px-8 py-8">
+        @RenderBody()
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-[#F0FFF9] mt-16 p-8 border-t border-black/10 flex flex-col md:flex-row justify-between items-center gap-4 px-4 md:px-8">
+        <div class="flex items-center gap-2 text-xl font-semibold text-acadus-green">
+            <img src="~/img/acaduslogo.png" alt="Acadus Logo" class="h-12" />
+            <div class="text-[#295239] font-bold text-3xl">
+                Acadus
+            </div>
+        </div>
+        <a href="#top" class="text-gray-600 font-bold hover:text-gray-800 transition-colors">Back to top</a>
+        <div class="text-gray-600 text-sm">© 2025 Acadus || Version 1.0.0</div>
+    </footer>
+
+    <script>
+        (function() {
+            const notifBtn = document.getElementById('notifBtn');
+            const notifPanel = document.getElementById('notifPanel');
+            const userMenuBtn = document.getElementById('userMenuBtn');
+            const userAvatarBtn = document.getElementById('userAvatarBtn');
+            const userMenu = document.getElementById('userMenu');
+            const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+            const mobileMenu = document.getElementById('mobileMenu');
+            const mobileMenuCloseBtn = document.getElementById('mobileMenuCloseBtn');
+
+            // ------------------ Notifications ------------------
+            async function loadDropdown() {
+                const response = await fetch('/Student/NotificationDropdown', { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+                const html = await response.text();
+                notifPanel.innerHTML = html;
+                positionNotifPanel();
+
+                const root = notifPanel.querySelector('[data-count]');
+                const count = root ? parseInt(root.getAttribute('data-count') || '0') : 0;
+                document.getElementById('notifDot').style.display = count > 0 ? 'block' : 'none';
+            }
+
+            (async function initNotifDot() {
+                try {
+                    const res = await fetch('/Student/NotificationCount', { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+                    const data = await res.json();
+                    document.getElementById('notifDot').style.display = (data && data.count > 0) ? 'block' : 'none';
+                } catch (_) {}
+            })();
+
+            function openNotif() {
+                if (notifPanel.parentElement !== document.body) {
+                    document.body.appendChild(notifPanel);
+                }
+                notifPanel.style.position = 'fixed';
+                notifPanel.style.zIndex = '999999';
+                notifPanel.classList.remove('hidden');
+                loadDropdown();
+                positionNotifPanel();
+            }
+
+            function closeNotif() {
+                notifPanel.classList.add('hidden');
+                notifPanel.innerHTML = '';
+            }
+
+            function positionNotifPanel() {
+                const rect = notifBtn.getBoundingClientRect();
+                const top = rect.bottom + 8;
+                const right = (window.innerWidth - rect.right) + 6;
+                notifPanel.style.top = top + 'px';
+                notifPanel.style.right = right + 'px';
+            }
+
+            function toggleNotif(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                if (notifPanel.classList.contains('hidden')) {
+                    openNotif();
+                    userMenu.classList.add('hidden');
+                } else {
+                    closeNotif();
+                }
+            }
+
+            notifBtn.addEventListener('click', toggleNotif);
+
+            // ------------------ User Menu ------------------
+            function toggleUserMenu(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                if (userMenu.classList.contains('hidden')) {
+                    userMenu.classList.remove('hidden');
+                    closeNotif();
+                } else {
+                    userMenu.classList.add('hidden');
+                }
+            }
+
+            userMenuBtn.addEventListener('click', toggleUserMenu);
+            userAvatarBtn.addEventListener('click', toggleUserMenu);
+
+            // ------------------ Mobile Menu Overlay ------------------
+            if (mobileMenuBtn && mobileMenu && mobileMenuCloseBtn) {
+                // Open mobile menu
+                mobileMenuBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    mobileMenu.classList.remove('hidden');
+                    closeNotif();
+                    userMenu.classList.add('hidden');
+                });
+
+                // Close mobile menu
+                mobileMenuCloseBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    mobileMenu.classList.add('hidden');
+                });
+
+                // Click outside closes menu
+                document.addEventListener('click', function() {
+                    mobileMenu.classList.add('hidden');
+                });
+
+                // Prevent closing when clicking inside
+                mobileMenu.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                });
+            }
+
+            // ------------------ Global behavior ------------------
+            // Close notifications or user menu when clicking outside
+            document.addEventListener('click', function() {
+                closeNotif();
+                userMenu.classList.add('hidden');
+            });
+
+            // Prevent closing when clicking inside panels
+            notifPanel.addEventListener('click', function(e) { e.stopPropagation(); });
+            userMenu.addEventListener('click', function(e) { e.stopPropagation(); });
+
+            // Reposition notifications on resize/scroll
+            window.addEventListener('resize', function() { if (!notifPanel.classList.contains('hidden')) positionNotifPanel(); });
+            window.addEventListener('scroll', function() { if (!notifPanel.classList.contains('hidden')) positionNotifPanel(); }, true);
+        })();
+    </script>
+</body>
+</html>
