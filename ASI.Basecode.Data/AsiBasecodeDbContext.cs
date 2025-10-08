@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata;
 using ASI.Basecode.Data.Models;
+using ASI.Basecode.Data.Repositories;
 
 namespace ASI.Basecode.Data
 {
@@ -16,6 +17,9 @@ namespace ASI.Basecode.Data
             : base(options)
         {
         }
+
+        //Students
+        //public virtual DbSet<TaskItem> TaskItem { get; set; }
 
         public virtual DbSet<User> Users { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
