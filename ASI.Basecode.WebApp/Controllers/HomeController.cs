@@ -13,7 +13,32 @@ namespace ASI.Basecode.WebApp.Controllers
         [AllowAnonymous]
         public IActionResult Index()
         {
-            return View();
+            if (User.Identity.IsAuthenticated)
+            {
+                // Check user role and redirect to appropriate dashboard
+                if (User.IsInRole("Admin"))
+                {
+                    return RedirectToAction("Index", "Admin");
+                }
+                else if (User.IsInRole("Teacher"))
+                {
+                    return RedirectToAction("Index", "Teacher");
+                }
+                else if (User.IsInRole("Student"))
+                {
+                    return RedirectToAction("Index", "Student");
+                }
+                else
+                {
+                    // Default to Student if role not recognized
+                    return RedirectToAction("Index", "Student");
+                }
+            }
+            else
+            {
+                // Not authenticated, redirect to landing page
+                return RedirectToAction("Index", "Auth");
+            }
         }
 
         [HttpGet]

@@ -1,0 +1,177 @@
+@{
+    var controller = ViewContext.RouteData.Values["controller"]?.ToString();
+}
+
+@using ASI.Basecode.Resources.Views
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Acadus</title>
+    <link href="~/css/site.css" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'acadus-green': '#337D58',
+                        'white-fill': '#F0FFF9',
+                        'lighter-shade': '#6CA9BA',
+                        'mid-color': '#77F77F',
+                        'darker-shade': '#337D58',
+                    },
+                    fontFamily: {
+                        'poppins': ['Poppins', 'sans-serif'],
+                        'geologica': ['Geologica', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+
+</head>
+<body class="min-h-screen flex flex-col bg-gray-50">
+    @await Html.PartialAsync("_Navbar")
+
+    <!-- Main Body -->
+    <main class="flex-grow">
+        @RenderBody()
+    </main>
+
+    @await Html.PartialAsync("_Footer")
+
+    <script>
+        var currentController = '@controller';
+        (function() {
+            const notifBtn = document.getElementById('notifBtn');
+            const notifPanel = document.getElementById('notifPanel');
+            const userMenuBtn = document.getElementById('userMenuBtn');
+            const userAvatarBtn = document.getElementById('userAvatarBtn');
+            const userMenu = document.getElementById('userMenu');
+            const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+            const mobileMenu = document.getElementById('mobileMenu');
+            const mobileMenuCloseBtn = document.getElementById('mobileMenuCloseBtn');
+
+            // ------------------ Notifications ------------------
+            async function loadDropdown() {
+                const response = await fetch('/' + currentController + '/NotificationDropdown', { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+                const html = await response.text();
+                notifPanel.innerHTML = html;
+                positionNotifPanel();
+
+                const root = notifPanel.querySelector('[data-count]');
+                const count = root ? parseInt(root.getAttribute('data-count') || '0') : 0;
+                document.getElementById('notifDot').style.display = count > 0 ? 'block' : 'none';
+            }
+
+            (async function initNotifDot() {
+                try {
+                    const res = await fetch('/' + currentController + '/NotificationCount', { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+                    const data = await res.json();
+                    document.getElementById('notifDot').style.display = (data && data.count > 0) ? 'block' : 'none';
+                } catch (_) {}
+            })();
+
+            function openNotif() {
+                if (notifPanel.parentElement !== document.body) {
+                    document.body.appendChild(notifPanel);
+                }
+                notifPanel.style.position = 'fixed';
+                notifPanel.style.zIndex = '999999';
+                notifPanel.classList.remove('hidden');
+                loadDropdown();
+                positionNotifPanel();
+            }
+
+            function closeNotif() {
+                notifPanel.classList.add('hidden');
+                notifPanel.innerHTML = '';
+            }
+
+            function positionNotifPanel() {
+                const rect = notifBtn.getBoundingClientRect();
+                const top = rect.bottom + 8;
+                const right = (window.innerWidth - rect.right) + 6;
+                notifPanel.style.top = top + 'px';
+                notifPanel.style.right = right + 'px';
+            }
+
+            function toggleNotif(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                if (notifPanel.classList.contains('hidden')) {
+                    openNotif();
+                    userMenu.classList.add('hidden');
+                } else {
+                    closeNotif();
+                }
+            }
+
+            notifBtn.addEventListener('click', toggleNotif);
+
+            // ------------------ User Menu ------------------
+            function toggleUserMenu(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                if (userMenu.classList.contains('hidden')) {
+                    userMenu.classList.remove('hidden');
+                    closeNotif();
+                } else {
+                    userMenu.classList.add('hidden');
+                }
+            }
+
+            userMenuBtn.addEventListener('click', toggleUserMenu);
+            userAvatarBtn.addEventListener('click', toggleUserMenu);
+
+            // ------------------ Mobile Menu Overlay ------------------
+            if (mobileMenuBtn && mobileMenu && mobileMenuCloseBtn) {
+                // Open mobile menu
+                mobileMenuBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    mobileMenu.classList.remove('hidden');
+                    closeNotif();
+                    userMenu.classList.add('hidden');
+                });
+
+                // Close mobile menu
+                mobileMenuCloseBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    mobileMenu.classList.add('hidden');
+                });
+
+                // Click outside closes menu
+                document.addEventListener('click', function() {
+                    mobileMenu.classList.add('hidden');
+                });
+
+                // Prevent closing when clicking inside
+                mobileMenu.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                });
+            }
+
+            // ------------------ Global behavior ------------------
+            // Close notifications or user menu when clicking outside
+            document.addEventListener('click', function() {
+                closeNotif();
+                userMenu.classList.add('hidden');
+            });
+
+            // Prevent closing when clicking inside panels
+            notifPanel.addEventListener('click', function(e) { e.stopPropagation(); });
+            userMenu.addEventListener('click', function(e) { e.stopPropagation(); });
+
+            // Reposition notifications on resize/scroll
+            window.addEventListener('resize', function() { if (!notifPanel.classList.contains('hidden')) positionNotifPanel(); });
+            window.addEventListener('scroll', function() { if (!notifPanel.classList.contains('hidden')) positionNotifPanel(); }, true);
+        })();
+    </script>
+    @RenderSection("Scripts", required: false)
+</body>
+</html>
