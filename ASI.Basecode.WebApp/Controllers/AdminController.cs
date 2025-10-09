@@ -71,6 +71,20 @@ namespace ASI.Basecode.WebApp.Controllers
         {
             return View();
         }
+
+        [HttpGet]
+        public IActionResult ViewCourse(string id)
+        {
+            // TODO: Load course data by id
+            return View();
+        }
+
+        [HttpGet]
+        public IActionResult EditCourse(string id)
+        {
+            // TODO: Load course data by id
+            return View();
+        }
     }
 }
 
