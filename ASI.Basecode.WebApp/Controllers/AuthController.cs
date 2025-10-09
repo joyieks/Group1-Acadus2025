@@ -21,7 +21,7 @@ namespace ASI.Basecode.WebApp.Controllers
             {
                 return View(model);
             }
-
+            
             var normalizedEmail = model.Email.Trim().ToLowerInvariant();
             var password = model.Password;
 

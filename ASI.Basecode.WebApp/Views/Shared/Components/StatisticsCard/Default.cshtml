@@ -1,0 +1,44 @@
+@model ASI.Basecode.WebApp.Controllers.ViewComponents.StatisticsCardModel
+
+@*
+    Statistics Card View Component View
+    Renders a clean, modern, minimalist dashboard card with:
+    - Soft white background and subtle light green border/shadow
+    - Rounded corners and drop shadow for elevation
+    - Dynamic icon in top-left based on model.Icon ("hamburger", "calendar", "checkmark")
+    - Title text next to icon in medium-dark grey
+    - Large, centrally aligned value in vibrant emerald green
+    - Uses Poppins font from the app's Tailwind config
+*@
+
+<div class="bg-white border border-green-100 rounded-lg shadow-sm p-6 relative">
+    <!-- Icon and Title Row -->
+    <div class="flex items-center mb-4">
+        <!-- Dynamic Icon -->
+        @if (Model.Icon == "hamburger")
+        {
+            <svg class="w-6 h-6 text-gray-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+            </svg>
+        }
+        else if (Model.Icon == "calendar")
+        {
+            <svg class="w-6 h-6 text-gray-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+            </svg>
+        }
+        else if (Model.Icon == "checkmark")
+        {
+            <svg class="w-6 h-6 text-gray-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+        }
+        <!-- Title -->
+        <h3 class="text-lg font-semibold text-gray-700 font-poppins">@Model.Title</h3>
+    </div>
+
+    <!-- Large Number -->
+    <div class="text-center">
+        <p class="text-5xl font-bold text-acadus-green font-poppins">@Model.Value</p>
+    </div>
+</div>

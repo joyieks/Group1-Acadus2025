@@ -1,0 +1,43 @@
+@using ASI.Basecode.Resources.Views
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Acadus</title>
+    <link href="~/css/site.css" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'acadus-green': '#337D58',
+                        'white-fill': '#F0FFF9',
+                        'lighter-shade': '#6CA9BA',
+                        'mid-color': '#77F77F',
+                        'darker-shade': '#337D58',
+                    },
+                    fontFamily: {
+                        'poppins': ['Poppins', 'sans-serif'],
+                        'geologica': ['Geologica', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+
+    @RenderSection("Styles", required: false)
+</head>
+<body class="min-h-screen flex flex-col bg-gray-50">
+    @RenderSection("FullWidth", required: false)
+    @RenderBody()
+
+    @RenderSection("Scripts", required: false)
+    <script>
+        // Any global scripts if needed
+    </script>
+</body>
+</html>
