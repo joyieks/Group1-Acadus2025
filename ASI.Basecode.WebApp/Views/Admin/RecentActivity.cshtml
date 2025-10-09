@@ -1,0 +1,199 @@
+@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Recent Activity</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+        }
+
+        .modal-backdrop {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            animation: fadeIn 0.3s ease;
+            overflow-y: auto;
+            padding: 20px;
+        }
+
+        @@keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @@keyframes slideUp {
+            from { transform: translateY(30px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .modal-content {
+            background: #ffffff;
+            border-radius: 16px;
+            width: 100%;
+            max-width: 800px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+            animation: slideUp 0.3s ease;
+            margin: auto;
+        }
+
+        .activity-item {
+            padding: 16px;
+            border-bottom: 1px solid #e5e7eb;
+            transition: background 0.2s;
+        }
+
+        .activity-item:last-child {
+            border-bottom: none;
+        }
+
+        .activity-item:hover {
+            background: #f9fafb;
+        }
+
+        .activity-item.highlighted {
+            background: #E8F9E8;
+        }
+    </style>
+</head>
+<body>
+    <div class="modal-backdrop" onclick="if(event.target === this) window.history.back()">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <!-- Header -->
+            <div style="background:#E8F9E8; padding:24px 32px; border-radius:16px 16px 0 0; display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #d1fae5;">
+                <h2 style="font-size:24px; font-weight:800; color:#111827; margin:0;">Recent Activity</h2>
+                <button onclick="window.history.back()" style="background:none; border:none; font-size:28px; color:#6b7280; cursor:pointer; width:32px; height:32px; border-radius:6px; transition:all 0.2s;">&times;</button>
+            </div>
+
+            <!-- Activity List -->
+            <div style="padding:24px 32px;">
+                <div style="border-radius:8px; overflow:hidden; border:1px solid #e5e7eb;">
+                    <!-- Activity Item 1 -->
+                    <div class="activity-item highlighted">
+                        <div style="font-weight:700; color:#111827; margin-bottom:4px;">New student registration approved</div>
+                        <div style="color:#6b7280; font-size:14px; display:flex; justify-content:space-between;">
+                            <span>Admin User</span>
+                            <span>January 15, 2025, 10:30 AM</span>
+                        </div>
+                    </div>
+
+                    <!-- Activity Item 2 -->
+                    <div class="activity-item">
+                        <div style="font-weight:700; color:#111827; margin-bottom:4px;">Course assignment updated</div>
+                        <div style="color:#6b7280; font-size:14px; display:flex; justify-content:space-between;">
+                            <span>System Administrator</span>
+                            <span>January 15, 2025, 09:15 AM</span>
+                        </div>
+                    </div>
+
+                    <!-- Activity Item 3 -->
+                    <div class="activity-item highlighted">
+                        <div style="font-weight:700; color:#111827; margin-bottom:4px;">Teacher account created</div>
+                        <div style="color:#6b7280; font-size:14px; display:flex; justify-content:space-between;">
+                            <span>HR Department</span>
+                            <span>January 14, 2025, 04:45 PM</span>
+                        </div>
+                    </div>
+
+                    <!-- Activity Item 4 -->
+                    <div class="activity-item">
+                        <div style="font-weight:700; color:#111827; margin-bottom:4px;">Student profile updated</div>
+                        <div style="color:#6b7280; font-size:14px; display:flex; justify-content:space-between;">
+                            <span>Registrar Office</span>
+                            <span>January 14, 2025, 02:20 PM</span>
+                        </div>
+                    </div>
+
+                    <!-- Activity Item 5 -->
+                    <div class="activity-item highlighted">
+                        <div style="font-weight:700; color:#111827; margin-bottom:4px;">New course created</div>
+                        <div style="color:#6b7280; font-size:14px; display:flex; justify-content:space-between;">
+                            <span>Academic Head</span>
+                            <span>January 14, 2025, 11:00 AM</span>
+                        </div>
+                    </div>
+
+                    <!-- Activity Item 6 -->
+                    <div class="activity-item">
+                        <div style="font-weight:700; color:#111827; margin-bottom:4px;">Department information updated</div>
+                        <div style="color:#6b7280; font-size:14px; display:flex; justify-content:space-between;">
+                            <span>Admin User</span>
+                            <span>January 13, 2025, 03:30 PM</span>
+                        </div>
+                    </div>
+
+                    <!-- Activity Item 7 -->
+                    <div class="activity-item highlighted">
+                        <div style="font-weight:700; color:#111827; margin-bottom:4px;">Student enrollment processed</div>
+                        <div style="color:#6b7280; font-size:14px; display:flex; justify-content:space-between;">
+                            <span>Registrar Office</span>
+                            <span>January 13, 2025, 01:15 PM</span>
+                        </div>
+                    </div>
+
+                    <!-- Activity Item 8 -->
+                    <div class="activity-item">
+                        <div style="font-weight:700; color:#111827; margin-bottom:4px;">Teacher schedule updated</div>
+                        <div style="color:#6b7280; font-size:14px; display:flex; justify-content:space-between;">
+                            <span>Academic Coordinator</span>
+                            <span>January 12, 2025, 04:00 PM</span>
+                        </div>
+                    </div>
+
+                    <!-- Activity Item 9 -->
+                    <div class="activity-item highlighted">
+                        <div style="font-weight:700; color:#111827; margin-bottom:4px;">Bulk user import completed</div>
+                        <div style="color:#6b7280; font-size:14px; display:flex; justify-content:space-between;">
+                            <span>System Administrator</span>
+                            <span>January 12, 2025, 10:30 AM</span>
+                        </div>
+                    </div>
+
+                    <!-- Activity Item 10 -->
+                    <div class="activity-item">
+                        <div style="font-weight:700; color:#111827; margin-bottom:4px;">User permissions modified</div>
+                        <div style="color:#6b7280; font-size:14px; display:flex; justify-content:space-between;">
+                            <span>Admin User</span>
+                            <span>January 11, 2025, 02:45 PM</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <div style="padding:20px 32px; background:#f9fafb; border-top:1px solid #e5e7eb; border-radius:0 0 16px 16px; display:flex; justify-content:center;">
+                <button onclick="window.history.back()" style="padding:12px 32px; border-radius:6px; font-size:14px; font-weight:600; cursor:pointer; background:#059669; color:#ffffff; border:none;">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Close on ESC key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') window.history.back();
+        });
+    </script>
+</body>
+</html>
+

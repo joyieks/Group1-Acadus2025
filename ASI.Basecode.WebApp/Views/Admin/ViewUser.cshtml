@@ -1,0 +1,462 @@
+@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>View User</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+        }
+
+        .modal-backdrop {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @@keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        @@keyframes slideUp {
+            from {
+                transform: translateY(30px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .modal-content {
+            background: #ffffff;
+            border-radius: 16px;
+            width: 90%;
+            max-width: 700px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            animation: slideUp 0.3s ease;
+        }
+
+        .modal-header {
+            background: #E8F9E8;
+            padding: 24px 32px;
+            border-radius: 16px 16px 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid #d1fae5;
+        }
+
+        .modal-title {
+            font-size: 24px;
+            font-weight: 800;
+            color: #111827;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 28px;
+            color: #6b7280;
+            cursor: pointer;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 6px;
+            transition: all 0.2s;
+        }
+
+        .close-btn:hover {
+            background: rgba(0, 0, 0, 0.05);
+            color: #111827;
+        }
+
+        .modal-body {
+            padding: 32px;
+        }
+
+        .profile-header {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .avatar {
+            width: 96px;
+            height: 96px;
+            border-radius: 9999px;
+            overflow: hidden;
+            border: 3px solid #d1fae5;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.12);
+            background: #e5e7eb;
+            display: grid;
+            place-items: center;
+            color: #065f46;
+            font-weight: 800;
+            font-size: 28px;
+        }
+
+        .avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        .profile-meta {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .profile-name {
+            font-size: 20px;
+            font-weight: 800;
+            color: #111827;
+        }
+
+        .profile-role {
+            font-size: 14px;
+            color: #6b7280;
+        }
+
+        .section {
+            margin-bottom: 32px;
+        }
+
+        .section:last-child {
+            margin-bottom: 0;
+        }
+
+        .section-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #111827;
+            margin-bottom: 16px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #e5e7eb;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+        }
+
+        .info-item {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .info-item.full-width {
+            grid-column: 1 / -1;
+        }
+
+        .info-label {
+            font-size: 13px;
+            font-weight: 600;
+            color: #6b7280;
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .info-value {
+            font-size: 15px;
+            color: #111827;
+            padding: 10px 12px;
+            background: #f9fafb;
+            border-radius: 6px;
+            border: 1px solid #e5e7eb;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 6px 16px;
+            border-radius: 12px;
+            font-size: 13px;
+            font-weight: 600;
+            width: fit-content;
+        }
+
+        .status-badge.active {
+            background: #86efac;
+            color: #065f46;
+        }
+
+        .status-badge.inactive {
+            background: #d1d5db;
+            color: #4b5563;
+        }
+
+        .modal-footer {
+            padding: 20px 32px;
+            background: #f9fafb;
+            border-top: 1px solid #e5e7eb;
+            border-radius: 0 0 16px 16px;
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+        }
+
+        .btn {
+            padding: 10px 24px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s;
+        }
+
+        .btn-secondary {
+            background: #ffffff;
+            color: #4b5563;
+            border: 1px solid #d1d5db;
+        }
+
+        .btn-secondary:hover {
+            background: #f3f4f6;
+        }
+
+        .btn-primary {
+            background: #059669;
+            color: #ffffff;
+        }
+
+        .btn-primary:hover {
+            background: #047857;
+        }
+
+        .btn-danger {
+            background: #dc2626;
+            color: #ffffff;
+        }
+
+        .btn-danger:hover {
+            background: #b91c1c;
+        }
+
+        @@media (max-width: 640px) {
+            .info-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .modal-body {
+                padding: 24px 20px;
+            }
+
+            .modal-header {
+                padding: 20px;
+            }
+
+            .modal-footer {
+                padding: 16px 20px;
+                flex-direction: column;
+            }
+
+            .btn {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="modal-backdrop" onclick="closeModal(event)">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <h2 class="modal-title">User Details</h2>
+                <button class="close-btn" onclick="window.history.back()">&times;</button>
+            </div>
+
+            <div class="modal-body">
+                <!-- Profile Picture and Summary -->
+                <div class="profile-header">
+                    <div class="avatar" aria-label="Profile picture">
+                        <img src="/img/acaduslogo.png" alt="Profile picture" />
+                        <!-- If you prefer initials instead of an image, remove the <img> and keep initials below -->
+                        <!-- JA -->
+                    </div>
+                    <div class="profile-meta">
+                        <div class="profile-name">Johnny Appleseed</div>
+                        <div class="profile-role">Student • CCS • Active</div>
+                    </div>
+                </div>
+
+                <!-- Personal Information Section -->
+                <div class="section">
+                    <h3 class="section-title">Personal Information</h3>
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <span class="info-label">ID Number</span>
+                            <span class="info-value">123213</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Status</span>
+                            <span class="status-badge active">Active</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">First Name</span>
+                            <span class="info-value">Johnny</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Last Name</span>
+                            <span class="info-value">Appleseed</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Middle Name</span>
+                            <span class="info-value">Michael</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Suffix</span>
+                            <span class="info-value">Jr.</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Role</span>
+                            <span class="info-value">Student</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Department/Office</span>
+                            <span class="info-value">CCS</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Contact Number</span>
+                            <span class="info-value">+63 912 345 6789</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Email</span>
+                            <span class="info-value">johnny.appleseed@example.com</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Address Information Section -->
+                <div class="section">
+                    <h3 class="section-title">Address Information</h3>
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <span class="info-label">House/Apt Number</span>
+                            <span class="info-value">123</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Street Name</span>
+                            <span class="info-value">Main Street</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Subdivision/Bldg.</span>
+                            <span class="info-value">Green Valley</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Barangay</span>
+                            <span class="info-value">Barangay 1</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">City</span>
+                            <span class="info-value">Manila</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Province</span>
+                            <span class="info-value">Metro Manila</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Zip Code</span>
+                            <span class="info-value">1000</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Emergency Contact Section -->
+                <div class="section">
+                    <h3 class="section-title">Emergency Contact</h3>
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <span class="info-label">First Name</span>
+                            <span class="info-value">Jane</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Last Name</span>
+                            <span class="info-value">Appleseed</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Middle Name</span>
+                            <span class="info-value">Marie</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Suffix</span>
+                            <span class="info-value">-</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Contact Number</span>
+                            <span class="info-value">+63 912 345 6788</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Relationship</span>
+                            <span class="info-value">Mother</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="window.history.back()">Close</button>
+                <a href="@Url.Action("EditUser", "Admin", new { id = "123213" })" class="btn btn-primary" style="text-decoration:none; display:inline-block;">Edit</a>
+                <button class="btn btn-danger" onclick="deactivateUser()">Deactivate</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function closeModal(event) {
+            if (event.target.classList.contains('modal-backdrop')) {
+                window.history.back();
+            }
+        }
+
+        function deactivateUser() {
+            if (confirm('Are you sure you want to deactivate this user?')) {
+                // TODO: Implement deactivate logic
+                alert('Deactivate functionality to be implemented');
+            }
+        }
+
+        // Close modal on ESC key
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                window.history.back();
+            }
+        });
+    </script>
+</body>
+</html>
+

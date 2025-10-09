@@ -1,0 +1,364 @@
+@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Pending Tasks</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+        }
+
+        .modal-backdrop {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            animation: fadeIn 0.3s ease;
+            overflow-y: auto;
+            padding: 20px;
+        }
+
+        @@keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @@keyframes slideUp {
+            from { transform: translateY(30px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .modal-content {
+            background: #ffffff;
+            border-radius: 16px;
+            width: 100%;
+            max-width: 900px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+            animation: slideUp 0.3s ease;
+            margin: auto;
+        }
+
+        .task-item {
+            padding: 16px;
+            border-bottom: 1px solid #e5e7eb;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background 0.2s;
+        }
+
+        .task-item:last-child {
+            border-bottom: none;
+        }
+
+        .task-item:hover {
+            background: #f9fafb;
+        }
+
+        .confirmation-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            animation: fadeIn 0.2s ease;
+        }
+
+        .confirmation-modal.show {
+            display: flex;
+        }
+
+        .confirmation-box {
+            background: white;
+            border-radius: 12px;
+            padding: 32px;
+            max-width: 400px;
+            width: 90%;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2);
+            animation: slideUp 0.3s ease;
+            text-align: center;
+        }
+
+        .confirmation-icon {
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            font-size: 32px;
+        }
+
+        .icon-approve {
+            background: #d1fae5;
+            color: #059669;
+        }
+
+        .icon-reject {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+
+        .icon-success {
+            background: #d1fae5;
+            color: #059669;
+        }
+
+        .confirmation-title {
+            font-size: 20px;
+            font-weight: 800;
+            color: #111827;
+            margin-bottom: 12px;
+        }
+
+        .confirmation-message {
+            font-size: 14px;
+            color: #6b7280;
+            margin-bottom: 24px;
+        }
+
+        .confirmation-buttons {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="modal-backdrop" onclick="if(event.target === this) window.history.back()">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <!-- Header -->
+            <div style="background:#E8F9E8; padding:24px 32px; border-radius:16px 16px 0 0; display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #d1fae5;">
+                <h2 style="font-size:24px; font-weight:800; color:#111827; margin:0;">Pending Tasks</h2>
+                <button onclick="window.history.back()" style="background:none; border:none; font-size:28px; color:#6b7280; cursor:pointer; width:32px; height:32px; border-radius:6px; transition:all 0.2s;">&times;</button>
+            </div>
+
+            <!-- Task List -->
+            <div style="padding:24px 32px;">
+                <div style="border-radius:8px; overflow:hidden; border:1px solid #e5e7eb;">
+                    <!-- Task Item 1 -->
+                    <div class="task-item">
+                        <div>
+                            <div style="font-weight:700; color:#111827; margin-bottom:4px;">Review new student application</div>
+                            <div style="color:#6b7280; font-size:14px;">Submitted by: Admissions Office</div>
+                        </div>
+                        <div style="display:flex; gap:8px;">
+                            <button onclick="showConfirmation('approve', 'Review new student application')" style="background:#76C7C0; color:#fff; border:none; padding:8px 16px; border-radius:20px; cursor:pointer; font-size:13px; font-weight:600;">Approve</button>
+                            <button onclick="showConfirmation('reject', 'Review new student application')" style="background:#E57373; color:#fff; border:none; padding:8px 16px; border-radius:20px; cursor:pointer; font-size:13px; font-weight:600;">Reject</button>
+                        </div>
+                    </div>
+
+                    <!-- Task Item 2 -->
+                    <div class="task-item">
+                        <div>
+                            <div style="font-weight:700; color:#111827; margin-bottom:4px;">Approve teacher leave request</div>
+                            <div style="color:#6b7280; font-size:14px;">Requested by: John Smith</div>
+                        </div>
+                        <div style="display:flex; gap:8px;">
+                            <button onclick="showConfirmation('approve', 'Approve teacher leave request')" style="background:#76C7C0; color:#fff; border:none; padding:8px 16px; border-radius:20px; cursor:pointer; font-size:13px; font-weight:600;">Approve</button>
+                            <button onclick="showConfirmation('reject', 'Approve teacher leave request')" style="background:#E57373; color:#fff; border:none; padding:8px 16px; border-radius:20px; cursor:pointer; font-size:13px; font-weight:600;">Reject</button>
+                        </div>
+                    </div>
+
+                    <!-- Task Item 3 -->
+                    <div class="task-item">
+                        <div>
+                            <div style="font-weight:700; color:#111827; margin-bottom:4px;">Verify course enrollment</div>
+                            <div style="color:#6b7280; font-size:14px;">Student: Jane Doe</div>
+                        </div>
+                        <div style="display:flex; gap:8px;">
+                            <button onclick="showConfirmation('approve', 'Verify course enrollment')" style="background:#76C7C0; color:#fff; border:none; padding:8px 16px; border-radius:20px; cursor:pointer; font-size:13px; font-weight:600;">Approve</button>
+                            <button onclick="showConfirmation('reject', 'Verify course enrollment')" style="background:#E57373; color:#fff; border:none; padding:8px 16px; border-radius:20px; cursor:pointer; font-size:13px; font-weight:600;">Reject</button>
+                        </div>
+                    </div>
+
+                    <!-- Task Item 4 -->
+                    <div class="task-item">
+                        <div>
+                            <div style="font-weight:700; color:#111827; margin-bottom:4px;">Schedule change request</div>
+                            <div style="color:#6b7280; font-size:14px;">Department: Computer Science</div>
+                        </div>
+                        <div style="display:flex; gap:8px;">
+                            <button onclick="showConfirmation('approve', 'Schedule change request')" style="background:#76C7C0; color:#fff; border:none; padding:8px 16px; border-radius:20px; cursor:pointer; font-size:13px; font-weight:600;">Approve</button>
+                            <button onclick="showConfirmation('reject', 'Schedule change request')" style="background:#E57373; color:#fff; border:none; padding:8px 16px; border-radius:20px; cursor:pointer; font-size:13px; font-weight:600;">Reject</button>
+                        </div>
+                    </div>
+
+                    <!-- Task Item 5 -->
+                    <div class="task-item">
+                        <div>
+                            <div style="font-weight:700; color:#111827; margin-bottom:4px;">Budget approval request</div>
+                            <div style="color:#6b7280; font-size:14px;">Submitted by: Finance Department</div>
+                        </div>
+                        <div style="display:flex; gap:8px;">
+                            <button onclick="showConfirmation('approve', 'Budget approval request')" style="background:#76C7C0; color:#fff; border:none; padding:8px 16px; border-radius:20px; cursor:pointer; font-size:13px; font-weight:600;">Approve</button>
+                            <button onclick="showConfirmation('reject', 'Budget approval request')" style="background:#E57373; color:#fff; border:none; padding:8px 16px; border-radius:20px; cursor:pointer; font-size:13px; font-weight:600;">Reject</button>
+                        </div>
+                    </div>
+
+                    <!-- Task Item 6 -->
+                    <div class="task-item">
+                        <div>
+                            <div style="font-weight:700; color:#111827; margin-bottom:4px;">Grade dispute resolution</div>
+                            <div style="color:#6b7280; font-size:14px;">Student: Mark Johnson</div>
+                        </div>
+                        <div style="display:flex; gap:8px;">
+                            <button onclick="showConfirmation('approve', 'Grade dispute resolution')" style="background:#76C7C0; color:#fff; border:none; padding:8px 16px; border-radius:20px; cursor:pointer; font-size:13px; font-weight:600;">Approve</button>
+                            <button onclick="showConfirmation('reject', 'Grade dispute resolution')" style="background:#E57373; color:#fff; border:none; padding:8px 16px; border-radius:20px; cursor:pointer; font-size:13px; font-weight:600;">Reject</button>
+                        </div>
+                    </div>
+
+                    <!-- Task Item 7 -->
+                    <div class="task-item">
+                        <div>
+                            <div style="font-weight:700; color:#111827; margin-bottom:4px;">Room reservation approval</div>
+                            <div style="color:#6b7280; font-size:14px;">Requested by: Student Council</div>
+                        </div>
+                        <div style="display:flex; gap:8px;">
+                            <button onclick="showConfirmation('approve', 'Room reservation approval')" style="background:#76C7C0; color:#fff; border:none; padding:8px 16px; border-radius:20px; cursor:pointer; font-size:13px; font-weight:600;">Approve</button>
+                            <button onclick="showConfirmation('reject', 'Room reservation approval')" style="background:#E57373; color:#fff; border:none; padding:8px 16px; border-radius:20px; cursor:pointer; font-size:13px; font-weight:600;">Reject</button>
+                        </div>
+                    </div>
+
+                    <!-- Task Item 8 -->
+                    <div class="task-item">
+                        <div>
+                            <div style="font-weight:700; color:#111827; margin-bottom:4px;">Faculty hiring recommendation</div>
+                            <div style="color:#6b7280; font-size:14px;">Department: Mathematics</div>
+                        </div>
+                        <div style="display:flex; gap:8px;">
+                            <button onclick="showConfirmation('approve', 'Faculty hiring recommendation')" style="background:#76C7C0; color:#fff; border:none; padding:8px 16px; border-radius:20px; cursor:pointer; font-size:13px; font-weight:600;">Approve</button>
+                            <button onclick="showConfirmation('reject', 'Faculty hiring recommendation')" style="background:#E57373; color:#fff; border:none; padding:8px 16px; border-radius:20px; cursor:pointer; font-size:13px; font-weight:600;">Reject</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <div style="padding:20px 32px; background:#f9fafb; border-top:1px solid #e5e7eb; border-radius:0 0 16px 16px; display:flex; justify-content:center;">
+                <button onclick="window.history.back()" style="padding:12px 32px; border-radius:6px; font-size:14px; font-weight:600; cursor:pointer; background:#059669; color:#ffffff; border:none;">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Confirmation Modal -->
+    <div id="confirmationModal" class="confirmation-modal">
+        <div class="confirmation-box" id="confirmationBox">
+            <!-- Content will be dynamically inserted -->
+        </div>
+    </div>
+
+    <script>
+        let currentAction = '';
+        let currentTask = '';
+
+        function showConfirmation(action, taskTitle) {
+            currentAction = action;
+            currentTask = taskTitle;
+            
+            const modal = document.getElementById('confirmationModal');
+            const box = document.getElementById('confirmationBox');
+            
+            if (action === 'approve') {
+                box.innerHTML = `
+                    <div class="confirmation-icon icon-approve">✓</div>
+                    <h3 class="confirmation-title">Approve Task?</h3>
+                    <p class="confirmation-message">Are you sure you want to approve "${taskTitle}"?</p>
+                    <div class="confirmation-buttons">
+                        <button onclick="closeConfirmation()" style="padding:10px 24px; border-radius:6px; font-size:14px; font-weight:600; cursor:pointer; background:#ffffff; color:#4b5563; border:1px solid #d1d5db;">Cancel</button>
+                        <button onclick="confirmAction()" style="padding:10px 24px; border-radius:6px; font-size:14px; font-weight:600; cursor:pointer; background:#76C7C0; color:#ffffff; border:none;">Yes, Approve</button>
+                    </div>
+                `;
+            } else {
+                box.innerHTML = `
+                    <div class="confirmation-icon icon-reject">✕</div>
+                    <h3 class="confirmation-title">Reject Task?</h3>
+                    <p class="confirmation-message">Are you sure you want to reject "${taskTitle}"?</p>
+                    <div class="confirmation-buttons">
+                        <button onclick="closeConfirmation()" style="padding:10px 24px; border-radius:6px; font-size:14px; font-weight:600; cursor:pointer; background:#ffffff; color:#4b5563; border:1px solid #d1d5db;">Cancel</button>
+                        <button onclick="confirmAction()" style="padding:10px 24px; border-radius:6px; font-size:14px; font-weight:600; cursor:pointer; background:#E57373; color:#ffffff; border:none;">Yes, Reject</button>
+                    </div>
+                `;
+            }
+            
+            modal.classList.add('show');
+        }
+
+        function closeConfirmation() {
+            document.getElementById('confirmationModal').classList.remove('show');
+        }
+
+        function confirmAction() {
+            const modal = document.getElementById('confirmationModal');
+            const box = document.getElementById('confirmationBox');
+            
+            // Show success message
+            if (currentAction === 'approve') {
+                box.innerHTML = `
+                    <div class="confirmation-icon icon-success">✓</div>
+                    <h3 class="confirmation-title">Task Approved!</h3>
+                    <p class="confirmation-message">The task "${currentTask}" has been approved successfully.</p>
+                    <button onclick="closeConfirmation()" style="padding:10px 24px; border-radius:6px; font-size:14px; font-weight:600; cursor:pointer; background:#059669; color:#ffffff; border:none; margin-top:8px;">Close</button>
+                `;
+            } else {
+                box.innerHTML = `
+                    <div class="confirmation-icon icon-success">✓</div>
+                    <h3 class="confirmation-title">Task Rejected!</h3>
+                    <p class="confirmation-message">The task "${currentTask}" has been rejected.</p>
+                    <button onclick="closeConfirmation()" style="padding:10px 24px; border-radius:6px; font-size:14px; font-weight:600; cursor:pointer; background:#059669; color:#ffffff; border:none; margin-top:8px;">Close</button>
+                `;
+            }
+            
+            // TODO: Implement actual approve/reject logic here
+        }
+
+        // Close on ESC key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                const confirmModal = document.getElementById('confirmationModal');
+                if (confirmModal.classList.contains('show')) {
+                    closeConfirmation();
+                } else {
+                    window.history.back();
+                }
+            }
+        });
+
+        // Close confirmation modal when clicking outside
+        document.getElementById('confirmationModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeConfirmation();
+            }
+        });
+    </script>
+</body>
+</html>
+

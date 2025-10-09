@@ -56,7 +56,7 @@
 		</div>
 
 		<!-- Table -->
-		<div style="overflow-x:auto;">
+		<div style="background:#ffffff; border-radius:0 0 12px 12px; overflow:hidden; box-shadow:0 1px 3px rgba(0,0,0,0.1);">
 			<table style="width:100%; border-collapse:collapse; background:#ffffff;">
 				<thead>
 					<tr style="background:#f9fafb; border-bottom:2px solid #e5e7eb;">
@@ -81,8 +81,8 @@
 						<td style="padding:16px; position:relative;">
 							<button class="action-menu-btn" style="background:transparent; border:none; font-size:24px; font-weight:800; cursor:pointer; padding:4px 8px; line-height:1;">⋮</button>
 							<div class="action-menu" style="display:none; position:absolute; right:40px; top:50%; transform:translateY(-50%); background:#fff; border:1px solid #e5e7eb; border-radius:8px; box-shadow:0 4px 12px rgba(0,0,0,0.15); min-width:130px; z-index:10;">
-								<button style="display:block; width:100%; padding:10px 16px; border:none; background:transparent; text-align:left; cursor:pointer; color:#111827; font-size:14px;">View</button>
-								<button style="display:block; width:100%; padding:10px 16px; border:none; background:transparent; text-align:left; cursor:pointer; color:#111827; font-size:14px;">Edit</button>
+                                <button style="display:block; width:100%; padding:10px 16px; border:none; background:transparent; text-align:left; cursor:pointer; color:#111827; font-size:14px;" onclick="navigateToView(this)">View</button>
+								<a href="@Url.Action("EditUser", "Admin", new { id = "123213" })" style="display:block; width:100%; padding:10px 16px; border:none; background:transparent; text-align:left; cursor:pointer; color:#111827; font-size:14px; text-decoration:none;" onmouseover="this.style.background='#f3f4f6'" onmouseout="this.style.background='transparent'">Edit</a>
 								<button style="display:block; width:100%; padding:10px 16px; border:none; background:transparent; text-align:left; cursor:pointer; color:#dc2626; font-size:14px;">Deactivate</button>
 							</div>
 						</td>
@@ -100,8 +100,8 @@
 						<td style="padding:16px; position:relative;">
 							<button class="action-menu-btn" style="background:transparent; border:none; font-size:24px; font-weight:800; cursor:pointer; padding:4px 8px; line-height:1;">⋮</button>
 							<div class="action-menu" style="display:none; position:absolute; right:40px; top:50%; transform:translateY(-50%); background:#fff; border:1px solid #e5e7eb; border-radius:8px; box-shadow:0 4px 12px rgba(0,0,0,0.15); min-width:130px; z-index:10;">
-								<button style="display:block; width:100%; padding:10px 16px; border:none; background:transparent; text-align:left; cursor:pointer; color:#111827; font-size:14px;">View</button>
-								<button style="display:block; width:100%; padding:10px 16px; border:none; background:transparent; text-align:left; cursor:pointer; color:#111827; font-size:14px;">Edit</button>
+                                <button style="display:block; width:100%; padding:10px 16px; border:none; background:transparent; text-align:left; cursor:pointer; color:#111827; font-size:14px;" onclick="navigateToView(this)">View</button>
+								<a href="@Url.Action("EditUser", "Admin", new { id = "123213" })" style="display:block; width:100%; padding:10px 16px; border:none; background:transparent; text-align:left; cursor:pointer; color:#111827; font-size:14px; text-decoration:none;" onmouseover="this.style.background='#f3f4f6'" onmouseout="this.style.background='transparent'">Edit</a>
 								<button style="display:block; width:100%; padding:10px 16px; border:none; background:transparent; text-align:left; cursor:pointer; color:#dc2626; font-size:14px;">Deactivate</button>
 							</div>
 						</td>
@@ -119,8 +119,8 @@
 						<td style="padding:16px; position:relative;">
 							<button class="action-menu-btn" style="background:transparent; border:none; font-size:24px; font-weight:800; cursor:pointer; padding:4px 8px; line-height:1;">⋮</button>
 							<div class="action-menu" style="display:none; position:absolute; right:40px; top:50%; transform:translateY(-50%); background:#fff; border:1px solid #e5e7eb; border-radius:8px; box-shadow:0 4px 12px rgba(0,0,0,0.15); min-width:130px; z-index:10;">
-								<button style="display:block; width:100%; padding:10px 16px; border:none; background:transparent; text-align:left; cursor:pointer; color:#111827; font-size:14px;">View</button>
-								<button style="display:block; width:100%; padding:10px 16px; border:none; background:transparent; text-align:left; cursor:pointer; color:#111827; font-size:14px;">Edit</button>
+                                <button style="display:block; width:100%; padding:10px 16px; border:none; background:transparent; text-align:left; cursor:pointer; color:#111827; font-size:14px;" onclick="navigateToView(this)">View</button>
+								<a href="@Url.Action("EditUser", "Admin", new { id = "123213" })" style="display:block; width:100%; padding:10px 16px; border:none; background:transparent; text-align:left; cursor:pointer; color:#111827; font-size:14px; text-decoration:none;" onmouseover="this.style.background='#f3f4f6'" onmouseout="this.style.background='transparent'">Edit</a>
 								<button style="display:block; width:100%; padding:10px 16px; border:none; background:transparent; text-align:left; cursor:pointer; color:#dc2626; font-size:14px;">Deactivate</button>
 							</div>
 						</td>
@@ -138,8 +138,8 @@
 						<td style="padding:16px; position:relative;">
 							<button class="action-menu-btn" style="background:transparent; border:none; font-size:24px; font-weight:800; cursor:pointer; padding:4px 8px; line-height:1;">⋮</button>
 							<div class="action-menu" style="display:none; position:absolute; right:40px; top:50%; transform:translateY(-50%); background:#fff; border:1px solid #e5e7eb; border-radius:8px; box-shadow:0 4px 12px rgba(0,0,0,0.15); min-width:130px; z-index:10;">
-								<button style="display:block; width:100%; padding:10px 16px; border:none; background:transparent; text-align:left; cursor:pointer; color:#111827; font-size:14px;">View</button>
-								<button style="display:block; width:100%; padding:10px 16px; border:none; background:transparent; text-align:left; cursor:pointer; color:#111827; font-size:14px;">Edit</button>
+                                <button style="display:block; width:100%; padding:10px 16px; border:none; background:transparent; text-align:left; cursor:pointer; color:#111827; font-size:14px;" onclick="navigateToView(this)">View</button>
+								<a href="@Url.Action("EditUser", "Admin", new { id = "123213" })" style="display:block; width:100%; padding:10px 16px; border:none; background:transparent; text-align:left; cursor:pointer; color:#111827; font-size:14px; text-decoration:none;" onmouseover="this.style.background='#f3f4f6'" onmouseout="this.style.background='transparent'">Edit</a>
 								<button style="display:block; width:100%; padding:10px 16px; border:none; background:transparent; text-align:left; cursor:pointer; color:#dc2626; font-size:14px;">Deactivate</button>
 							</div>
 						</td>
@@ -157,8 +157,8 @@
 						<td style="padding:16px; position:relative;">
 							<button class="action-menu-btn" style="background:transparent; border:none; font-size:24px; font-weight:800; cursor:pointer; padding:4px 8px; line-height:1;">⋮</button>
 							<div class="action-menu" style="display:none; position:absolute; right:40px; top:50%; transform:translateY(-50%); background:#fff; border:1px solid #e5e7eb; border-radius:8px; box-shadow:0 4px 12px rgba(0,0,0,0.15); min-width:130px; z-index:10;">
-								<button style="display:block; width:100%; padding:10px 16px; border:none; background:transparent; text-align:left; cursor:pointer; color:#111827; font-size:14px;">View</button>
-								<button style="display:block; width:100%; padding:10px 16px; border:none; background:transparent; text-align:left; cursor:pointer; color:#111827; font-size:14px;">Edit</button>
+                                <button style="display:block; width:100%; padding:10px 16px; border:none; background:transparent; text-align:left; cursor:pointer; color:#111827; font-size:14px;" onclick="navigateToView(this)">View</button>
+								<a href="@Url.Action("EditUser", "Admin", new { id = "123213" })" style="display:block; width:100%; padding:10px 16px; border:none; background:transparent; text-align:left; cursor:pointer; color:#111827; font-size:14px; text-decoration:none;" onmouseover="this.style.background='#f3f4f6'" onmouseout="this.style.background='transparent'">Edit</a>
 								<button style="display:block; width:100%; padding:10px 16px; border:none; background:transparent; text-align:left; cursor:pointer; color:#dc2626; font-size:14px;">Deactivate</button>
 							</div>
 						</td>
@@ -176,8 +176,8 @@
 						<td style="padding:16px; position:relative;">
 							<button class="action-menu-btn" style="background:transparent; border:none; font-size:24px; font-weight:800; cursor:pointer; padding:4px 8px; line-height:1;">⋮</button>
 							<div class="action-menu" style="display:none; position:absolute; right:40px; top:50%; transform:translateY(-50%); background:#fff; border:1px solid #e5e7eb; border-radius:8px; box-shadow:0 4px 12px rgba(0,0,0,0.15); min-width:130px; z-index:10;">
-								<button style="display:block; width:100%; padding:10px 16px; border:none; background:transparent; text-align:left; cursor:pointer; color:#111827; font-size:14px;">View</button>
-								<button style="display:block; width:100%; padding:10px 16px; border:none; background:transparent; text-align:left; cursor:pointer; color:#111827; font-size:14px;">Edit</button>
+                                <button style="display:block; width:100%; padding:10px 16px; border:none; background:transparent; text-align:left; cursor:pointer; color:#111827; font-size:14px;" onclick="navigateToView(this)">View</button>
+								<a href="@Url.Action("EditUser", "Admin", new { id = "123213" })" style="display:block; width:100%; padding:10px 16px; border:none; background:transparent; text-align:left; cursor:pointer; color:#111827; font-size:14px; text-decoration:none;" onmouseover="this.style.background='#f3f4f6'" onmouseout="this.style.background='transparent'">Edit</a>
 								<button style="display:block; width:100%; padding:10px 16px; border:none; background:transparent; text-align:left; cursor:pointer; color:#dc2626; font-size:14px;">Deactivate</button>
 							</div>
 						</td>
@@ -190,6 +190,14 @@
 </section>
 
 <script>
+	function navigateToView(button) {
+		// Find the row and extract the ID number from the first cell
+		const row = button.closest('tr');
+		const idCell = row?.cells?.[0];
+		const id = idCell ? idCell.textContent.trim() : '';
+		// Navigate using MVC route
+		window.location.href = '@Url.Action("ViewUser", "Admin")' + (id ? ('?id=' + encodeURIComponent(id)) : '');
+	}
 	// Toggle action menu dropdowns
 	document.addEventListener('DOMContentLoaded', function() {
 		const actionBtns = document.querySelectorAll('.action-menu-btn');
