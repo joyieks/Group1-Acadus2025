@@ -3,12 +3,198 @@
     ViewData["Title"] = "Admin Dashboard";
 }
 
-<section class="min-h-screen flex items-center justify-center bg-white">
-    <div class="text-center">
-        <h1 class="text-3xl font-bold mb-4">Admin</h1>
-        <p class="text-gray-600">This is the Admin UI placeholder.</p>
-    </div>
-    @section Scripts {}
+<section class="bg-[#E8F9E8]" style="padding: 0 0 24px 0;">
+	<!-- Top nav without white background -->
+	<div class="container" style="max-width: 1200px; margin: 0 auto; padding: 12px 16px; display:flex; align-items:center; justify-content: space-between;">
+		<div style="display:flex; align-items:center; gap:12px;">
+			<img src="/img/acaduslogo.png" alt="Acadus" style="height:40px; width:auto;" />
+			<img src="/img/wordonly.png" alt="Acadus Wordmark" style="height:22px; width:auto;" />
+		</div>
+		<nav style="display:flex; gap:24px; font-weight:600; color:#3a3a3a;">
+			<a href="#" style="padding:8px 12px;">Courses</a>
+			<a href="#" style="padding:8px 12px; border-radius:8px; background:#DFF1DF;">Dashboard</a>
+			<a href="#" style="padding:8px 12px;">Users</a>
+		</nav>
+		<div style="display:flex; align-items:center; gap:12px;">
+			<span style="font-weight:600;">First Name</span>
+			<div style="height:32px; width:32px; background:#CDE9CD; border-radius:9999px;"></div>
+		</div>
+	</div>
+
+	<div class="container" style="max-width: 1200px; margin: 0 auto; padding: 0 16px;">
+
+		<!-- Welcome and KPI cards -->
+		<div style="background:#DFF1DF; border-radius:12px; padding:24px; text-align:center;">
+			<h1 style="font-size:28px; font-weight:800; margin:0 0 4px 0;">Welcome!</h1>
+			<p style="margin:0; color:#4b5563;">See what's happening in your workspace today</p>
+			<div style="display:grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap:16px; margin-top:20px;">
+				<div style="background:#ffffff; border-radius:12px; padding:16px; box-shadow:0 1px 2px rgba(0,0,0,0.06);">
+					<div style="display:flex; align-items:center; gap:8px; color:#6b7280; margin-bottom:8px;">
+						<span>≡</span>
+						<span>Students</span>
+					</div>
+					<div style="font-size:36px; font-weight:800; color:#1f2937;">0</div>
+				</div>
+				<div style="background:#ffffff; border-radius:12px; padding:16px; box-shadow:0 1px 2px rgba(0,0,0,0.06);">
+					<div style="display:flex; align-items:center; gap:8px; color:#6b7280; margin-bottom:8px;">
+						<span>≡</span>
+						<span>Instructors</span>
+					</div>
+					<div style="font-size:36px; font-weight:800; color:#1f2937;">0</div>
+				</div>
+				<div style="background:#ffffff; border-radius:12px; padding:16px; box-shadow:0 1px 2px rgba(0,0,0,0.06);">
+					<div style="display:flex; align-items:center; gap:8px; color:#6b7280; margin-bottom:8px;">
+						<span>≡</span>
+						<span>Total Courses</span>
+					</div>
+					<div style="font-size:36px; font-weight:800; color:#1f2937;">0</div>
+				</div>
+			</div>
+		</div>
+
+		<!-- Middle panels -->
+		<div style="display:grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap:24px; margin-top:24px;">
+			<!-- Recent activity -->
+			<div style="background:#ffffff; border-radius:12px; padding:16px; box-shadow:0 1px 2px rgba(0,0,0,0.06);">
+				<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+					<h2 style="margin:0; font-weight:800;">Recent activity</h2>
+					<a href="#" style="color:#00897B;">View all</a>
+				</div>
+				<div style="border:1px solid #E5E7EB; border-radius:8px; overflow:hidden;">
+					<!-- 5 placeholder rows -->
+					<div style="display:flex; justify-content:space-between; padding:12px 16px; background:#F1FBF1;">
+						<div>
+							<div style="font-weight:700;">Task item title</div>
+							<div style="color:#6b7280; font-size:14px;">User of action</div>
+						</div>
+						<div style="color:#6b7280;">MMMM DD, 00:00 XM</div>
+					</div>
+					<div style="display:flex; justify-content:space-between; padding:12px 16px;">
+						<div>
+							<div style="font-weight:700;">Task item title</div>
+							<div style="color:#6b7280; font-size:14px;">User of action</div>
+						</div>
+						<div style="color:#6b7280;">MMMM DD, 00:00 XM</div>
+					</div>
+					<div style="display:flex; justify-content:space-between; padding:12px 16px; background:#F1FBF1;">
+						<div>
+							<div style="font-weight:700;">Task item title</div>
+							<div style="color:#6b7280; font-size:14px;">User of action</div>
+						</div>
+						<div style="color:#6b7280;">MMMM DD, 00:00 XM</div>
+					</div>
+					<div style="display:flex; justify-content:space-between; padding:12px 16px;">
+						<div>
+							<div style="font-weight:700;">Task item title</div>
+							<div style="color:#6b7280; font-size:14px;">User of action</div>
+						</div>
+						<div style="color:#6b7280;">MMMM DD, 00:00 XM</div>
+					</div>
+					<div style="display:flex; justify-content:space-between; padding:12px 16px; background:#F1FBF1;">
+						<div>
+							<div style="font-weight:700;">Task item title</div>
+							<div style="color:#6b7280; font-size:14px;">User of action</div>
+						</div>
+						<div style="color:#6b7280;">MMMM DD, 00:00 XM</div>
+					</div>
+				</div>
+			</div>
+
+			<!-- Pending tasks -->
+			<div style="background:#ffffff; border-radius:12px; padding:16px; box-shadow:0 1px 2px rgba(0,0,0,0.06);">
+				<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+					<h2 style="margin:0; font-weight:800;">Pending tasks</h2>
+					<a href="#" style="color:#00897B;">View all</a>
+				</div>
+				<div style="border:1px solid #E5E7EB; border-radius:8px; overflow:hidden;">
+					<!-- 5 placeholder rows with actions -->
+					<div style="display:flex; justify-content:space-between; align-items:center; padding:12px 16px; background:#F1FBF1; gap:12px;">
+						<div>
+							<div style="font-weight:700;">Task item title</div>
+							<div style="color:#6b7280; font-size:14px;">User of action</div>
+						</div>
+						<div style="display:flex; gap:8px;">
+							<button style="background:#76C7C0; color:#fff; padding:6px 10px; border:none; border-radius:16px;">Approve</button>
+							<button style="background:#E57373; color:#fff; padding:6px 10px; border:none; border-radius:16px;">Reject</button>
+						</div>
+					</div>
+					<div style="display:flex; justify-content:space-between; align-items:center; padding:12px 16px; gap:12px;">
+						<div>
+							<div style="font-weight:700;">Task item title</div>
+							<div style="color:#6b7280; font-size:14px;">User of action</div>
+						</div>
+						<div style="display:flex; gap:8px;">
+							<button style="background:#76C7C0; color:#fff; padding:6px 10px; border:none; border-radius:16px;">Approve</button>
+							<button style="background:#E57373; color:#fff; padding:6px 10px; border:none; border-radius:16px;">Reject</button>
+						</div>
+					</div>
+					<div style="display:flex; justify-content:space-between; align-items:center; padding:12px 16px; background:#F1FBF1; gap:12px;">
+						<div>
+							<div style="font-weight:700;">Task item title</div>
+							<div style="color:#6b7280; font-size:14px;">User of action</div>
+						</div>
+						<div style="display:flex; gap:8px;">
+							<button style="background:#76C7C0; color:#fff; padding:6px 10px; border:none; border-radius:16px;">Approve</button>
+							<button style="background:#E57373; color:#fff; padding:6px 10px; border:none; border-radius:16px;">Reject</button>
+						</div>
+					</div>
+					<div style="display:flex; justify-content:space-between; align-items:center; padding:12px 16px; gap:12px;">
+						<div>
+							<div style="font-weight:700;">Task item title</div>
+							<div style="color:#6b7280; font-size:14px;">User of action</div>
+						</div>
+						<div style="display:flex; gap:8px;">
+							<button style="background:#76C7C0; color:#fff; padding:6px 10px; border:none; border-radius:16px;">Approve</button>
+							<button style="background:#E57373; color:#fff; padding:6px 10px; border:none; border-radius:16px;">Reject</button>
+						</div>
+					</div>
+					<div style="display:flex; justify-content:space-between; align-items:center; padding:12px 16px; background:#F1FBF1; gap:12px;">
+						<div>
+							<div style="font-weight:700;">Task item title</div>
+							<div style="color:#6b7280; font-size:14px;">User of action</div>
+						</div>
+						<div style="display:flex; gap:8px;">
+							<button style="background:#76C7C0; color:#fff; padding:6px 10px; border:none; border-radius:16px;">Approve</button>
+							<button style="background:#E57373; color:#fff; padding:6px 10px; border:none; border-radius:16px;">Reject</button>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<!-- Quick management -->
+		<div style="margin-top:24px;">
+			<h2 style="text-align:center; font-weight:800; margin:0 0 12px 0;">Quick management</h2>
+			<div style="display:grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap:24px;">
+				<div style="background:#ffffff; border-radius:12px; padding:24px; text-align:center; box-shadow:0 1px 2px rgba(0,0,0,0.06);">
+					<h3 style="margin:0 0 12px 0;">Add a student</h3>
+					<div style="height:84px; display:flex; align-items:center; justify-content:center;">🎓</div>
+					<button style="margin-top:12px; background:#76C7C0; color:#fff; border:none; border-radius:8px; padding:10px 16px;">Proceed</button>
+				</div>
+				<div style="background:#ffffff; border-radius:12px; padding:24px; text-align:center; box-shadow:0 1px 2px rgba(0,0,0,0.06);">
+					<h3 style="margin:0 0 12px 0;">Add faculty</h3>
+					<div style="height:84px; display:flex; align-items:center; justify-content:center;">📘</div>
+					<button style="margin-top:12px; background:#76C7C0; color:#fff; border:none; border-radius:8px; padding:10px 16px;">Proceed</button>
+				</div>
+				<div style="background:#ffffff; border-radius:12px; padding:24px; text-align:center; box-shadow:0 1px 2px rgba(0,0,0,0.06);">
+					<h3 style="margin:0 0 12px 0;">Create a course</h3>
+					<div style="height:84px; display:flex; align-items:center; justify-content:center;">≡</div>
+					<button style="margin-top:12px; background:#76C7C0; color:#fff; border:none; border-radius:8px; padding:10px 16px;">Proceed</button>
+				</div>
+			</div>
+		</div>
+
+		<!-- Footer -->
+		<footer style="margin-top:36px; display:flex; align-items:center; justify-content:space-between; padding:16px 0;">
+			<div style="display:flex; align-items:center; gap:12px;">
+				<img src="/img/acaduslogo.png" alt="Acadus" style="height:44px; width:auto;" />
+				<img src="/img/wordonly.png" alt="Acadus Wordmark" style="height:24px; width:auto;" />
+			</div>
+			<a href="#top" style="color:#00897B; font-weight:700;">Back to top</a>
+			<div style="color:#6b7280;">© 2025 Acadus || Version 1.0.0</div>
+		</footer>
+	</div>
+	@section Scripts {}
 </section>
 
 
