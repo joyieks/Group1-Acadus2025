@@ -15,7 +15,7 @@
 
     <!-- Center Nav (desktop) -->
     <nav class="hidden md:flex gap-4 font-[Poppins]">
-        @if (controller == "Student")
+        @if (User.IsInRole("Student"))
         {
             <!-- Courses -->
             <a asp-controller="Student" asp-action="Courses"
@@ -41,14 +41,14 @@
                Reports
             </a>
         }
-        else if (controller == "Teacher")
+        else if (User.IsInRole("Teacher"))
         {
-            <!-- Classes -->
-            <a asp-controller="Teacher" asp-action="Classes"
+            <!-- Activities -->
+            <a asp-controller="Teacher" asp-action="Activities"
                class="px-4 py-2 rounded-md text-sm transition-all duration-200 no-underline 
-                    @(action == "Classes" ? 
+                    @(action == "Activities" ? 
                     "bg-acadus-green text-white font-bold shadow-sm" : "text-[#337D58] hover:bg-acadus-green/10")">
-                Classes
+                Activities
             </a>
 
             <!-- Dashboard -->
@@ -59,24 +59,16 @@
                 Dashboard
             </a>
 
-            <!-- Reports -->
-            <a asp-controller="Teacher" asp-action="Reports"
+            <!-- Grades -->
+            <a asp-controller="Teacher" asp-action="Grades"
                class="px-4 py-2 rounded-md text-sm transition-all duration-200 no-underline
-                    @(action == "Reports" ? 
+                    @(action == "Grades" ? 
                     "bg-acadus-green text-white font-bold shadow-sm" : "text-[#337D58] hover:bg-acadus-green/10")">
-               Reports
+               Grades
             </a>
         }
-        else if (controller == "Admin")
+        else if (User.IsInRole("Admin"))
         {
-            <!-- Users -->
-            <a asp-controller="Admin" asp-action="Users"
-               class="px-4 py-2 rounded-md text-sm transition-all duration-200 no-underline 
-                    @(action == "Users" ? 
-                    "bg-acadus-green text-white font-bold shadow-sm" : "text-[#337D58] hover:bg-acadus-green/10")">
-                Users
-            </a>
-
             <!-- Dashboard -->
             <a asp-controller="Admin" asp-action="Index"
                class="px-4 py-2 rounded-md text-sm transition-all duration-200 no-underline 
@@ -85,12 +77,20 @@
                 Dashboard
             </a>
 
-            <!-- Settings -->
-            <a asp-controller="Admin" asp-action="Settings"
-               class="px-4 py-2 rounded-md text-sm transition-all duration-200 no-underline
-                    @(action == "Settings" ? 
+            <!-- Users -->
+            <a asp-controller="Admin" asp-action="Users"
+               class="px-4 py-2 rounded-md text-sm transition-all duration-200 no-underline 
+                    @(action == "Users" ? 
                     "bg-acadus-green text-white font-bold shadow-sm" : "text-[#337D58] hover:bg-acadus-green/10")">
-               Settings
+                Users
+            </a>
+
+            <!-- Courses -->
+            <a asp-controller="Admin" asp-action="Courses"
+               class="px-4 py-2 rounded-md text-sm transition-all duration-200 no-underline
+                    @(action == "Courses" ? 
+                    "bg-acadus-green text-white font-bold shadow-sm" : "text-[#337D58] hover:bg-acadus-green/10")">
+               Courses
             </a>
         }
     </nav>
@@ -138,7 +138,7 @@
             <!-- User Menu Dropdown -->
             <div id="userMenu" class="hidden absolute right-0 top-12 z-[9999] bg-white shadow-lg rounded-xl border border-gray-100 w-48">
                 <a href="/Home/Profile" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">Edit Profile</a>
-                <a href="/Auth/Index" class="block px-4 py-2 text-sm text-red-600 hover:bg-gray-50">Logout</a>
+                <a href="/Auth/Logout" class="block px-4 py-2 text-sm text-red-600 hover:bg-gray-50">Logout</a>
             </div>
         </div>
     </div>
@@ -152,29 +152,34 @@
         </svg>
     </button>
 
+@* <Summary>
+Here is where the user role specific links are rendered
+Each action is found in their respective view directories
+You can add and change accordingly
+<Summary> *@
     <div class="px-4 pt-2 pb-3 space-y-1">
-        @if (controller == "Student")
+        @if (User.IsInRole("Student"))
         {
             <a asp-controller="Student" asp-action="Courses" class="block px-3 py-2 rounded-md text-base @(action == "Courses" ? "bg-acadus-green text-white font-semibold" : "text-[#337D58] hover:bg-acadus-green/10")">Courses</a>
             <a asp-controller="Student" asp-action="Index" class="block px-3 py-2 rounded-md text-base @(action == "Index" ? "bg-acadus-green text-white font-semibold" : "text-[#337D58] hover:bg-acadus-green/10")">Dashboard</a>
             <a asp-controller="Student" asp-action="Reports" class="block px-3 py-2 rounded-md text-base @(action == "Reports" ? "bg-acadus-green text-white font-semibold" : "text-[#337D58] hover:bg-acadus-green/10")">Reports</a>
         }
-        else if (controller == "Teacher")
+        else if (User.IsInRole("Teacher"))
         {
-            <a asp-controller="Teacher" asp-action="Classes" class="block px-3 py-2 rounded-md text-base @(action == "Classes" ? "bg-acadus-green text-white font-semibold" : "text-[#337D58] hover:bg-acadus-green/10")">Classes</a>
+            <a asp-controller="Teacher" asp-action="Activities" class="block px-3 py-2 rounded-md text-base @(action == "Activities" ? "bg-acadus-green text-white font-semibold" : "text-[#337D58] hover:bg-acadus-green/10")">Activities</a>
             <a asp-controller="Teacher" asp-action="Index" class="block px-3 py-2 rounded-md text-base @(action == "Index" ? "bg-acadus-green text-white font-semibold" : "text-[#337D58] hover:bg-acadus-green/10")">Dashboard</a>
-            <a asp-controller="Teacher" asp-action="Reports" class="block px-3 py-2 rounded-md text-base @(action == "Reports" ? "bg-acadus-green text-white font-semibold" : "text-[#337D58] hover:bg-acadus-green/10")">Reports</a>
+            <a asp-controller="Teacher" asp-action="Grades" class="block px-3 py-2 rounded-md text-base @(action == "Grades" ? "bg-acadus-green text-white font-semibold" : "text-[#337D58] hover:bg-acadus-green/10")">Grades</a>
         }
-        else if (controller == "Admin")
+        else if (User.IsInRole("Admin"))
         {
             <a asp-controller="Admin" asp-action="Users" class="block px-3 py-2 rounded-md text-base @(action == "Users" ? "bg-acadus-green text-white font-semibold" : "text-[#337D58] hover:bg-acadus-green/10")">Users</a>
             <a asp-controller="Admin" asp-action="Index" class="block px-3 py-2 rounded-md text-base @(action == "Index" ? "bg-acadus-green text-white font-semibold" : "text-[#337D58] hover:bg-acadus-green/10")">Dashboard</a>
-            <a asp-controller="Admin" asp-action="Settings" class="block px-3 py-2 rounded-md text-base @(action == "Settings" ? "bg-acadus-green text-white font-semibold" : "text-[#337D58] hover:bg-acadus-green/10")">Settings</a>
+            <a asp-controller="Admin" asp-action="Courses" class="block px-3 py-2 rounded-md text-base @(action == "Courses" ? "bg-acadus-green text-white font-semibold" : "text-[#337D58] hover:bg-acadus-green/10")">Courses</a>
         }
     </div>
     <div class="px-4 pt-2 pb-4 border-t border-gray-100 space-y-1">
         <a href="/@controller/Notifications" class="block px-3 py-2 rounded-md text-base text-[#337D58] hover:bg-acadus-green/10">Notifications</a>
         <a href="/Home/Profile" class="block px-3 py-2 rounded-md text-base text-[#337D58] hover:bg-acadus-green/10">Edit Profile</a>
-        <a href="/Auth/Index" class="block px-3 py-2 rounded-md text-base text-red-600 hover:bg-red-50">Logout</a>
+        <a href="/Auth/Logout" class="block px-3 py-2 rounded-md text-base text-red-600 hover:bg-red-50">Logout</a>
     </div>
 </div>

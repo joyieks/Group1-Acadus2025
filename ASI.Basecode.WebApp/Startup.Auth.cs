@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.AspNetCore.Authentication.Cookies;
 
 namespace ASI.Basecode.WebApp
 {
@@ -12,8 +13,13 @@ namespace ASI.Basecode.WebApp
         /// </summary>
         private void ConfigureAuthorization()
         {
-            // Skip authentication/authorization wiring entirely for UI work
-            this._services.AddMvc();
+            this._services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+                .AddCookie(options =>
+                {
+                    options.LoginPath = "/Auth/Login";
+                    options.AccessDeniedPath = "/Auth/AccessDenied";
+                });
+            this._services.AddAuthorization();
         }
     }
 }

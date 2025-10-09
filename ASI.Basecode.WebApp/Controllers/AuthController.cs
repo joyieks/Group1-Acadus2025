@@ -1,5 +1,10 @@
 using Microsoft.AspNetCore.Mvc;
 using Acadus___Alliance_Project_2025.Models;
+using System.Security.Claims;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace ASI.Basecode.WebApp.Controllers
 {
@@ -15,7 +20,7 @@ namespace ASI.Basecode.WebApp.Controllers
         }
 
         [HttpPost]
-        public IActionResult Login(LoginModel model)
+        public async Task<IActionResult> Login(LoginModel model)
         {
             if (!ModelState.IsValid)
             {
@@ -25,22 +30,54 @@ namespace ASI.Basecode.WebApp.Controllers
             var normalizedEmail = model.Email.Trim().ToLowerInvariant();
             var password = model.Password;
 
+            string role = null;
             // Hardcoded users → simple role routing
             if (normalizedEmail == "student@gmail.com" && password == "student123")
             {
+                role = "Student";
+            }
+            else if (normalizedEmail == "teacher@gmail.com" && password == "teacher123")
+            {
+                role = "Teacher";
+            }
+            else if (normalizedEmail == "admin@gmail.com" && password == "admin123")
+            {
+                role = "Admin";
+            }
+            else
+            {
+                ModelState.AddModelError(string.Empty, "Invalid email or password.");
+                return View(model);
+            }
+
+            // Create claims
+            var claims = new List<Claim>
+            {
+                new Claim(ClaimTypes.Name, normalizedEmail),
+                new Claim(ClaimTypes.Role, role)
+            };
+
+            var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+            var principal = new ClaimsPrincipal(identity);
+
+            // Sign in
+            await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, principal);
+
+            // Redirect based on role
+            if (role == "Student")
+            {
                 return RedirectToAction("Index", "Student");
             }
-            if (normalizedEmail == "teacher@gmail.com" && password == "teacher123")
+            else if (role == "Teacher")
             {
                 return RedirectToAction("Index", "Teacher");
             }
-            if (normalizedEmail == "admin@gmail.com" && password == "admin123")
+            else if (role == "Admin")
             {
                 return RedirectToAction("Index", "Admin");
             }
 
-            ModelState.AddModelError(string.Empty, "Invalid email or password.");
-            return View(model);
+            return RedirectToAction("Index", "Home");
         }
 
         public IActionResult EmailVerification()
@@ -97,6 +134,13 @@ namespace ASI.Basecode.WebApp.Controllers
 
             // Redirect to success or login
             return RedirectToAction("Login");
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> Logout()
+        {
+            await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+            return RedirectToAction("Index");
         }
     }
 }

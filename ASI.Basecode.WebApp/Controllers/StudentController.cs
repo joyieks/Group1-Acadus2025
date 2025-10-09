@@ -3,11 +3,13 @@ using ASI.Basecode.WebApp.Models;
 using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Collections.Generic;
+using Microsoft.AspNetCore.Authorization;
 using static ASI.Basecode.WebApp.Models.StudentCourseDetailsViewModel;
 using static ASI.Basecode.WebApp.Models.StudentDashboardViewModel;
 
 namespace ASI.Basecode.WebApp.Controllers
 {
+    [Authorize(Roles = "Student")]
     public class StudentController : Controller
     {
         [HttpGet]

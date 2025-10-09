@@ -77,6 +77,9 @@ namespace ASI.Basecode.WebApp
             // DI Services
             this.ConfigureOtherServices();
 
+            // Configure authorization
+            this.ConfigureAuthorization();
+
             services.Configure<FormOptions>(options =>
             {
                 options.ValueLengthLimit = 1024 * 1024 * 100;
@@ -115,6 +118,8 @@ namespace ASI.Basecode.WebApp
 
             this._app.UseSession();
             this._app.UseRouting();
+            this._app.UseAuthentication();
+            this._app.UseAuthorization();
         }
     }
 }
