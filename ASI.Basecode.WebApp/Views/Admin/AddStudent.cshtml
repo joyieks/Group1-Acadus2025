@@ -1,0 +1,302 @@
+@{
+    Layout = "~/Views/Shared/_AuthenticatedLayout.cshtml";
+    ViewData["Title"] = "Add Student";
+}
+
+<!-- Header Section -->
+<section class="bg-[#E8F9E8]" style="padding: 32px 0; text-align:center;">
+	<div class="container" style="max-width: 1200px; margin: 0 auto; padding: 0 16px;">
+		<h1 style="font-size:28px; font-weight:800; margin:0 0 8px 0; color:#111827;">ADD A STUDENT</h1>
+		<p style="margin:0; color:#4b5563; font-size:14px;">Complete the form below to register a new student</p>
+	</div>
+</section>
+
+<!-- Form Section -->
+<section style="background:#f9fafb; padding: 40px 0;">
+	<div class="container" style="max-width: 900px; margin: 0 auto; padding: 0 16px;">
+		
+		<form method="post" action="/Admin/AddStudent">
+			
+			<!-- Section 1: Personal Information -->
+			<div style="background:#ffffff; border-radius:12px; padding:32px; margin-bottom:24px; box-shadow:0 1px 3px rgba(0,0,0,0.1);">
+				<h2 style="font-size:18px; font-weight:800; margin:0 0 24px 0; color:#111827;">Section 1: Personal Information</h2>
+				
+				<div style="display:grid; grid-template-columns: repeat(2, 1fr); gap:20px;">
+					<!-- First name -->
+					<div>
+						<label style="display:block; margin-bottom:6px; font-size:14px; font-weight:600; color:#111827;">
+							First name <span style="color:#dc2626;">*</span>
+						</label>
+						<input type="text" name="FirstName" required 
+							   style="width:100%; padding:10px 12px; border:1px solid #d1d5db; border-radius:6px; font-size:14px; box-sizing:border-box;">
+					</div>
+					
+					<!-- Last name -->
+					<div>
+						<label style="display:block; margin-bottom:6px; font-size:14px; font-weight:600; color:#111827;">
+							Last name <span style="color:#dc2626;">*</span>
+						</label>
+						<input type="text" name="LastName" required 
+							   style="width:100%; padding:10px 12px; border:1px solid #d1d5db; border-radius:6px; font-size:14px; box-sizing:border-box;">
+					</div>
+					
+					<!-- Middle name -->
+					<div>
+						<label style="display:block; margin-bottom:6px; font-size:14px; font-weight:600; color:#111827;">
+							Middle name
+						</label>
+						<input type="text" name="MiddleName" 
+							   style="width:100%; padding:10px 12px; border:1px solid #d1d5db; border-radius:6px; font-size:14px; box-sizing:border-box;">
+					</div>
+					
+					<!-- Suffix -->
+					<div>
+						<label style="display:block; margin-bottom:6px; font-size:14px; font-weight:600; color:#111827;">
+							Suffix
+						</label>
+						<input type="text" name="Suffix" 
+							   style="width:100%; padding:10px 12px; border:1px solid #d1d5db; border-radius:6px; font-size:14px; box-sizing:border-box;">
+					</div>
+					
+					<!-- Contact Number -->
+					<div>
+						<label style="display:block; margin-bottom:6px; font-size:14px; font-weight:600; color:#111827;">
+							Contact Number <span style="color:#dc2626;">*</span>
+						</label>
+						<input type="tel" name="ContactNumber" required 
+							   style="width:100%; padding:10px 12px; border:1px solid #d1d5db; border-radius:6px; font-size:14px; box-sizing:border-box;">
+					</div>
+					
+					<!-- Email -->
+					<div>
+						<label style="display:block; margin-bottom:6px; font-size:14px; font-weight:600; color:#111827;">
+							Email <span style="color:#dc2626;">*</span>
+						</label>
+						<input type="email" name="Email" required 
+							   style="width:100%; padding:10px 12px; border:1px solid #d1d5db; border-radius:6px; font-size:14px; box-sizing:border-box;">
+					</div>
+				</div>
+			</div>
+
+			<!-- Section 2: Address Information -->
+			<div style="background:#E8F9E8; border-radius:12px; padding:32px; margin-bottom:24px;">
+				<h2 style="font-size:18px; font-weight:800; margin:0 0 24px 0; color:#111827;">Section 2: Address Information</h2>
+				
+				<div style="display:grid; grid-template-columns: 1fr; gap:20px;">
+					<!-- House/Apt number -->
+					<div>
+						<label style="display:block; margin-bottom:6px; font-size:14px; font-weight:600; color:#111827;">
+							House/Apt number
+						</label>
+						<input type="text" name="HouseNumber" 
+							   style="width:100%; padding:10px 12px; border:1px solid #d1d5db; border-radius:6px; font-size:14px; background:#ffffff; box-sizing:border-box;">
+					</div>
+					
+					<!-- Street name -->
+					<div>
+						<label style="display:block; margin-bottom:6px; font-size:14px; font-weight:600; color:#111827;">
+							Street name <span style="color:#dc2626;">*</span>
+						</label>
+						<input type="text" name="StreetName" required 
+							   style="width:100%; padding:10px 12px; border:1px solid #d1d5db; border-radius:6px; font-size:14px; background:#ffffff; box-sizing:border-box;">
+					</div>
+					
+					<!-- Subdivision/Bldg. -->
+					<div>
+						<label style="display:block; margin-bottom:6px; font-size:14px; font-weight:600; color:#111827;">
+							Subdivision/Bldg.
+						</label>
+						<input type="text" name="Subdivision" 
+							   style="width:100%; padding:10px 12px; border:1px solid #d1d5db; border-radius:6px; font-size:14px; background:#ffffff; box-sizing:border-box;">
+					</div>
+				</div>
+				
+				<div style="display:grid; grid-template-columns: repeat(2, 1fr); gap:20px; margin-top:20px;">
+					<!-- Barangay -->
+					<div>
+						<label style="display:block; margin-bottom:6px; font-size:14px; font-weight:600; color:#111827;">
+							Barangay <span style="color:#dc2626;">*</span>
+						</label>
+						<input type="text" name="Barangay" required 
+							   style="width:100%; padding:10px 12px; border:1px solid #d1d5db; border-radius:6px; font-size:14px; background:#ffffff; box-sizing:border-box;">
+					</div>
+					
+					<!-- City -->
+					<div>
+						<label style="display:block; margin-bottom:6px; font-size:14px; font-weight:600; color:#111827;">
+							City <span style="color:#dc2626;">*</span>
+						</label>
+						<input type="text" name="City" required 
+							   style="width:100%; padding:10px 12px; border:1px solid #d1d5db; border-radius:6px; font-size:14px; background:#ffffff; box-sizing:border-box;">
+					</div>
+					
+					<!-- Province -->
+					<div>
+						<label style="display:block; margin-bottom:6px; font-size:14px; font-weight:600; color:#111827;">
+							Province <span style="color:#dc2626;">*</span>
+						</label>
+						<input type="text" name="Province" required 
+							   style="width:100%; padding:10px 12px; border:1px solid #d1d5db; border-radius:6px; font-size:14px; background:#ffffff; box-sizing:border-box;">
+					</div>
+					
+					<!-- Zip Code -->
+					<div>
+						<label style="display:block; margin-bottom:6px; font-size:14px; font-weight:600; color:#111827;">
+							Zip Code <span style="color:#dc2626;">*</span>
+						</label>
+						<input type="text" name="ZipCode" required 
+							   style="width:100%; padding:10px 12px; border:1px solid #d1d5db; border-radius:6px; font-size:14px; background:#ffffff; box-sizing:border-box;">
+					</div>
+				</div>
+			</div>
+
+			<!-- Section 3: Address Information (Second Address) -->
+			<div style="background:#ffffff; border-radius:12px; padding:32px; margin-bottom:24px; box-shadow:0 1px 3px rgba(0,0,0,0.1);">
+				<h2 style="font-size:18px; font-weight:800; margin:0 0 24px 0; color:#111827;">Section 3: Address Information</h2>
+				
+				<div style="display:grid; grid-template-columns: 1fr; gap:20px;">
+					<!-- House/Apt number -->
+					<div>
+						<label style="display:block; margin-bottom:6px; font-size:14px; font-weight:600; color:#111827;">
+							House/Apt number
+						</label>
+						<input type="text" name="HouseNumber2" 
+							   style="width:100%; padding:10px 12px; border:1px solid #d1d5db; border-radius:6px; font-size:14px; box-sizing:border-box;">
+					</div>
+					
+					<!-- Street name -->
+					<div>
+						<label style="display:block; margin-bottom:6px; font-size:14px; font-weight:600; color:#111827;">
+							Street name <span style="color:#dc2626;">*</span>
+						</label>
+						<input type="text" name="StreetName2" 
+							   style="width:100%; padding:10px 12px; border:1px solid #d1d5db; border-radius:6px; font-size:14px; box-sizing:border-box;">
+					</div>
+					
+					<!-- Subdivision/Bldg. -->
+					<div>
+						<label style="display:block; margin-bottom:6px; font-size:14px; font-weight:600; color:#111827;">
+							Subdivision/Bldg.
+						</label>
+						<input type="text" name="Subdivision2" 
+							   style="width:100%; padding:10px 12px; border:1px solid #d1d5db; border-radius:6px; font-size:14px; box-sizing:border-box;">
+					</div>
+				</div>
+				
+				<div style="display:grid; grid-template-columns: repeat(2, 1fr); gap:20px; margin-top:20px;">
+					<!-- Barangay -->
+					<div>
+						<label style="display:block; margin-bottom:6px; font-size:14px; font-weight:600; color:#111827;">
+							Barangay <span style="color:#dc2626;">*</span>
+						</label>
+						<input type="text" name="Barangay2" 
+							   style="width:100%; padding:10px 12px; border:1px solid #d1d5db; border-radius:6px; font-size:14px; box-sizing:border-box;">
+					</div>
+					
+					<!-- City -->
+					<div>
+						<label style="display:block; margin-bottom:6px; font-size:14px; font-weight:600; color:#111827;">
+							City <span style="color:#dc2626;">*</span>
+						</label>
+						<input type="text" name="City2" 
+							   style="width:100%; padding:10px 12px; border:1px solid #d1d5db; border-radius:6px; font-size:14px; box-sizing:border-box;">
+					</div>
+					
+					<!-- Province -->
+					<div>
+						<label style="display:block; margin-bottom:6px; font-size:14px; font-weight:600; color:#111827;">
+							Province <span style="color:#dc2626;">*</span>
+						</label>
+						<input type="text" name="Province2" 
+							   style="width:100%; padding:10px 12px; border:1px solid #d1d5db; border-radius:6px; font-size:14px; box-sizing:border-box;">
+					</div>
+					
+					<!-- Zip Code -->
+					<div>
+						<label style="display:block; margin-bottom:6px; font-size:14px; font-weight:600; color:#111827;">
+							Zip Code <span style="color:#dc2626;">*</span>
+						</label>
+						<input type="text" name="ZipCode2" 
+							   style="width:100%; padding:10px 12px; border:1px solid #d1d5db; border-radius:6px; font-size:14px; box-sizing:border-box;">
+					</div>
+				</div>
+			</div>
+
+			<!-- Section 4: Emergency Contact Information -->
+			<div style="background:#E8F9E8; border-radius:12px; padding:32px; margin-bottom:32px;">
+				<h2 style="font-size:18px; font-weight:800; margin:0 0 24px 0; color:#111827;">Section 4: Emergency Contact Information</h2>
+				
+				<div style="display:grid; grid-template-columns: repeat(2, 1fr); gap:20px;">
+					<!-- First name -->
+					<div>
+						<label style="display:block; margin-bottom:6px; font-size:14px; font-weight:600; color:#111827;">
+							First name <span style="color:#dc2626;">*</span>
+						</label>
+						<input type="text" name="EmergencyFirstName" required 
+							   style="width:100%; padding:10px 12px; border:1px solid #d1d5db; border-radius:6px; font-size:14px; background:#ffffff; box-sizing:border-box;">
+					</div>
+					
+					<!-- Last name -->
+					<div>
+						<label style="display:block; margin-bottom:6px; font-size:14px; font-weight:600; color:#111827;">
+							Last name <span style="color:#dc2626;">*</span>
+						</label>
+						<input type="text" name="EmergencyLastName" required 
+							   style="width:100%; padding:10px 12px; border:1px solid #d1d5db; border-radius:6px; font-size:14px; background:#ffffff; box-sizing:border-box;">
+					</div>
+					
+					<!-- Middle name -->
+					<div>
+						<label style="display:block; margin-bottom:6px; font-size:14px; font-weight:600; color:#111827;">
+							Middle name
+						</label>
+						<input type="text" name="EmergencyMiddleName" 
+							   style="width:100%; padding:10px 12px; border:1px solid #d1d5db; border-radius:6px; font-size:14px; background:#ffffff; box-sizing:border-box;">
+					</div>
+					
+					<!-- Suffix -->
+					<div>
+						<label style="display:block; margin-bottom:6px; font-size:14px; font-weight:600; color:#111827;">
+							Suffix
+						</label>
+						<input type="text" name="EmergencySuffix" 
+							   style="width:100%; padding:10px 12px; border:1px solid #d1d5db; border-radius:6px; font-size:14px; background:#ffffff; box-sizing:border-box;">
+					</div>
+					
+					<!-- Contact Number -->
+					<div>
+						<label style="display:block; margin-bottom:6px; font-size:14px; font-weight:600; color:#111827;">
+							Contact Number <span style="color:#dc2626;">*</span>
+						</label>
+						<input type="tel" name="EmergencyContactNumber" required 
+							   style="width:100%; padding:10px 12px; border:1px solid #d1d5db; border-radius:6px; font-size:14px; background:#ffffff; box-sizing:border-box;">
+					</div>
+					
+					<!-- Relationship to student -->
+					<div>
+						<label style="display:block; margin-bottom:6px; font-size:14px; font-weight:600; color:#111827;">
+							Relationship to student <span style="color:#dc2626;">*</span>
+						</label>
+						<input type="text" name="Relationship" required 
+							   style="width:100%; padding:10px 12px; border:1px solid #d1d5db; border-radius:6px; font-size:14px; background:#ffffff; box-sizing:border-box;">
+					</div>
+				</div>
+			</div>
+
+			<!-- Action Buttons -->
+			<div style="display:flex; justify-content:center; gap:16px;">
+				<button type="button" onclick="window.location.href='/Admin/Users'" 
+						style="background:#ffffff; color:#4b5563; border:1px solid #d1d5db; padding:12px 32px; border-radius:6px; cursor:pointer; font-size:14px; font-weight:600;">
+					Cancel
+				</button>
+				<button type="submit" 
+						style="background:#059669; color:#fff; border:none; padding:12px 32px; border-radius:6px; cursor:pointer; font-size:14px; font-weight:600;">
+					Register
+				</button>
+			</div>
+
+		</form>
+
+	</div>
+</section>
+

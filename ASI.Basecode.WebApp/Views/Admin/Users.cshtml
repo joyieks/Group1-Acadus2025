@@ -1,0 +1,275 @@
+@{
+    Layout = "~/Views/Shared/_AuthenticatedLayout.cshtml";
+    ViewData["Title"] = "Users";
+}
+
+<section class="bg-[#E8F9E8]" style="padding: 0 0 24px 0;">
+
+	<div class="container" style="max-width: 1200px; margin: 0 auto; padding: 0 16px;">
+		<!-- Header -->
+		<div style="text-align:center; padding: 24px 0;">
+			<h1 style="font-size:28px; font-weight:800; margin:0 0 4px 0;">USERS</h1>
+			<p style="margin:0; color:#4b5563;">Create, manage, and view all your users</p>
+		</div>
+
+		<!-- KPI cards -->
+		<div style="display:grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap:24px; max-width: 800px; margin-left: auto; margin-right: auto;">
+			<div style="background:#ffffff; border-radius:12px; padding:15px 24px; text-align:center; min-width: 200px; min-height: 120px; display: flex; flex-direction: column; justify-content: center;">
+				<div style="display:flex; align-items:center; justify-content:center; margin-bottom:8px; color:#6b7280;">
+					<span style="margin-right:8px;">≡</span>
+					<span style="font-size:14px;">Students</span>
+				</div>
+				<div style="font-size:36px; font-weight:800; color:#065f46;">0</div>
+			</div>
+
+			<div style="background:#ffffff; border-radius:12px; padding:15px 24px; text-align:center; min-width: 200px; min-height: 120px; display: flex; flex-direction: column; justify-content: center;">
+				<div style="display:flex; align-items:center; justify-content:center; margin-bottom:8px; color:#6b7280;">
+					<span style="margin-right:8px;">≡</span>
+					<span style="font-size:14px;">Instructors</span>
+				</div>
+				<div style="font-size:36px; font-weight:800; color:#065f46;">0</div>
+			</div>
+		</div>
+	</div>
+
+</section>
+
+<!-- White section with search and table -->
+<section style="background:#ffffff; padding: 24px 0;">
+	<div class="container" style="max-width: 1200px; margin: 0 auto; padding: 0 16px;">
+		
+		<!-- Search bar and Add button -->
+		<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px; gap:16px;">
+			<div style="display:flex; flex:1; max-width:600px; gap:12px;">
+				<input type="text" placeholder="Search for a user ID or name" style="flex:1; padding:10px 16px; border:1px solid #d1d5db; border-radius:8px; font-size:14px; background:#f3f4f6;">
+				<button style="background:#059669; color:#fff; border:none; border-radius:8px; padding:10px 24px; font-weight:600; cursor:pointer;">Search</button>
+			</div>
+			<a id="addStudentBtn" asp-controller="Admin" asp-action="AddStudent" style="display:none; background:#059669; color:#fff; border:none; border-radius:8px; padding:10px 24px; font-weight:600; cursor:pointer; text-decoration:none;">Add Student</a>
+			<a id="addTeacherBtn" asp-controller="Admin" asp-action="AddTeacher" style="display:none; background:#059669; color:#fff; border:none; border-radius:8px; padding:10px 24px; font-weight:600; cursor:pointer; text-decoration:none;">Add Teacher</a>
+		</div>
+
+		<!-- Tabs -->
+		<div style="display:flex; gap:0; background:#059669; padding:0; border-radius:8px 8px 0 0; overflow:hidden;">
+			<button class="tab-btn active" style="background:#059669; color:#fff; border:none; padding:12px 24px; font-weight:600; cursor:pointer; border-radius:0; position:relative; border-bottom:3px solid #84FFC2; transition:all 0.3s ease;">All users</button>
+			<button class="tab-btn" style="background:#059669; color:rgba(255,255,255,0.7); border:none; padding:12px 24px; font-weight:600; cursor:pointer; border-radius:0; position:relative; border-bottom:3px solid transparent; transition:all 0.3s ease;">Students</button>
+			<button class="tab-btn" style="background:#059669; color:rgba(255,255,255,0.7); border:none; padding:12px 24px; font-weight:600; cursor:pointer; border-radius:0; position:relative; border-bottom:3px solid transparent; transition:all 0.3s ease;">Teachers</button>
+		</div>
+
+		<!-- Table -->
+		<div style="overflow-x:auto;">
+			<table style="width:100%; border-collapse:collapse; background:#ffffff;">
+				<thead>
+					<tr style="background:#f9fafb; border-bottom:2px solid #e5e7eb;">
+						<th style="padding:12px 16px; text-align:left; font-weight:700; color:#111827;">ID No.</th>
+						<th style="padding:12px 16px; text-align:left; font-weight:700; color:#111827;">Name</th>
+						<th style="padding:12px 16px; text-align:left; font-weight:700; color:#111827;">Role</th>
+						<th style="padding:12px 16px; text-align:left; font-weight:700; color:#111827;">Department/Office</th>
+						<th style="padding:12px 16px; text-align:left; font-weight:700; color:#111827;">Status</th>
+						<th style="padding:12px 16px; text-align:left; font-weight:700; color:#111827;">Actions</th>
+					</tr>
+				</thead>
+				<tbody>
+					<!-- Row 1 -->
+					<tr style="border-bottom:1px solid #e5e7eb;">
+						<td style="padding:16px; color:#111827;">123213</td>
+						<td style="padding:16px; color:#111827;">Johnny Appleseed</td>
+						<td style="padding:16px; color:#111827;">Student</td>
+						<td style="padding:16px; color:#111827;">CCS</td>
+						<td style="padding:16px;">
+							<span style="background:#d1fae5; color:#065f46; padding:6px 14px; border-radius:16px; font-size:13px; font-weight:600;">Active</span>
+						</td>
+						<td style="padding:16px; position:relative;">
+							<button class="action-menu-btn" style="background:transparent; border:none; font-size:24px; font-weight:800; cursor:pointer; padding:4px 8px; line-height:1;">⋮</button>
+							<div class="action-menu" style="display:none; position:absolute; right:40px; top:50%; transform:translateY(-50%); background:#fff; border:1px solid #e5e7eb; border-radius:8px; box-shadow:0 4px 12px rgba(0,0,0,0.15); min-width:130px; z-index:10;">
+								<button style="display:block; width:100%; padding:10px 16px; border:none; background:transparent; text-align:left; cursor:pointer; color:#111827; font-size:14px;">View</button>
+								<button style="display:block; width:100%; padding:10px 16px; border:none; background:transparent; text-align:left; cursor:pointer; color:#111827; font-size:14px;">Edit</button>
+								<button style="display:block; width:100%; padding:10px 16px; border:none; background:transparent; text-align:left; cursor:pointer; color:#dc2626; font-size:14px;">Deactivate</button>
+							</div>
+						</td>
+					</tr>
+
+					<!-- Row 2 -->
+					<tr style="border-bottom:1px solid #e5e7eb;">
+						<td style="padding:16px; color:#111827;">123123</td>
+						<td style="padding:16px; color:#111827;">Ballerina Capuccina</td>
+						<td style="padding:16px; color:#111827;">Student</td>
+						<td style="padding:16px; color:#111827;">CON</td>
+						<td style="padding:16px;">
+							<span style="background:#d1fae5; color:#065f46; padding:6px 14px; border-radius:16px; font-size:13px; font-weight:600;">Active</span>
+						</td>
+						<td style="padding:16px; position:relative;">
+							<button class="action-menu-btn" style="background:transparent; border:none; font-size:24px; font-weight:800; cursor:pointer; padding:4px 8px; line-height:1;">⋮</button>
+							<div class="action-menu" style="display:none; position:absolute; right:40px; top:50%; transform:translateY(-50%); background:#fff; border:1px solid #e5e7eb; border-radius:8px; box-shadow:0 4px 12px rgba(0,0,0,0.15); min-width:130px; z-index:10;">
+								<button style="display:block; width:100%; padding:10px 16px; border:none; background:transparent; text-align:left; cursor:pointer; color:#111827; font-size:14px;">View</button>
+								<button style="display:block; width:100%; padding:10px 16px; border:none; background:transparent; text-align:left; cursor:pointer; color:#111827; font-size:14px;">Edit</button>
+								<button style="display:block; width:100%; padding:10px 16px; border:none; background:transparent; text-align:left; cursor:pointer; color:#dc2626; font-size:14px;">Deactivate</button>
+							</div>
+						</td>
+					</tr>
+
+					<!-- Row 3 -->
+					<tr style="border-bottom:1px solid #e5e7eb;">
+						<td style="padding:16px; color:#111827;">123123</td>
+						<td style="padding:16px; color:#111827;">Tungtung Tung Sahur</td>
+						<td style="padding:16px; color:#111827;">Teacher</td>
+						<td style="padding:16px; color:#111827;">Registrar</td>
+						<td style="padding:16px;">
+							<span style="background:#e5e7eb; color:#4b5563; padding:6px 14px; border-radius:16px; font-size:13px; font-weight:600;">Inactive</span>
+						</td>
+						<td style="padding:16px; position:relative;">
+							<button class="action-menu-btn" style="background:transparent; border:none; font-size:24px; font-weight:800; cursor:pointer; padding:4px 8px; line-height:1;">⋮</button>
+							<div class="action-menu" style="display:none; position:absolute; right:40px; top:50%; transform:translateY(-50%); background:#fff; border:1px solid #e5e7eb; border-radius:8px; box-shadow:0 4px 12px rgba(0,0,0,0.15); min-width:130px; z-index:10;">
+								<button style="display:block; width:100%; padding:10px 16px; border:none; background:transparent; text-align:left; cursor:pointer; color:#111827; font-size:14px;">View</button>
+								<button style="display:block; width:100%; padding:10px 16px; border:none; background:transparent; text-align:left; cursor:pointer; color:#111827; font-size:14px;">Edit</button>
+								<button style="display:block; width:100%; padding:10px 16px; border:none; background:transparent; text-align:left; cursor:pointer; color:#dc2626; font-size:14px;">Deactivate</button>
+							</div>
+						</td>
+					</tr>
+
+					<!-- Row 4 -->
+					<tr style="border-bottom:1px solid #e5e7eb;">
+						<td style="padding:16px; color:#111827;">123213</td>
+						<td style="padding:16px; color:#111827;">Johnny Appleseed</td>
+						<td style="padding:16px; color:#111827;">Student</td>
+						<td style="padding:16px; color:#111827;">CCS</td>
+						<td style="padding:16px;">
+							<span style="background:#d1fae5; color:#065f46; padding:6px 14px; border-radius:16px; font-size:13px; font-weight:600;">Active</span>
+						</td>
+						<td style="padding:16px; position:relative;">
+							<button class="action-menu-btn" style="background:transparent; border:none; font-size:24px; font-weight:800; cursor:pointer; padding:4px 8px; line-height:1;">⋮</button>
+							<div class="action-menu" style="display:none; position:absolute; right:40px; top:50%; transform:translateY(-50%); background:#fff; border:1px solid #e5e7eb; border-radius:8px; box-shadow:0 4px 12px rgba(0,0,0,0.15); min-width:130px; z-index:10;">
+								<button style="display:block; width:100%; padding:10px 16px; border:none; background:transparent; text-align:left; cursor:pointer; color:#111827; font-size:14px;">View</button>
+								<button style="display:block; width:100%; padding:10px 16px; border:none; background:transparent; text-align:left; cursor:pointer; color:#111827; font-size:14px;">Edit</button>
+								<button style="display:block; width:100%; padding:10px 16px; border:none; background:transparent; text-align:left; cursor:pointer; color:#dc2626; font-size:14px;">Deactivate</button>
+							</div>
+						</td>
+					</tr>
+
+					<!-- Row 5 -->
+					<tr style="border-bottom:1px solid #e5e7eb;">
+						<td style="padding:16px; color:#111827;">123123</td>
+						<td style="padding:16px; color:#111827;">Ballerina Capuccina</td>
+						<td style="padding:16px; color:#111827;">Student</td>
+						<td style="padding:16px; color:#111827;">CON</td>
+						<td style="padding:16px;">
+							<span style="background:#d1fae5; color:#065f46; padding:6px 14px; border-radius:16px; font-size:13px; font-weight:600;">Active</span>
+						</td>
+						<td style="padding:16px; position:relative;">
+							<button class="action-menu-btn" style="background:transparent; border:none; font-size:24px; font-weight:800; cursor:pointer; padding:4px 8px; line-height:1;">⋮</button>
+							<div class="action-menu" style="display:none; position:absolute; right:40px; top:50%; transform:translateY(-50%); background:#fff; border:1px solid #e5e7eb; border-radius:8px; box-shadow:0 4px 12px rgba(0,0,0,0.15); min-width:130px; z-index:10;">
+								<button style="display:block; width:100%; padding:10px 16px; border:none; background:transparent; text-align:left; cursor:pointer; color:#111827; font-size:14px;">View</button>
+								<button style="display:block; width:100%; padding:10px 16px; border:none; background:transparent; text-align:left; cursor:pointer; color:#111827; font-size:14px;">Edit</button>
+								<button style="display:block; width:100%; padding:10px 16px; border:none; background:transparent; text-align:left; cursor:pointer; color:#dc2626; font-size:14px;">Deactivate</button>
+							</div>
+						</td>
+					</tr>
+
+					<!-- Row 6 -->
+					<tr style="border-bottom:1px solid #e5e7eb;">
+						<td style="padding:16px; color:#111827;">123123</td>
+						<td style="padding:16px; color:#111827;">Tungtung Tung Sahur</td>
+						<td style="padding:16px; color:#111827;">Teacher</td>
+						<td style="padding:16px; color:#111827;">Registrar</td>
+						<td style="padding:16px;">
+							<span style="background:#e5e7eb; color:#4b5563; padding:6px 14px; border-radius:16px; font-size:13px; font-weight:600;">Inactive</span>
+						</td>
+						<td style="padding:16px; position:relative;">
+							<button class="action-menu-btn" style="background:transparent; border:none; font-size:24px; font-weight:800; cursor:pointer; padding:4px 8px; line-height:1;">⋮</button>
+							<div class="action-menu" style="display:none; position:absolute; right:40px; top:50%; transform:translateY(-50%); background:#fff; border:1px solid #e5e7eb; border-radius:8px; box-shadow:0 4px 12px rgba(0,0,0,0.15); min-width:130px; z-index:10;">
+								<button style="display:block; width:100%; padding:10px 16px; border:none; background:transparent; text-align:left; cursor:pointer; color:#111827; font-size:14px;">View</button>
+								<button style="display:block; width:100%; padding:10px 16px; border:none; background:transparent; text-align:left; cursor:pointer; color:#111827; font-size:14px;">Edit</button>
+								<button style="display:block; width:100%; padding:10px 16px; border:none; background:transparent; text-align:left; cursor:pointer; color:#dc2626; font-size:14px;">Deactivate</button>
+							</div>
+						</td>
+					</tr>
+				</tbody>
+			</table>
+		</div>
+
+	</div>
+</section>
+
+<script>
+	// Toggle action menu dropdowns
+	document.addEventListener('DOMContentLoaded', function() {
+		const actionBtns = document.querySelectorAll('.action-menu-btn');
+		
+		actionBtns.forEach(btn => {
+			btn.addEventListener('click', function(e) {
+				e.stopPropagation();
+				const menu = this.nextElementSibling;
+				
+				// Close all other menus
+				document.querySelectorAll('.action-menu').forEach(m => {
+					if (m !== menu) m.style.display = 'none';
+				});
+				
+				// Toggle current menu
+				menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+			});
+		});
+		
+		// Close menus when clicking outside
+		document.addEventListener('click', function() {
+			document.querySelectorAll('.action-menu').forEach(menu => {
+				menu.style.display = 'none';
+			});
+		});
+
+		// Tab switching with animated underline and filtering
+		const tabBtns = document.querySelectorAll('.tab-btn');
+		const tableRows = document.querySelectorAll('tbody tr');
+		const addStudentBtn = document.getElementById('addStudentBtn');
+		const addTeacherBtn = document.getElementById('addTeacherBtn');
+		
+		tabBtns.forEach(btn => {
+			btn.addEventListener('click', function() {
+				// Remove active class from all tabs
+				tabBtns.forEach(tab => {
+					tab.classList.remove('active');
+					tab.style.color = 'rgba(255,255,255,0.7)';
+					tab.style.borderBottom = '3px solid transparent';
+				});
+				
+				// Add active class to clicked tab
+				this.classList.add('active');
+				this.style.color = '#fff';
+				this.style.borderBottom = '3px solid #84FFC2';
+				
+				// Filter table rows based on selected tab
+				const tabText = this.textContent.trim();
+				
+				// Hide all buttons first
+				addStudentBtn.style.display = 'none';
+				addTeacherBtn.style.display = 'none';
+				
+				tableRows.forEach(row => {
+					const roleCell = row.cells[2]; // Role column is at index 2
+					const roleText = roleCell.textContent.trim();
+					
+					if (tabText === 'All users') {
+						// Show all rows, no add button
+						row.style.display = '';
+					} else if (tabText === 'Students') {
+						// Show only students, show Add Student button
+						if (roleText === 'Student') {
+							row.style.display = '';
+						} else {
+							row.style.display = 'none';
+						}
+						addStudentBtn.style.display = 'block';
+					} else if (tabText === 'Teachers') {
+						// Show only teachers, show Add Teacher button
+						if (roleText === 'Teacher') {
+							row.style.display = '';
+						} else {
+							row.style.display = 'none';
+						}
+						addTeacherBtn.style.display = 'block';
+					}
+				});
+			});
+		});
+	});
+</script>
+

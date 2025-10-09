@@ -36,7 +36,7 @@ namespace ASI.Basecode.WebApp.Controllers
             }
             if (normalizedEmail == "admin@gmail.com" && password == "admin123")
             {
-                return RedirectToAction("Index", "Admin");
+                return RedirectToAction("Dashboard", "Admin");
             }
 
             ModelState.AddModelError(string.Empty, "Invalid email or password.");

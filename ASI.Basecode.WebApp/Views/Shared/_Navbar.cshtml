@@ -69,28 +69,28 @@
         }
         else if (controller == "Admin")
         {
-            <!-- Users -->
-            <a asp-controller="Admin" asp-action="Users"
+            <!-- Courses -->
+            <a asp-controller="Admin" asp-action="Courses"
                class="px-4 py-2 rounded-md text-sm transition-all duration-200 no-underline 
-                    @(action == "Users" ? 
+                    @(action == "Courses" ? 
                     "bg-acadus-green text-white font-bold shadow-sm" : "text-[#337D58] hover:bg-acadus-green/10")">
-                Users
+                Courses
             </a>
 
             <!-- Dashboard -->
-            <a asp-controller="Admin" asp-action="Index"
+            <a asp-controller="Admin" asp-action="Dashboard"
                class="px-4 py-2 rounded-md text-sm transition-all duration-200 no-underline 
-                    @(action == "Index" ? 
+                    @(action == "Dashboard" ? 
                     "bg-acadus-green text-white font-bold shadow-sm" : "text-[#337D58] hover:bg-acadus-green/10")">
                 Dashboard
             </a>
 
-            <!-- Settings -->
-            <a asp-controller="Admin" asp-action="Settings"
+            <!-- Users -->
+            <a asp-controller="Admin" asp-action="Users"
                class="px-4 py-2 rounded-md text-sm transition-all duration-200 no-underline
-                    @(action == "Settings" ? 
+                    @(action == "Users" ? 
                     "bg-acadus-green text-white font-bold shadow-sm" : "text-[#337D58] hover:bg-acadus-green/10")">
-               Settings
+               Users
             </a>
         }
     </nav>
