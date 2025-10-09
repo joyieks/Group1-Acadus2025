@@ -88,7 +88,7 @@
             <!-- Users -->
             <a asp-controller="Admin" asp-action="Users"
                class="px-4 py-2 rounded-md text-sm transition-all duration-200 no-underline
-                    @(action == "Users" ? 
+                    @(action == "Users" || action == "AddStudent" || action == "AddTeacher" ? 
                     "bg-acadus-green text-white font-bold shadow-sm" : "text-[#337D58] hover:bg-acadus-green/10")">
                Users
             </a>
@@ -182,9 +182,9 @@
         }
         else if (controller == "Admin")
         {
-            <a asp-controller="Admin" asp-action="Users" class="block px-3 py-2 rounded-md text-base @(action == "Users" ? "bg-acadus-green text-white font-semibold" : "text-[#337D58] hover:bg-acadus-green/10")">Users</a>
-            <a asp-controller="Admin" asp-action="Index" class="block px-3 py-2 rounded-md text-base @(action == "Index" ? "bg-acadus-green text-white font-semibold" : "text-[#337D58] hover:bg-acadus-green/10")">Dashboard</a>
-            <a asp-controller="Admin" asp-action="Settings" class="block px-3 py-2 rounded-md text-base @(action == "Settings" ? "bg-acadus-green text-white font-semibold" : "text-[#337D58] hover:bg-acadus-green/10")">Settings</a>
+            <a asp-controller="Admin" asp-action="Courses" class="block px-3 py-2 rounded-md text-base @(action == "Courses" ? "bg-acadus-green text-white font-semibold" : "text-[#337D58] hover:bg-acadus-green/10")">Courses</a>
+            <a asp-controller="Admin" asp-action="Dashboard" class="block px-3 py-2 rounded-md text-base @(action == "Dashboard" ? "bg-acadus-green text-white font-semibold" : "text-[#337D58] hover:bg-acadus-green/10")">Dashboard</a>
+            <a asp-controller="Admin" asp-action="Users" class="block px-3 py-2 rounded-md text-base @(action == "Users" || action == "AddStudent" || action == "AddTeacher" ? "bg-acadus-green text-white font-semibold" : "text-[#337D58] hover:bg-acadus-green/10")">Users</a>
         }
     </div>
     <div class="px-4 pt-2 pb-4 border-t border-gray-100 space-y-1">
