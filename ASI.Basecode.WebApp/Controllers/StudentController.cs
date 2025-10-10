@@ -6,15 +6,26 @@ using ASI.Basecode.WebApp.Models;
 
 namespace ASI.Basecode.WebApp.Controllers
 {
+    /// <summary>
+    /// Controller for student-related actions and dashboard views.
+    /// </summary>
     public class StudentController : Controller
     {
         private readonly IConfiguration _configuration;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="StudentController"/> class.
+        /// </summary>
+        /// <param name="configuration">Application configuration.</param>
         public StudentController(IConfiguration configuration)
         {
             _configuration = configuration;
         }
 
+        /// <summary>
+        /// Displays the student dashboard.
+        /// </summary>
+        /// <returns>The dashboard view.</returns>
         [HttpGet]
         public IActionResult Index()
         {
@@ -26,6 +37,10 @@ namespace ASI.Basecode.WebApp.Controllers
             return View(viewModel);
         }
 
+        /// <summary>
+        /// Displays the student's courses.
+        /// </summary>
+        /// <returns>The courses view.</returns>
         [HttpGet]
         public IActionResult Courses()
         {
@@ -37,6 +52,11 @@ namespace ASI.Basecode.WebApp.Controllers
             return View(viewModel);
         }
 
+        /// <summary>
+        /// Displays details for a specific course.
+        /// </summary>
+        /// <param name="courseId">The course identifier.</param>
+        /// <returns>The course details view.</returns>
         [HttpGet]
         public IActionResult CourseDetails(string courseId)
         {
@@ -54,6 +74,11 @@ namespace ASI.Basecode.WebApp.Controllers
             return View(viewModel);
         }
 
+        /// <summary>
+        /// Gets the course title by its identifier.
+        /// </summary>
+        /// <param name="courseId">The course identifier.</param>
+        /// <returns>The course title.</returns>
         private string GetCourseTitleById(string courseId)
         {
             return courseId switch
@@ -66,6 +91,10 @@ namespace ASI.Basecode.WebApp.Controllers
             };
         }
 
+        /// <summary>
+        /// Displays the student's reports.
+        /// </summary>
+        /// <returns>The reports view.</returns>
         [HttpGet]
         public IActionResult Reports()
         {
@@ -76,6 +105,10 @@ namespace ASI.Basecode.WebApp.Controllers
             return View(viewModel);
         }
 
+        /// <summary>
+        /// Displays the student's notifications.
+        /// </summary>
+        /// <returns>The notifications view.</returns>
         [HttpGet]
         public IActionResult Notifications()
         {
@@ -88,6 +121,10 @@ namespace ASI.Basecode.WebApp.Controllers
             return View(model);
         }
 
+        /// <summary>
+        /// Returns the notification dropdown partial view.
+        /// </summary>
+        /// <returns>The notification dropdown partial view.</returns>
         [HttpGet]
         public PartialViewResult NotificationDropdown()
         {
@@ -98,6 +135,10 @@ namespace ASI.Basecode.WebApp.Controllers
             return PartialView("_NotificationDropdown", model);
         }
 
+        /// <summary>
+        /// Gets the count of notifications.
+        /// </summary>
+        /// <returns>The notification count as JSON.</returns>
         [HttpGet]
         public IActionResult NotificationCount()
         {

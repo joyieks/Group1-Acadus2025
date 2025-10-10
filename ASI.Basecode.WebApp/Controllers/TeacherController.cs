@@ -7,15 +7,26 @@ using System.Linq;
 
 namespace ASI.Basecode.WebApp.Controllers
 {
+    /// <summary>
+    /// Controller for teacher-related actions and dashboard statistics.
+    /// </summary>
     public class TeacherController : Controller
     {
         private readonly IConfiguration _configuration;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="TeacherController"/> class.
+        /// </summary>
+        /// <param name="configuration">Application configuration.</param>
         public TeacherController(IConfiguration configuration)
         {
             _configuration = configuration;
         }
 
+        /// <summary>
+        /// Displays the teacher dashboard with statistics.
+        /// </summary>
+        /// <returns>The dashboard view.</returns>
         [HttpGet]
         public async Task<IActionResult> Index()
         {
