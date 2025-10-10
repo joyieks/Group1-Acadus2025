@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using System.Threading.Tasks;
 using System.Linq;
+using ASI.Basecode.WebApp.Models;
 
 namespace ASI.Basecode.WebApp.Controllers
 {
@@ -28,21 +29,34 @@ namespace ASI.Basecode.WebApp.Controllers
         /// </summary>
         /// <returns>The dashboard view.</returns>
         [HttpGet]
-        public async Task<IActionResult> Index()
+        public IActionResult Index()
         {
-            // Initialize Supabase client
-            await AsiBasecodeDBContext.InitializeSupabaseAsync(_configuration);
-            var client = AsiBasecodeDBContext.SupabaseClient;
+            var model = new TeacherDashboardViewModel
+            {
+                TotalActivities = 0,
+                GradedActivities = 0,
+                TotalCoursesHandled = 0
+            };
+            return View(model);
+        }
 
-            // Fetch all users from Supabase (users table is present)
-            var usersResponse = await client.From<SupabaseUser>().Get();
-            var users = usersResponse.Models;
+        /// <summary>
+        /// Displays the teacher's activities view.
+        /// </summary>
+        /// <returns>The activities view.</returns>
+        [HttpGet]
+        public IActionResult Activities()
+        {
+            return View();
+        }
 
-            // Statistics for teacher dashboard
-            ViewBag.StudentCount = users.Count;
-            ViewBag.InstructorCount = 0; // Not available in SupabaseUser
-            ViewBag.CourseCount = 0; // No courses table in Supabase
-
+        /// <summary>
+        /// Displays the teacher's grades view.
+        /// </summary>
+        /// <returns>The grades view.</returns>
+        [HttpGet]
+        public IActionResult Grades()
+        {
             return View();
         }
     }

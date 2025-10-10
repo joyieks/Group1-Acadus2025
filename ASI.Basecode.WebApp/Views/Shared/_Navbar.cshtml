@@ -4,7 +4,7 @@
 }
 
 <!-- Header / Navbar -->
-<header class="bg-white/90 backdrop-blur-sm border-b border-black/10 px-4 md:px-8 py-4 flex justify-between items-center sticky top-0 z-">
+<header class="bg-white/90 backdrop-blur-sm border-b border-black/10 px-4 md:px-8 py-4 flex justify-between items-center sticky top-0 z-50">
     <!-- Logo -->
     <div class="flex items-center gap-2 text-xl font-semibold text-acadus-green">
         <img src="~/img/acaduslogo.png" alt="Acadus Logo" class="h-12" />
@@ -43,12 +43,12 @@
         }
         else if (controller == "Teacher")
         {
-            <!-- Classes -->
-            <a asp-controller="Teacher" asp-action="Classes"
+            <!-- Activities -->
+            <a asp-controller="Teacher" asp-action="Activities"
                class="px-4 py-2 rounded-md text-sm transition-all duration-200 no-underline 
-                    @(action == "Classes" ? 
+                    @(action == "Activities" ? 
                     "bg-acadus-green text-white font-bold shadow-sm" : "text-[#337D58] hover:bg-acadus-green/10")">
-                Classes
+                Activities
             </a>
 
             <!-- Dashboard -->
@@ -59,12 +59,12 @@
                 Dashboard
             </a>
 
-            <!-- Reports -->
-            <a asp-controller="Teacher" asp-action="Reports"
+            <!-- Grades -->
+            <a asp-controller="Teacher" asp-action="Grades"
                class="px-4 py-2 rounded-md text-sm transition-all duration-200 no-underline
-                    @(action == "Reports" ? 
+                    @(action == "Grades" ? 
                     "bg-acadus-green text-white font-bold shadow-sm" : "text-[#337D58] hover:bg-acadus-green/10")">
-               Reports
+               Grades
             </a>
         }
         else if (controller == "Admin")
@@ -176,9 +176,9 @@
         }
         else if (controller == "Teacher")
         {
-            <a asp-controller="Teacher" asp-action="Classes" class="block px-3 py-2 rounded-md text-base @(action == "Classes" ? "bg-acadus-green text-white font-semibold" : "text-[#337D58] hover:bg-acadus-green/10")">Classes</a>
+            <a asp-controller="Teacher" asp-action="Activities" class="block px-3 py-2 rounded-md text-base @(action == "Activities" ? "bg-acadus-green text-white font-semibold" : "text-[#337D58] hover:bg-acadus-green/10")">Activities</a>
             <a asp-controller="Teacher" asp-action="Index" class="block px-3 py-2 rounded-md text-base @(action == "Index" ? "bg-acadus-green text-white font-semibold" : "text-[#337D58] hover:bg-acadus-green/10")">Dashboard</a>
-            <a asp-controller="Teacher" asp-action="Reports" class="block px-3 py-2 rounded-md text-base @(action == "Reports" ? "bg-acadus-green text-white font-semibold" : "text-[#337D58] hover:bg-acadus-green/10")">Reports</a>
+            <a asp-controller="Teacher" asp-action="Grades" class="block px-3 py-2 rounded-md text-base @(action == "Grades" ? "bg-acadus-green text-white font-semibold" : "text-[#337D58] hover:bg-acadus-green/10")">Grades</a>
         }
         else if (controller == "Admin")
         {
