@@ -1,25 +1,28 @@
 using ASI.Basecode.Webapp.Models;
-using ASI.Basecode.WebApp.Models;
 using Microsoft.AspNetCore.Mvc;
-using System;
+using Microsoft.Extensions.Configuration;
 using System.Collections.Generic;
-using static ASI.Basecode.WebApp.Models.StudentCourseDetailsViewModel;
-using static ASI.Basecode.WebApp.Models.StudentDashboardViewModel;
+using ASI.Basecode.WebApp.Models;
 
 namespace ASI.Basecode.WebApp.Controllers
 {
     public class StudentController : Controller
     {
+        private readonly IConfiguration _configuration;
+
+        public StudentController(IConfiguration configuration)
+        {
+            _configuration = configuration;
+        }
+
         [HttpGet]
         public IActionResult Index()
         {
-            var viewModel = new StudentDashboardViewModel();
-
-            // TODO: Replace with database calls
-            // Leave empty to trigger "no data" message for now
-            viewModel.RecentlyGradedTasks = new List<TaskItem>();
-            viewModel.ToBeGradedTasks = new List<TaskItem>();
-
+            var viewModel = new StudentDashboardViewModel
+            {
+                RecentlyGradedTasks = new List<StudentDashboardViewModel.TaskItem>(),
+                ToBeGradedTasks = new List<StudentDashboardViewModel.TaskItem>()
+            };
             return View(viewModel);
         }
 
@@ -31,30 +34,27 @@ namespace ASI.Basecode.WebApp.Controllers
                 UserName = "First Name",
                 Courses = new List<StudentCoursesViewModel.CourseItem>()
             };
-
             return View(viewModel);
         }
 
-        public IActionResult CourseDetails(string? courseId)
+        [HttpGet]
+        public IActionResult CourseDetails(string courseId)
         {
             var viewModel = new StudentCourseDetailsViewModel
             {
                 CourseId = courseId ?? "default",
-                //CourseTitle = GetCourseTitleById(),
-                OverallGPA = 0,  // can be replaced with real data later
+                OverallGPA = 0,
                 CompletedTasks = 0,
                 TotalTasks = 0,
                 PendingTasks = 0,
-                Activities = new List<StudentCourseDetailsViewModel.ActivityItem>(), // empty list
-                Appeals = new List<StudentCourseDetailsViewModel.AppealItem>(),      // empty list
-                Feedbacks = new List<StudentCourseDetailsViewModel.FeedbackItem>()   // empty list
+                Activities = new List<StudentCourseDetailsViewModel.ActivityItem>(),
+                Appeals = new List<StudentCourseDetailsViewModel.AppealItem>(),
+                Feedbacks = new List<StudentCourseDetailsViewModel.FeedbackItem>()
             };
-
-            // TODO: Replace with actual data retrieval later
             return View(viewModel);
         }
 
-        private string GetCourseTitleById(string? courseId)
+        private string GetCourseTitleById(string courseId)
         {
             return courseId switch
             {
@@ -66,13 +66,13 @@ namespace ASI.Basecode.WebApp.Controllers
             };
         }
 
+        [HttpGet]
         public IActionResult Reports()
         {
             var viewModel = new StudentReportViewModel
             {
-                Reports = new List<StudentReportViewModel.ReportItem>() // Empty list
+                Reports = new List<StudentReportViewModel.ReportItem>()
             };
-
             return View(viewModel);
         }
 
@@ -81,12 +81,10 @@ namespace ASI.Basecode.WebApp.Controllers
         {
             var model = new NotificationsViewModel
             {
-                Notifications = new List<NotificationsViewModel.NotificationItem>() // no seeded items
+                Notifications = new List<NotificationsViewModel.NotificationItem>()
             };
-
             if (!model.HasData)
                 ViewBag.NoDataMessage = "No notifications available at the moment.";
-
             return View(model);
         }
 
@@ -103,7 +101,7 @@ namespace ASI.Basecode.WebApp.Controllers
         [HttpGet]
         public IActionResult NotificationCount()
         {
-            var count = 0; // sync with model above; replace with real count when available
+            var count = 0;
             return Json(new { count });
         }
     }
