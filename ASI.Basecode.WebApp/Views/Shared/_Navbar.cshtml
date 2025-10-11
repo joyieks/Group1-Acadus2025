@@ -97,22 +97,7 @@
 
     <!-- Right side: User + Notifications (desktop) -->
     <div class="hidden md:flex items-center gap-4 relative">
-        <!-- Notifications Icon Button -->
-        <button id="notifBtn" type="button" class="relative text-gray-600 hover:text-gray-800 transition-colors">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                      d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002
-                     6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67
-                     6.165 6 8.388 6 11v3.159c0 .538-.214
-                     1.055-.595 1.436L4 17h5m6 0v1a3
-                     3 0 11-6 0 0-1m6 0H9" />
-            </svg>
-            <!-- Dot indicator (shown when there are notifications) -->
-            <span id="notifDot" class="absolute -top-1 -right-1 bg-red-500 w-2 h-2 rounded-full"></span>
-        </button>
-
-        <!-- Dropdown Panel Container (fixed to overlay page content) -->
-        <div id="notifPanel" class="hidden fixed right-6 top-16 z-[100000]"></div>
+        @await Component.InvokeAsync("Notifications")
 
         <!-- User Info -->
         <div class="flex items-center gap-3 relative">

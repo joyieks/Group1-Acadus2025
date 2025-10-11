@@ -1,0 +1,33 @@
+@model ASI.Basecode.WebApp.Models.GradebookViewModel
+
+<!-- Table Container -->
+<div style="background:#ffffff; border-radius:12px; padding:32px; box-shadow:0 1px 3px rgba(0,0,0,0.1); overflow-x:auto;">
+    <table id="gradebookTable" class="table table-striped" style="width:100%; border-collapse:collapse; background:#ffffff; min-width:800px;">
+        <thead>
+            <tr style="background:#059669; border-bottom:2px solid #e5e7eb;">
+                <th style="padding:12px 16px; text-align:left; font-weight:700; color:#fff; position:sticky; left:0; background:#059669; z-index:1;">Last Name</th>
+                <th style="padding:12px 16px; text-align:left; font-weight:700; color:#fff; position:sticky; left:120px; background:#059669; z-index:1;">First Name</th>
+                @foreach (var activity in Model.Activities)
+                {
+                    <th style="padding:12px 16px; text-align:left; font-weight:700; color:#fff;">@activity</th>
+                }
+                <th style="padding:12px 16px; text-align:left; font-weight:700; color:#fff;">Total Grade</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var student in Model.StudentGrades)
+            {
+                <tr style="border-bottom:1px solid #e5e7eb;">
+                    <td style="padding:16px; color:#111827; position:sticky; left:0; background:#ffffff; z-index:1;">@student.LastName</td>
+                    <td style="padding:16px; color:#111827; position:sticky; left:120px; background:#ffffff; z-index:1;">@student.FirstName</td>
+                    @foreach (var activity in Model.Activities)
+                    {
+                        var grade = student.ActivityGrades.ContainsKey(activity) ? student.ActivityGrades[activity] : null;
+                        <td style="padding:16px; color:#111827;">@(grade.HasValue ? grade.Value.ToString("F2") : "-")</td>
+                    }
+                    <td style="padding:16px; color:#111827; font-weight:600;">@(student.TotalGrade.HasValue ? student.TotalGrade.Value.ToString("F2") : "-")</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
