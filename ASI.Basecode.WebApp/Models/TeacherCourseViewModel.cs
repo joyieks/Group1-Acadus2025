@@ -30,5 +30,10 @@ namespace ASI.Basecode.WebApp.Models
         /// </summary>
         [Required]
         public string CardColor { get; set; }
+
+        /// <summary>
+        /// Gets or sets the course ID.
+        /// </summary>
+        public int Id { get; set; }
     }
 }

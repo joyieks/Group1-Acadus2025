@@ -1,0 +1,112 @@
+@model ASI.Basecode.WebApp.Models.TeacherCourseViewModel
+@{
+    Layout = "~/Views/Shared/_AuthenticatedLayout.cshtml";
+    ViewData["Title"] = "Full Course View";
+}
+
+<style>
+    @@keyframes bounce {
+        0%, 20%, 50%, 80%, 100% {
+            transform: translateY(0);
+        }
+        40% {
+            transform: translateY(-10px);
+        }
+        60% {
+            transform: translateY(-5px);
+        }
+    }
+    .bounce-cta {
+        animation: bounce 2s infinite;
+    }
+</style>
+
+<!-- Hero Section -->
+<section class="hero-section" style="min-height:80vh; background:#E8F9E8; display:flex; align-items:center; justify-content:center; text-align:center; position:relative;">
+    <a href="/Teacher/Courses" style="position:absolute; top:20px; left:20px; background:#ffffff; color:#059669; border:1px solid #d1d5db; border-radius:8px; padding:8px 16px; font-weight:600; text-decoration:none; transition:background 0.3s; display:flex; align-items:center; gap:8px;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M19 12H5"></path>
+            <path d="M12 19l-7-7 7-7"></path>
+        </svg>
+        Back to Courses
+    </a>
+    <div class="container" style="max-width: 1200px; margin: 0 auto; padding: 0 8px;">
+        <p style="margin:0 0 4px 0; color:#4b5563; font-size:24px;">@Model.CourseCode</p>
+        <h1 style="font-size:64px; font-weight:800; margin:0 0 4px 0; color:#111827;">@Model.CourseTitle</h1>
+        <p style="margin:0 0 24px 0; color:#4b5563; font-size:24px;">@Model.SemesterInfo</p>
+        <p style="margin:0 0 32px 0; color:#6b7280; font-size:16px;">Manage your course students, view top performers, and access quick actions.</p>
+        <a href="#students-section" class="bounce-cta" style="background:#d1fae5; color:#065f46; border:none; border-radius:16px; padding:12px 32px; font-weight:600; text-decoration:none; display:inline-block; transition:background 0.3s;">↓ Scroll down to see more ↓</a>
+    </div>
+</section>
+
+<!-- White Section for Students -->
+<section id="students-section" style="background:#ffffff; padding: 40px 0;">
+    <div class="container" style="max-width: 1200px; margin: 0 auto; padding: 0 16px;">
+        <h2 style="margin:0 0 24px 0; font-weight:800; font-size:24px; color:#111827;">Student List</h2>
+        <!-- Search bar -->
+        <div style="display:flex; justify-content:flex-start; align-items:center; margin-bottom:24px; gap:12px;">
+            <input type="text" placeholder="Search for a student ID or name" style="flex:1; max-width:400px; padding:10px 16px; border:1px solid #d1d5db; border-radius:8px; font-size:14px; background:#f3f4f6;">
+            <button style="background:#059669; color:#fff; border:none; border-radius:8px; padding:10px 24px; font-weight:600; cursor:pointer;">Search</button>
+        </div>
+        @await Component.InvokeAsync("StudentTable")
+    </div>
+</section>
+
+@section Scripts {
+    <style>
+        /* Pagination button styles similar to RecentActivity */
+        .dataTables_paginate .paginate_button {
+            background: transparent !important;
+            border: none !important;
+            border-radius: 8px !important;
+            padding: 10px !important;
+            color: #374151 !important;
+            cursor: pointer !important;
+            transition: background-color 0.2s !important;
+            margin: 0 2px !important;
+        }
+        .dataTables_paginate .paginate_button:hover {
+            background: #F2F7F2 !important; /* Lighter, more grayish green */
+        }
+        .dataTables_paginate .paginate_button.current {
+            background: #E0F0E0 !important; /* A step darker */
+            font-weight: bold !important;
+        }
+        .dataTables_paginate .paginate_button.disabled {
+            opacity: 0.5 !important;
+            cursor: not-allowed !important;
+        }
+    </style>
+    <script>
+        $(document).ready(function() {
+            $('#studentTable').DataTable({
+                "pageLength": 10,
+                "lengthChange": false,
+                "searching": false,
+                "ordering": true,
+                "info": true,
+                "paging": true,
+                "language": {
+                    "paginate": {
+                        "previous": "Prev",
+                        "next": "Next"
+                    }
+                }
+            });
+        });
+    </script>
+}
+
+<!-- Green Section with Top Students and Quick Actions -->
+<section style="background:#E8F9E8; padding: 40px 0;">
+    <div class="container" style="max-width: 1200px; margin: 0 auto; padding: 0 16px;">
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:24px;">
+            <div>
+                @await Component.InvokeAsync("TopStudents")
+            </div>
+            <div>
+                @await Component.InvokeAsync("QuickActions")
+            </div>
+        </div>
+    </div>
+</section>
