@@ -1,0 +1,51 @@
+@model IEnumerable<ASI.Basecode.WebApp.Controllers.ViewComponents.TopStudentViewModel>
+
+<div style="background:#ffffff; border-radius:12px; padding:24px; box-shadow:0 1px 3px rgba(0,0,0,0.1);">
+    <h3 style="margin:0 0 16px 0; font-size:20px; font-weight:700; color:#111827;">Top Students</h3>
+    <table style="width:100%; border-collapse:collapse;">
+        <thead>
+            <tr style="background:#059669; border-bottom:2px solid #e5e7eb;">
+                <th style="padding:8px 12px; text-align:left; font-weight:700; color:#fff; font-size:14px;">ID Number</th>
+                <th style="padding:8px 12px; text-align:left; font-weight:700; color:#fff; font-size:14px;">First Name</th>
+                <th style="padding:8px 12px; text-align:left; font-weight:700; color:#fff; font-size:14px;">Last Name</th>
+                <th style="padding:8px 12px; text-align:left; font-weight:700; color:#fff; font-size:14px;">Grade</th>
+            </tr>
+        </thead>
+        <tbody>
+            @{
+                int index = 0;
+                foreach (var student in Model)
+                {
+                    string bgColor = "";
+                    if (index == 0)
+                    {
+                        bgColor = "rgba(119, 247, 127, 0.55)"; // #77F77F at 55%
+                    }
+                    else if (index == 1)
+                    {
+                        bgColor = "rgba(130, 220, 136, 0.55)"; // #82DC88 at 55%
+                    }
+                    else if (index == 2)
+                    {
+                        bgColor = "rgba(119, 247, 127, 0.4)"; // lower opacity
+                    }
+                    else if (index == 3)
+                    {
+                        bgColor = "rgba(130, 220, 136, 0.4)"; // lower
+                    }
+                    else
+                    {
+                        bgColor = "rgba(119, 247, 127, 0.3)"; // even lower
+                    }
+                    <tr style="background:@bgColor; border-bottom:1px solid #e5e7eb;">
+                        <td style="padding:12px; color:#111827; font-size:14px;">@student.IdNumber</td>
+                        <td style="padding:12px; color:#111827; font-size:14px;">@student.FirstName</td>
+                        <td style="padding:12px; color:#111827; font-size:14px;">@student.LastName</td>
+                        <td style="padding:12px; color:#111827; font-size:14px; font-weight:600;">@student.Grade</td>
+                    </tr>
+                    index++;
+                }
+            }
+        </tbody>
+    </table>
+</div>
