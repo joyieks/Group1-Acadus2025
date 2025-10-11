@@ -32,6 +32,60 @@
     </div>
 </section>
 
-@section Scripts {}
+@section Scripts {
+    <style>
+        /* Subtler table outlines */
+        #recentActivityTable {
+            border: none !important;
+        }
+        #recentActivityTable thead th {
+            border-bottom: 1px solid #f3f4f6 !important;
+        }
+        #recentActivityTable tbody td {
+            border-bottom: 1px solid #f3f4f6 !important;
+        }
+
+        /* Pagination button styles to match CourseCard buttons */
+        .dataTables_paginate .paginate_button {
+            background: transparent !important;
+            border: none !important;
+            border-radius: 8px !important;
+            padding: 10px !important;
+            color: #374151 !important;
+            cursor: pointer !important;
+            transition: background-color 0.2s !important;
+            margin: 0 2px !important;
+        }
+        .dataTables_paginate .paginate_button:hover {
+            background: #F2F7F2 !important; /* Lighter, more grayish green */
+        }
+        .dataTables_paginate .paginate_button.current {
+            background: #E0F0E0 !important; /* A step darker */
+            font-weight: bold !important;
+        }
+        .dataTables_paginate .paginate_button.disabled {
+            opacity: 0.5 !important;
+            cursor: not-allowed !important;
+        }
+    </style>
+    <script>
+        $(document).ready(function() {
+            $('#recentActivityTable').DataTable({
+                paging: true,
+                pageLength: 5,
+                searching: false,
+                ordering: true,
+                info: false,
+                lengthChange: false,
+                "language": {
+                    "paginate": {
+                        "previous": "Prev",
+                        "next": "Next"
+                    }
+                }
+            });
+        });
+    </script>
+}
 
 
