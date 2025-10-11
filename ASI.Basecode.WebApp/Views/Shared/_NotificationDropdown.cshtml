@@ -1,0 +1,39 @@
+@model ASI.Basecode.Webapp.Models.NotificationsViewModel
+
+<div class="w-80 bg-white shadow-lg rounded-xl border border-gray-100 font-[Poppins]" data-count="@Model.Notifications.Count">
+    <div class="p-4 border-b border-gray-200 flex justify-between items-center">
+        <h3 class="font-semibold text-[#337D58] text-sm">Notifications</h3>
+        <span class="text-xs text-gray-400">@Model.Notifications.Count new</span>
+    </div>
+
+    @if (!Model.HasData)
+    {
+        <div class="p-6 text-center text-gray-500 text-sm">
+            No notifications available.
+        </div>
+    }
+    else
+    {
+        <ul class="divide-y divide-gray-100 max-h-60 overflow-y-auto">
+            @foreach (var notif in Model.Notifications.Take(3))
+            {
+                <li class="p-3 hover:bg-gray-50 transition">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="font-medium text-sm text-gray-800">@notif.Title</p>
+                            <p class="text-xs text-gray-500">@notif.Message</p>
+                        </div>
+                        <span class="text-[10px] text-gray-400">@notif.Date.ToString("MMM dd")</span>
+                    </div>
+                </li>
+            }
+        </ul>
+    }
+
+    <div class="border-t border-gray-200 p-3 text-center">
+        <a href="/@ViewContext.RouteData.Values["controller"]/Notifications"
+           class="text-[#337D58] text-sm font-medium hover:underline">
+            View All Notifications
+        </a>
+    </div>
+</div>

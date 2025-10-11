@@ -1,0 +1,74 @@
+@model ASI.Basecode.WebApp.Models.GradebookViewModel
+@{
+    Layout = "~/Views/Shared/_AuthenticatedLayout.cshtml";
+    ViewData["Title"] = "Gradebook";
+}
+
+<style>
+    @@keyframes bounce {
+        0%, 20%, 50%, 80%, 100% {
+            transform: translateY(0);
+        }
+        40% {
+            transform: translateY(-10px);
+        }
+        60% {
+            transform: translateY(-5px);
+        }
+    }
+    .bounce-cta {
+        animation: bounce 2s infinite;
+    }
+</style>
+
+<!-- Hero Section -->
+<section class="hero-section" style="min-height:60vh; background:#E8F9E8; display:flex; align-items:center; justify-content:center; text-align:center; position:relative;">
+    <a href="@Url.Action("FullCourseView", "Teacher", new { id = Model.Id })" style="position:absolute; top:20px; left:20px; background:#ffffff; color:#059669; border:1px solid #d1d5db; border-radius:8px; padding:8px 16px; font-weight:600; text-decoration:none; transition:background 0.3s; display:flex; align-items:center; gap:8px;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M19 12H5"></path>
+            <path d="M12 19l-7-7 7-7"></path>
+        </svg>
+        Back to Course
+    </a>
+    <div class="container" style="max-width: 1200px; margin: 0 auto; padding: 0 8px;">
+        <p style="margin:0 0 4px 0; color:#4b5563; font-size:24px;">@Model.CourseCode</p>
+        <h1 style="font-size:48px; font-weight:800; margin:0 0 4px 0; color:#111827;">Gradebook</h1>
+        <p style="margin:0 0 24px 0; color:#4b5563; font-size:20px;">@Model.CourseTitle - @Model.SemesterInfo</p>
+        <p style="margin:0 0 32px 0; color:#6b7280; font-size:16px;">View and manage student grades for all activities.</p>
+    </div>
+</section>
+
+<!-- White Section for Gradebook -->
+<section style="background:#ffffff; padding: 40px 0;">
+    <div class="container" style="max-width: 1200px; margin: 0 auto; padding: 0 16px;">
+        @await Component.InvokeAsync("Gradebook", Model)
+    </div>
+</section>
+
+@section Scripts {
+    <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.4/js/dataTables.bootstrap5.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            $('#gradebookTable').DataTable({
+                "paging": false,
+                "scrollX": true,
+                "searching": true,
+                "ordering": true,
+                "info": false,
+                "lengthChange": false
+            });
+
+            // Custom search functionality
+            $('#searchBtn').on('click', function() {
+                var searchTerm = $('#gradebookSearch').val();
+                $('#gradebookTable').DataTable().search(searchTerm).draw();
+            });
+
+            $('#gradebookSearch').on('keyup', function() {
+                var searchTerm = $(this).val();
+                $('#gradebookTable').DataTable().search(searchTerm).draw();
+            });
+        });
+    </script>
+}
