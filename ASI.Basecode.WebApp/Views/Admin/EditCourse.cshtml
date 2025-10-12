@@ -1,0 +1,314 @@
+@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Edit Course</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+        }
+
+        .modal-backdrop {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            animation: fadeIn 0.3s ease;
+            overflow-y: auto;
+            padding: 20px;
+        }
+
+        @@keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @@keyframes slideUp {
+            from { transform: translateY(30px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .modal-content {
+            background: #ffffff;
+            border-radius: 16px;
+            width: 100%;
+            max-width: 900px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+            animation: slideUp 0.3s ease;
+            margin: auto;
+        }
+
+        .section-white {
+            background: #ffffff;
+            border-radius: 12px;
+            padding: 32px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            margin-bottom: 24px;
+        }
+
+        .section-green {
+            background: #E8F9E8;
+            border-radius: 12px;
+            padding: 32px;
+            margin-bottom: 24px;
+        }
+
+        .confirmation-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            animation: fadeIn 0.2s ease;
+        }
+
+        .confirmation-modal.show {
+            display: flex;
+        }
+
+        .confirmation-box {
+            background: white;
+            border-radius: 12px;
+            padding: 32px;
+            max-width: 400px;
+            width: 90%;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2);
+            animation: slideUp 0.3s ease;
+            text-align: center;
+        }
+
+        .confirmation-icon {
+            width: 64px;
+            height: 64px;
+            background: #E8F9E8;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            font-size: 32px;
+        }
+
+        .confirmation-title {
+            font-size: 20px;
+            font-weight: 800;
+            color: #111827;
+            margin-bottom: 12px;
+        }
+
+        .confirmation-message {
+            font-size: 14px;
+            color: #6b7280;
+            margin-bottom: 24px;
+        }
+
+        .confirmation-buttons {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+            font-family: inherit;
+        }
+    </style>
+</head>
+<body>
+    <div class="modal-backdrop" onclick="if(event.target === this) window.history.back()">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <!-- Header -->
+            <div style="background:#E8F9E8; padding:24px 32px; border-radius:16px 16px 0 0; display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #d1fae5;">
+                <h2 style="font-size:24px; font-weight:800; color:#111827; margin:0;">Edit Course</h2>
+                <button onclick="window.history.back()" style="background:none; border:none; font-size:28px; color:#6b7280; cursor:pointer; width:32px; height:32px; border-radius:6px; transition:all 0.2s;">&times;</button>
+            </div>
+
+            <!-- Body -->
+            <div style="padding:32px; background:#f9fafb;">
+                
+                <!-- Section 1: Course Information -->
+                <div class="section-white">
+                    <h3 style="font-size:18px; font-weight:800; color:#111827; margin:0 0 24px 0;">Section 1: Course Information</h3>
+                    <div style="display:grid; grid-template-columns:repeat(2,1fr); gap:20px;">
+                        <div>
+                            <label style="display:block; margin-bottom:6px; font-size:14px; font-weight:600; color:#111827;">Course Code</label>
+                            <input type="text" value="92322" readonly style="width:100%; padding:10px 12px; border:1px solid #d1d5db; border-radius:6px; font-size:14px; background:#f3f4f6; color:#6b7280;">
+                        </div>
+                        <div>
+                            <label style="display:block; margin-bottom:6px; font-size:14px; font-weight:600; color:#111827;">Status <span style="color:#dc2626;">*</span></label>
+                            <select required style="width:100%; padding:10px 12px; border:1px solid #d1d5db; border-radius:6px; font-size:14px;">
+                                <option selected>Active</option>
+                                <option>Inactive</option>
+                            </select>
+                        </div>
+                        <div style="grid-column:1/-1;">
+                            <label style="display:block; margin-bottom:6px; font-size:14px; font-weight:600; color:#111827;">Course Name <span style="color:#dc2626;">*</span></label>
+                            <input type="text" value="PHP Programming" required style="width:100%; padding:10px 12px; border:1px solid #d1d5db; border-radius:6px; font-size:14px;">
+                        </div>
+                        <div style="grid-column:1/-1;">
+                            <label style="display:block; margin-bottom:6px; font-size:14px; font-weight:600; color:#111827;">Description</label>
+                            <textarea style="width:100%; padding:10px 12px; border:1px solid #d1d5db; border-radius:6px; font-size:14px;">Introduction to PHP programming language covering basic to advanced concepts including web development, database integration, and modern PHP frameworks.</textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Section 2: Enrollment Information -->
+                <div class="section-green">
+                    <h3 style="font-size:18px; font-weight:800; color:#111827; margin:0 0 24px 0;">Section 2: Enrollment Information</h3>
+                    <div style="display:grid; grid-template-columns:repeat(2,1fr); gap:20px;">
+                        <div>
+                            <label style="display:block; margin-bottom:6px; font-size:14px; font-weight:600; color:#111827;">Enrolled Students</label>
+                            <input type="number" value="35" readonly style="width:100%; padding:10px 12px; border:1px solid #d1d5db; border-radius:6px; font-size:14px; background:#f3f4f6; color:#6b7280;">
+                        </div>
+                        <div>
+                            <label style="display:block; margin-bottom:6px; font-size:14px; font-weight:600; color:#111827;">Max Capacity <span style="color:#dc2626;">*</span></label>
+                            <input type="number" value="40" required style="width:100%; padding:10px 12px; border:1px solid #d1d5db; border-radius:6px; font-size:14px; background:#ffffff;">
+                        </div>
+                        <div>
+                            <label style="display:block; margin-bottom:6px; font-size:14px; font-weight:600; color:#111827;">Department <span style="color:#dc2626;">*</span></label>
+                            <select required style="width:100%; padding:10px 12px; border:1px solid #d1d5db; border-radius:6px; font-size:14px; background:#ffffff;">
+                                <option value="">Select Department</option>
+                                <option selected>Computer Science</option>
+                                <option>Information Technology</option>
+                                <option>Engineering</option>
+                                <option>Business Administration</option>
+                                <option>Accountancy</option>
+                                <option>Psychology</option>
+                                <option>Nursing</option>
+                                <option>Education</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label style="display:block; margin-bottom:6px; font-size:14px; font-weight:600; color:#111827;">Year Level <span style="color:#dc2626;">*</span></label>
+                            <select required style="width:100%; padding:10px 12px; border:1px solid #d1d5db; border-radius:6px; font-size:14px; background:#ffffff;">
+                                <option value="">Select Year Level</option>
+                                <option>1st Year</option>
+                                <option>2nd Year</option>
+                                <option selected>3rd Year</option>
+                                <option>4th Year</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Section 3: Schedule Information -->
+                <div class="section-white">
+                    <h3 style="font-size:18px; font-weight:800; color:#111827; margin:0 0 24px 0;">Section 3: Schedule Information</h3>
+                    <div style="display:grid; grid-template-columns:repeat(2,1fr); gap:20px;">
+                        <div>
+                            <label style="display:block; margin-bottom:6px; font-size:14px; font-weight:600; color:#111827;">Schedule <span style="color:#dc2626;">*</span></label>
+                            <input type="text" value="MWF 10:00 AM - 11:30 AM" required style="width:100%; padding:10px 12px; border:1px solid #d1d5db; border-radius:6px; font-size:14px;">
+                        </div>
+                        <div>
+                            <label style="display:block; margin-bottom:6px; font-size:14px; font-weight:600; color:#111827;">Room <span style="color:#dc2626;">*</span></label>
+                            <input type="text" value="CCS Lab 301" required style="width:100%; padding:10px 12px; border:1px solid #d1d5db; border-radius:6px; font-size:14px;">
+                        </div>
+                        <div>
+                            <label style="display:block; margin-bottom:6px; font-size:14px; font-weight:600; color:#111827;">Instructor <span style="color:#dc2626;">*</span></label>
+                            <input type="text" value="Prof. Juan Dela Cruz" required style="width:100%; padding:10px 12px; border:1px solid #d1d5db; border-radius:6px; font-size:14px;">
+                        </div>
+                        <div>
+                            <label style="display:block; margin-bottom:6px; font-size:14px; font-weight:600; color:#111827;">Semester <span style="color:#dc2626;">*</span></label>
+                            <input type="text" value="1st Semester, AY 2024-2025" required style="width:100%; padding:10px 12px; border:1px solid #d1d5db; border-radius:6px; font-size:14px;">
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Footer -->
+            <div style="padding:20px 32px; background:#f9fafb; border-top:1px solid #e5e7eb; border-radius:0 0 16px 16px; display:flex; justify-content:center; gap:16px;">
+                <button onclick="window.history.back()" style="padding:12px 32px; border-radius:6px; font-size:14px; font-weight:600; cursor:pointer; background:#ffffff; color:#4b5563; border:1px solid #d1d5db;">Cancel</button>
+                <button onclick="showConfirmation()" style="padding:12px 32px; border-radius:6px; font-size:14px; font-weight:600; cursor:pointer; background:#059669; color:#ffffff; border:none;">Save Changes</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Confirmation Modal -->
+    <div id="confirmationModal" class="confirmation-modal">
+        <div class="confirmation-box">
+            <div class="confirmation-icon">✓</div>
+            <h3 class="confirmation-title">Save Changes?</h3>
+            <p class="confirmation-message">Are you sure you want to save the changes to this course's information?</p>
+            <div class="confirmation-buttons">
+                <button onclick="closeConfirmation()" style="padding:10px 24px; border-radius:6px; font-size:14px; font-weight:600; cursor:pointer; background:#ffffff; color:#4b5563; border:1px solid #d1d5db;">Cancel</button>
+                <button onclick="confirmSave()" style="padding:10px 24px; border-radius:6px; font-size:14px; font-weight:600; cursor:pointer; background:#059669; color:#ffffff; border:none;">Yes, Save</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function showConfirmation() {
+            document.getElementById('confirmationModal').classList.add('show');
+        }
+
+        function closeConfirmation() {
+            document.getElementById('confirmationModal').classList.remove('show');
+        }
+
+        function confirmSave() {
+            // TODO: Implement actual save functionality
+            closeConfirmation();
+            
+            // Show success message
+            const modal = document.getElementById('confirmationModal');
+            const box = modal.querySelector('.confirmation-box');
+            box.innerHTML = `
+                <div class="confirmation-icon" style="background:#d1fae5;">✓</div>
+                <h3 class="confirmation-title">Changes Saved!</h3>
+                <p class="confirmation-message">The course information has been updated successfully.</p>
+                <button onclick="window.history.back()" style="padding:10px 24px; border-radius:6px; font-size:14px; font-weight:600; cursor:pointer; background:#059669; color:#ffffff; border:none; margin-top:8px;">Close</button>
+            `;
+            modal.classList.add('show');
+        }
+
+        // Close on ESC key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                const confirmModal = document.getElementById('confirmationModal');
+                if (confirmModal.classList.contains('show')) {
+                    closeConfirmation();
+                } else {
+                    window.history.back();
+                }
+            }
+        });
+
+        // Close confirmation modal when clicking outside
+        document.getElementById('confirmationModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeConfirmation();
+            }
+        });
+    </script>
+</body>
+</html>
+

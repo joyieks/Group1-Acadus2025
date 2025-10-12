@@ -1,10 +1,22 @@
 using Microsoft.AspNetCore.Mvc;
 using Acadus___Alliance_Project_2025.Models;
+using ASI.Basecode.Services.Interfaces;
+using Microsoft.Extensions.Configuration;
+using System.Threading.Tasks;
+using System;
 
 namespace ASI.Basecode.WebApp.Controllers
 {
     public class AuthController : Controller
     {
+        private readonly ISupabaseAuthService _supabaseAuthService;
+        private readonly IConfiguration _configuration;
+
+        public AuthController(ISupabaseAuthService supabaseAuthService, IConfiguration configuration)
+        {
+            _supabaseAuthService = supabaseAuthService;
+            _configuration = configuration;
+        }
         public IActionResult Index()
         {
             return View();
@@ -15,7 +27,7 @@ namespace ASI.Basecode.WebApp.Controllers
         }
 
         [HttpPost]
-        public IActionResult Login(LoginModel model)
+        public async Task<IActionResult> Login(LoginModel model)
         {
             if (!ModelState.IsValid)
             {
@@ -25,18 +37,59 @@ namespace ASI.Basecode.WebApp.Controllers
             var normalizedEmail = model.Email.Trim().ToLowerInvariant();
             var password = model.Password;
 
-            // Hardcoded users → simple role routing
-            if (normalizedEmail == "student@gmail.com" && password == "student123")
+            try
             {
-                return RedirectToAction("Index", "Student");
+                // Try Supabase Auth first
+                var supabaseClient = await _supabaseAuthService.GetSupabaseClientForAuthAsync();
+                var session = await supabaseClient.Auth.SignIn(normalizedEmail, password);
+                
+                if (session?.User != null)
+                {
+                    // Check if user is confirmed
+                    if (session.User.EmailConfirmedAt.HasValue)
+                    {
+                        // Determine user role by checking database tables
+                        var userRole = await _supabaseAuthService.GetUserRoleAsync(session.User.Id);
+                        
+                        // Redirect based on user role
+                        switch (userRole)
+                        {
+                            case "Teacher":
+                                return RedirectToAction("Index", "Teacher");
+                            case "Student":
+                                return RedirectToAction("Index", "Student");
+                            default:
+                                // Default to Student if role not recognized
+                                return RedirectToAction("Index", "Student");
+                        }
+                    }
+                    else
+                    {
+                        ModelState.AddModelError(string.Empty, "Please confirm your email before logging in.");
+                        return View(model);
+                    }
+                }
             }
-            if (normalizedEmail == "teacher@gmail.com" && password == "teacher123")
+            catch (System.Exception ex)
             {
-                return RedirectToAction("Index", "Teacher");
+                // Log the error for debugging
+                Console.WriteLine($"Supabase Auth Error: {ex.Message}");
             }
-            if (normalizedEmail == "admin@gmail.com" && password == "admin123")
+
+            // Fallback to hardcoded users for admin/teacher access (for development only)
+            // TODO: Remove these hardcoded credentials in production
+            var adminEmail = _configuration["Admin:Email"] ?? "admin@gmail.com";
+            var adminPassword = _configuration["Admin:Password"] ?? "admin123";
+            var teacherEmail = _configuration["Teacher:Email"] ?? "teacher@gmail.com";
+            var teacherPassword = _configuration["Teacher:Password"] ?? "teacher123";
+            
+            if (normalizedEmail == adminEmail && password == adminPassword)
             {
                 return RedirectToAction("Dashboard", "Admin");
+            }
+            if (normalizedEmail == teacherEmail && password == teacherPassword)
+            {
+                return RedirectToAction("Index", "Teacher");
             }
 
             ModelState.AddModelError(string.Empty, "Invalid email or password.");
@@ -97,6 +150,16 @@ namespace ASI.Basecode.WebApp.Controllers
 
             // Redirect to success or login
             return RedirectToAction("Login");
+        }
+
+        /// <summary>
+        /// Handles password setup from Supabase email link
+        /// </summary>
+        [HttpGet]
+        public IActionResult SetPassword()
+        {
+            // Redirect to AccountController's SetPassword action
+            return RedirectToAction("SetPassword", "Account");
         }
     }
 }

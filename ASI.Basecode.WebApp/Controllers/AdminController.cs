@@ -1,9 +1,21 @@
 using Microsoft.AspNetCore.Mvc;
+using ASI.Basecode.Services.Interfaces;
+using ASI.Basecode.Services.ServiceModels;
+using System.Threading.Tasks;
 
 namespace ASI.Basecode.WebApp.Controllers
 {
     public class AdminController : Controller
     {
+        private readonly IStudentService _studentService;
+        private readonly ITeacherService _teacherService;
+
+        public AdminController(IStudentService studentService, ITeacherService teacherService)
+        {
+            _studentService = studentService;
+            _teacherService = teacherService;
+        }
+
         [HttpGet]
         public IActionResult Dashboard()
         {
@@ -19,13 +31,44 @@ namespace ASI.Basecode.WebApp.Controllers
         [HttpGet]
         public IActionResult AddStudent()
         {
-            return View();
+            return View(new StudentViewModel());
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> AddStudent(StudentViewModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                return View(model);
+            }
+
+            try
+            {
+                var success = await _studentService.CreateStudentAsync(model);
+                
+                if (success)
+                {
+                    TempData["SuccessMessage"] = $"Student {model.FirstName} {model.LastName} has been successfully created! A confirmation email has been sent to {model.Email}. The student must click the confirmation link in the email before they can log in. The temporary password has been logged for admin reference.";
+                    return RedirectToAction("Users");
+                }
+                else
+                {
+                    ModelState.AddModelError(string.Empty, "Failed to create student. Please try again.");
+                    return View(model);
+                }
+            }
+            catch (System.Exception ex)
+            {
+                ModelState.AddModelError(string.Empty, $"Error creating student: {ex.Message}");
+                return View(model);
+            }
         }
 
         [HttpGet]
         public IActionResult AddTeacher()
         {
-            return View();
+            return RedirectToAction("AddTeacher", "Teacher");
         }
 
         [HttpGet]
@@ -70,6 +113,26 @@ namespace ASI.Basecode.WebApp.Controllers
         public IActionResult AddCourse()
         {
             return View();
+        }
+
+        [HttpGet]
+        public IActionResult ViewCourse(string id)
+        {
+            // TODO: Load course data by id
+            return View();
+        }
+
+        [HttpGet]
+        public IActionResult EditCourse(string id)
+        {
+            // TODO: Load course data by id
+            return View();
+        }
+
+        [HttpGet]
+        public IActionResult Teachers()
+        {
+            return RedirectToAction("Index", "Teacher");
         }
     }
 }

@@ -197,3 +197,10 @@ $RECYCLE.BIN/
 node_modules
 */src/*/Scripts/**/*.js
 */src/*/Scripts/**/*.js.map
+
+# Environment variables and secrets
+.env
+.env.local
+.env.development
+.env.production
+appsettings.Development.local.json

@@ -1,19 +1,24 @@
 @{
-    Layout = "~/Views/Shared/_AuthenticatedLayout.cshtml";
-    ViewData["Title"] = "Teacher Dashboard";
+    ViewData["Title"] = "Teachers - Acadus";
+    Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-<section class="min-h-screen flex flex-col items-center justify-center bg-white">
-    <div class="text-center mb-8">
-        <h1 class="text-3xl font-bold mb-4">Teacher</h1>
-        <p class="text-gray-600">This is the Teacher UI placeholder.</p>
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Teachers</h3>
+                    <div class="card-tools">
+                        <a href="@Url.Action("AddTeacher")" class="btn btn-primary">
+                            <i class="bi bi-person-plus"></i> Add Teacher
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted">Teacher management functionality will be implemented here.</p>
+                </div>
+            </div>
+        </div>
     </div>
-    <div class="flex justify-center space-x-4">
-        @await Component.InvokeAsync("StatisticsCard", new { title = "Ungraded Activities", value = 0, icon = "hamburger" })
-        @await Component.InvokeAsync("StatisticsCard", new { title = "Upcoming Events", value = 5, icon = "calendar" })
-        @await Component.InvokeAsync("StatisticsCard", new { title = "Completed Tasks", value = 10, icon = "checkmark" })
-    </div>
-    @section Scripts {}
-</section>
-
-
+</div>
