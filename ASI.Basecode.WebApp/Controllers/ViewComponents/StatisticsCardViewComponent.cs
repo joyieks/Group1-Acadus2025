@@ -49,7 +49,7 @@ namespace ASI.Basecode.WebApp.Controllers.ViewComponents
 
         /// <summary>
         /// Gets or sets the icon type for the statistics card.
-        /// Supported values: "hamburger", "calendar", "checkmark".
+        /// Supported values: "hamburger", "calendar", "checkmark", "activity", "graded", "courses".
         /// </summary>
         public string Icon { get; set; }
     }
