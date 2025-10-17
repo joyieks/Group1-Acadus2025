@@ -1,5 +1,6 @@
 using Supabase.Postgrest.Attributes;
 using Supabase.Postgrest.Models;
+using System;
 
 namespace ASI.Basecode.Data.Models
 {
@@ -28,6 +29,12 @@ namespace ASI.Basecode.Data.Models
         public string Code { get; set; }
 
         /// <summary>
+        /// Gets or sets the teacher ID for the course.
+        /// </summary>
+        [Column("teacher_id")]
+        public Guid TeacherId { get; set; }
+
+        /// <summary>
         /// Gets or sets the course status.
         /// </summary>
         [Column("status")]
@@ -44,5 +51,11 @@ namespace ASI.Basecode.Data.Models
         /// </summary>
         [Column("enrolled_count")]
         public int EnrolledCount { get; set; }
+
+        /// <summary>
+        /// Gets or sets the creation date for the course.
+        /// </summary>
+        [Column("created_at")]
+        public DateTime CreatedAt { get; set; }
     }
 }
