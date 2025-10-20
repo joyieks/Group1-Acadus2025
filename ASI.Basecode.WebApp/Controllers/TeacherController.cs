@@ -7,8 +7,7 @@ using System.Threading.Tasks;
 using System.Linq;
 using ASI.Basecode.WebApp.Models;
 using System;
-
-namespace ASI.Basecode.WebApp.Controllers
+ namespace ASI.Basecode.WebApp.Controllers
 {
     /// <summary>
     /// Controller for teacher-related actions and dashboard statistics.
@@ -136,62 +135,42 @@ namespace ASI.Basecode.WebApp.Controllers
         /// </summary>
         /// <returns>The full course view.</returns>
         [HttpGet]
-        public IActionResult FullCourseView(int id)
+        public async Task<IActionResult> FullCourseView(int id)
         {
-            // Placeholder: Find course by id from sample data
-            var courses = new List<TeacherCourseViewModel>
+            await AsiBasecodeDBContext.InitializeSupabaseAsync(_configuration);
+            var client = AsiBasecodeDBContext.SupabaseClient;
+
+            // Fetch the course from the database
+            var courseResponse = await client.From<CourseModel>()
+                .Filter("id", Supabase.Postgrest.Constants.Operator.Equals, id)
+                .Get();
+            var course = courseResponse.Models.FirstOrDefault();
+
+            if (course == null)
             {
-                new TeacherCourseViewModel
-                {
-                    Id = 1,
-                    CourseCode = "91299 - ELPHP41",
-                    CourseTitle = "FREE ELECTIVE - PHP",
-                    SemesterInfo = "1st Semester 2025 - 2026",
-                    CardColor = "#E8F9E8"
-                },
-                new TeacherCourseViewModel
-                {
-                    Id = 2,
-                    CourseCode = "91300 - CS101",
-                    CourseTitle = "INTRODUCTION TO COMPUTER SCIENCE",
-                    SemesterInfo = "1st Semester 2025 - 2026",
-                    CardColor = "#D1FAE5"
-                },
-                new TeacherCourseViewModel
-                {
-                    Id = 3,
-                    CourseCode = "91301 - MATH201",
-                    CourseTitle = "DISCRETE MATHEMATICS",
-                    SemesterInfo = "1st Semester 2025 - 2026",
-                    CardColor = "#A7F3D0"
-                },
-                new TeacherCourseViewModel
-                {
-                    Id = 4,
-                    CourseCode = "91302 - ENG102",
-                    CourseTitle = "TECHNICAL WRITING",
-                    SemesterInfo = "1st Semester 2025 - 2026",
-                    CardColor = "#6EE7B7"
-                },
-                new TeacherCourseViewModel
-                {
-                    Id = 5,
-                    CourseCode = "91303 - DATA301",
-                    CourseTitle = "DATA STRUCTURES",
-                    SemesterInfo = "2nd Semester 2025 - 2026",
-                    CardColor = "#34D399"
-                },
-                new TeacherCourseViewModel
-                {
-                    Id = 6,
-                    CourseCode = "91304 - WEBDEV401",
-                    CourseTitle = "WEB DEVELOPMENT",
-                    SemesterInfo = "2nd Semester 2025 - 2026",
-                    CardColor = "#10B981"
-                }
+                return NotFound();
+            }
+
+            // Optionally, fetch activities for this course
+            var activitiesResponse = await client.From<ActivityModel>()
+                .Filter("course_id", Supabase.Postgrest.Constants.Operator.Equals, id)
+                .Get();
+            var activities = activitiesResponse.Models;
+
+            // Map to your view model as needed
+            var viewModel = new TeacherCourseViewModel
+            {
+                Id = course.Id,
+                CourseCode = course.Code,
+                CourseTitle = course.Name,
+                SemesterInfo = course.SemesterInfo ?? string.Empty, // Adjust property as needed
+                CardColor = "#E8F9E8" // Or fetch from DB if available
             };
-            var course = courses.FirstOrDefault(c => c.Id == id) ?? new TeacherCourseViewModel { Id = id, CourseTitle = "Sample Course" };
-            return View("Courses/FullCourseView", course);
+
+            // Pass activities to the view if your view expects them
+            ViewBag.Activities = activities;
+
+            return View("Courses/FullCourseView", viewModel);
         }
 
         [HttpGet]
@@ -546,6 +525,143 @@ namespace ASI.Basecode.WebApp.Controllers
                         gradedBy = g.GradedBy
                     })
                 });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = $"Error: {ex.Message}" });
+            }
+        }
+
+        /// <summary>
+        /// Edits a course.
+        /// </summary>
+        /// <param name="id">The course ID.</param>
+        /// <param name="model">The course model with updated data.</param>
+        /// <returns>JSON result indicating success or failure.</returns>
+        [HttpPost]
+        public async Task<IActionResult> EditCourse(int id, TeacherCourseViewModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                return View("Courses/EditCourse", model);
+            }
+            try
+            {
+                await AsiBasecodeDBContext.InitializeSupabaseAsync(_configuration);
+                var client = AsiBasecodeDBContext.SupabaseClient;
+                var courseResponse = await client.From<CourseModel>()
+                    .Filter("id", Supabase.Postgrest.Constants.Operator.Equals, id)
+                    .Get();
+                var course = courseResponse.Models.FirstOrDefault();
+                if (course == null)
+                {
+                    ModelState.AddModelError("", "Course not found.");
+                    return View("Courses/EditCourse", model);
+                }
+                // Update course fields
+                course.Code = model.CourseCode;
+                course.Name = model.CourseTitle;
+                // You can add more fields as needed
+                await course.Update<CourseModel>();
+                TempData["SuccessMessage"] = "Course updated successfully.";
+                return RedirectToAction("FullCourseView", new { id = course.Id });
+            }
+            catch (Exception ex)
+            {
+                ModelState.AddModelError("", $"Error: {ex.Message}");
+                return View("Courses/EditCourse", model);
+            }
+        }
+
+        /// <summary>
+        /// Retrieves the average grade and count of grades for a course.
+        /// </summary>
+        /// <param name="courseId">The course ID.</param>
+        /// <returns>JSON result with average grade and count.</returns>
+        [HttpGet]
+        public async Task<IActionResult> GetCourseGrades(int courseId)
+        {
+            try
+            {
+                await AsiBasecodeDBContext.InitializeSupabaseAsync(_configuration);
+                var client = AsiBasecodeDBContext.SupabaseClient;
+                // Get all activities for the course
+                var activitiesResponse = await client.From<ActivityModel>()
+                    .Filter("course_id", Supabase.Postgrest.Constants.Operator.Equals, courseId)
+                    .Get();
+                var activityIds = activitiesResponse.Models.Select(a => a.Id).ToList();
+                if (!activityIds.Any())
+                {
+                    return Json(new { success = true, message = "No activities found for this course.", data = new { average = 0, count = 0 } });
+                }
+                // Get all grades for these activities
+                var gradesResponse = await client.From<GradeModel>().Get();
+                var grades = gradesResponse.Models.Where(g => activityIds.Contains(g.ActivityId)).ToList();
+                if (!grades.Any())
+                {
+                    return Json(new { success = true, message = "No grades found for this course.", data = new { average = 0, count = 0 } });
+                }
+                var average = grades.Average(g => (double)g.Grade);
+                var count = grades.Count;
+                return Json(new { success = true, data = new { average, count } });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = $"Error: {ex.Message}" });
+            }
+        }
+
+        /// <summary>
+        /// Creates a new activity for a course.
+        /// </summary>
+        /// <param name="model">The activity model with required data.</param>
+        /// <returns>JSON result indicating success or failure.</returns>
+        [HttpPost]
+        public async Task<IActionResult> CreateActivity([FromBody] ActivityModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                return Json(new { success = false, message = "Invalid activity data.", errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage) });
+            }
+            try
+            {
+                await AsiBasecodeDBContext.InitializeSupabaseAsync(_configuration);
+                var client = AsiBasecodeDBContext.SupabaseClient;
+
+                // TODO: Get teacher ID from authentication
+                model.TeacherId = 1; // Placeholder
+                model.CreatedAt = DateTime.UtcNow;
+                model.IsArchived = false;
+                model.IsGraded = false;
+
+                // Save activity
+                var insertResponse = await client.From<ActivityModel>().Insert(model);
+                var createdActivity = insertResponse.Models.FirstOrDefault();
+                if (createdActivity == null)
+                {
+                    return Json(new { success = false, message = "Failed to create activity." });
+                }
+
+                // Grade computation: Initialize grade records for all enrolled students in the course
+                var enrollmentsResponse = await client.From<EnrollmentModel>()
+                    .Filter("course_id", Supabase.Postgrest.Constants.Operator.Equals, model.CourseId)
+                    .Filter("status", Supabase.Postgrest.Constants.Operator.Equals, "active")
+                    .Get();
+                var enrolledStudents = enrollmentsResponse.Models;
+                var gradeModels = enrolledStudents.Select(e => new GradeModel
+                {
+                    StudentId = e.StudentId,
+                    ActivityId = createdActivity.Id,
+                    Grade = 0, // Default grade
+                    GradedAt = DateTime.MinValue, // Use default value for non-nullable DateTime
+                    GradedBy = 0 // Use default value for non-nullable int
+                }).ToList();
+                if (gradeModels.Any())
+                {
+                    await client.From<GradeModel>().Insert(gradeModels);
+                }
+
+                return Json(new { success = true, message = "Activity created successfully.", activityId = createdActivity.Id });
             }
             catch (Exception ex)
             {

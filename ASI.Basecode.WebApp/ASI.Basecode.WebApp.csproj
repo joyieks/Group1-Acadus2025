@@ -5,6 +5,7 @@
     <TypeScriptToolsVersion>4.4</TypeScriptToolsVersion>
     <UserSecretsId>872bac6a-ed64-4226-a559-064bd37b166e</UserSecretsId>
     <PreserveCompilationContext>true</PreserveCompilationContext>
+    <TypeScriptCompileBlocked>true</TypeScriptCompileBlocked>
   </PropertyGroup>
 
   
@@ -35,6 +36,15 @@
   <ItemGroup>
     <ProjectReference Include="..\ASI.Basecode.Resources\ASI.Basecode.Resources.csproj" />
     <ProjectReference Include="..\ASI.Basecode.Services\ASI.Basecode.Services.csproj" />
+  </ItemGroup>
+
+  <!-- Exclude node_modules from all compilations -->
+  <ItemGroup>
+    <Content Remove="node_modules\**" />
+    <Compile Remove="node_modules\**" />
+    <EmbeddedResource Remove="node_modules\**" />
+    <None Remove="node_modules\**" />
+    <TypeScriptCompile Remove="node_modules\**" />
   </ItemGroup>
 
 </Project>

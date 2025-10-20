@@ -32,7 +32,7 @@ namespace ASI.Basecode.Data.Models
         /// Gets or sets the teacher ID for the course.
         /// </summary>
         [Column("teacher_id")]
-        public Guid TeacherId { get; set; }
+        public int TeacherId { get; set; }  // int4 in database
 
         /// <summary>
         /// Gets or sets the course status.
@@ -57,5 +57,11 @@ namespace ASI.Basecode.Data.Models
         /// </summary>
         [Column("created_at")]
         public DateTime CreatedAt { get; set; }
+
+        /// <summary>
+        /// Gets or sets the semester information for the course.
+        /// </summary>
+        [Column("semester_info")]
+        public string SemesterInfo { get; set; }
     }
 }

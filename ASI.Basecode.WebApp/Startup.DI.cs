@@ -34,6 +34,15 @@ namespace ASI.Basecode.WebApp
             //     options.UseInMemoryDatabase("AsiBasecodeDev");
             // });
 
+            // Supabase Auth Services
+            this._services.AddScoped<ASI.Basecode.Services.Interfaces.ISupabaseAuthService, ASI.Basecode.Services.Services.SupabaseAuthService>();
+            this._services.AddScoped<ASI.Basecode.Services.Interfaces.IStudentService, ASI.Basecode.Services.Services.StudentService>();
+            this._services.AddScoped<ASI.Basecode.Services.Interfaces.ITeacherService, ASI.Basecode.Services.Services.TeacherService>();
+            
+            // Production Services
+            this._services.AddScoped<ASI.Basecode.Services.Interfaces.IPasswordGenerator, ASI.Basecode.Services.Services.PasswordGenerator>();
+            this._services.AddScoped<ASI.Basecode.Services.Interfaces.IEmailService, ASI.Basecode.Services.Services.EmailService>();
+
             /*
              * Temporarily disabled backend service wiring while focusing on frontend only.
              * Uncomment when backend implementations are ready.

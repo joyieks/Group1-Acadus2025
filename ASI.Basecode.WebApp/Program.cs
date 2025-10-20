@@ -20,6 +20,12 @@ Directory.CreateDirectory(builder.Environment.WebRootPath);
 // Load appsettings.json
 builder.Configuration.AddJsonFile("appsettings.json", optional: true, reloadOnChange: true);
 
+// Load environment-specific appsettings
+builder.Configuration.AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", optional: true, reloadOnChange: true);
+
+// Add environment variables
+builder.Configuration.AddEnvironmentVariables();
+
 builder.WebHost.UseIISIntegration();
 
 // Configure logging

@@ -29,11 +29,11 @@ namespace ASI.Basecode.WebApp.Controllers
         [HttpGet]
         public IActionResult Index()
         {
-            var viewModel = new StudentDashboardViewModel
-            {
-                RecentlyGradedTasks = new List<StudentDashboardViewModel.TaskItem>(),
-                ToBeGradedTasks = new List<StudentDashboardViewModel.TaskItem>()
-            };
+            var viewModel = new StudentDashboardViewModel();
+
+            viewModel.RecentlyGradedTasks = new List<StudentDashboardViewModel.TaskItem>();
+            viewModel.ToBeGradedTasks = new List<StudentDashboardViewModel.TaskItem>();
+
             return View(viewModel);
         }
 
@@ -71,6 +71,7 @@ namespace ASI.Basecode.WebApp.Controllers
                 Appeals = new List<StudentCourseDetailsViewModel.AppealItem>(),
                 Feedbacks = new List<StudentCourseDetailsViewModel.FeedbackItem>()
             };
+
             return View(viewModel);
         }
 

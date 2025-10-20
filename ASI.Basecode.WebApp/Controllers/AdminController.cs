@@ -1,9 +1,9 @@
 using ASI.Basecode.Data;
 using ASI.Basecode.Data.Models;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Configuration;
+using ASI.Basecode.Services.Interfaces;
+using ASI.Basecode.Services.ServiceModels;
 using System.Threading.Tasks;
-using System.Linq;
 
 namespace ASI.Basecode.WebApp.Controllers
 {
@@ -12,37 +12,18 @@ namespace ASI.Basecode.WebApp.Controllers
     /// </summary>
     public class AdminController : Controller
     {
-        private readonly IConfiguration _configuration;
+        private readonly IStudentService _studentService;
+        private readonly ITeacherService _teacherService;
 
-        /// <summary>
-        /// Initializes a new instance of the <see cref="AdminController"/> class.
-        /// </summary>
-        /// <param name="configuration">Application configuration.</param>
-        public AdminController(IConfiguration configuration)
+        public AdminController(IStudentService studentService, ITeacherService teacherService)
         {
-            _configuration = configuration;
+            _studentService = studentService;
+            _teacherService = teacherService;
         }
 
-        /// <summary>
-        /// Displays the admin dashboard with statistics.
-        /// </summary>
-        /// <returns>The dashboard view.</returns>
         [HttpGet]
-        public async Task<IActionResult> Dashboard()
+        public IActionResult Dashboard()
         {
-            // Initialize Supabase client
-            await AsiBasecodeDBContext.InitializeSupabaseAsync(_configuration);
-            var client = AsiBasecodeDBContext.SupabaseClient;
-
-            // Fetch all users from Supabase (users table is present)
-            var usersResponse = await client.From<SupabaseUser>().Get();
-            var users = usersResponse.Models;
-
-            // If you have a Role property, filter by role. Otherwise, just count all users.
-            ViewBag.StudentCount = users.Count;
-            ViewBag.InstructorCount = 0; // Not available in SupabaseUser
-            ViewBag.CourseCount = 0; // No courses table in Supabase
-
             return View();
         }
 
@@ -63,7 +44,38 @@ namespace ASI.Basecode.WebApp.Controllers
         [HttpGet]
         public IActionResult AddStudent()
         {
-            return View();
+            return View(new StudentViewModel());
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> AddStudent(StudentViewModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                return View(model);
+            }
+
+            try
+            {
+                var success = await _studentService.CreateStudentAsync(model);
+                
+                if (success)
+                {
+                    TempData["SuccessMessage"] = $"Student {model.FirstName} {model.LastName} has been successfully created! A confirmation email has been sent to {model.Email}. The student must click the confirmation link in the email before they can log in. The temporary password has been logged for admin reference.";
+                    return RedirectToAction("Users");
+                }
+                else
+                {
+                    ModelState.AddModelError(string.Empty, "Failed to create student. Please try again.");
+                    return View(model);
+                }
+            }
+            catch (System.Exception ex)
+            {
+                ModelState.AddModelError(string.Empty, $"Error creating student: {ex.Message}");
+                return View(model);
+            }
         }
 
         /// <summary>
@@ -73,7 +85,7 @@ namespace ASI.Basecode.WebApp.Controllers
         [HttpGet]
         public IActionResult AddTeacher()
         {
-            return View();
+            return RedirectToAction("AddTeacher", "Teacher");
         }
 
         /// <summary>
@@ -172,6 +184,12 @@ namespace ASI.Basecode.WebApp.Controllers
         {
             // TODO: Load course data by id
             return View();
+        }
+
+        [HttpGet]
+        public IActionResult Teachers()
+        {
+            return RedirectToAction("Index", "Teacher");
         }
     }
 }

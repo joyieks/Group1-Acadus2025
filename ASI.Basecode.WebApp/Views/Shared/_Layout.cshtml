@@ -284,5 +284,7 @@
             window.addEventListener('scroll', function() { if (!notifPanel.classList.contains('hidden')) positionNotifPanel(); }, true);
         })();
     </script>
+
+    @RenderSection("Scripts", required: false)
 </body>
 </html>

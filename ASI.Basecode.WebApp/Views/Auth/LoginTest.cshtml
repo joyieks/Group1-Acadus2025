@@ -1,0 +1,68 @@
+@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Login Debug Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 40px; background: #f5f5f5; }
+        .container { max-width: 600px; margin: 0 auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .form-group { margin-bottom: 20px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; }
+        input { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; }
+        button { background: #059669; color: white; padding: 12px 24px; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; }
+        button:hover { background: #047857; }
+        .info { background: #e0f2fe; padding: 15px; border-radius: 4px; margin-bottom: 20px; border-left: 4px solid #0284c7; }
+        .result { margin-top: 20px; padding: 15px; border-radius: 4px; }
+        .success { background: #d1fae5; border-left: 4px solid #059669; }
+        .error { background: #fee2e2; border-left: 4px solid #dc2626; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>?? Login Debug Test</h1>
+        
+        <div class="info">
+            <strong>Default Credentials:</strong><br>
+            Teacher Email: <code>teacher@gmail.com</code><br>
+            Teacher Password: <code>teacher123</code><br><br>
+            Admin Email: <code>admin@gmail.com</code><br>
+            Admin Password: <code>admin123</code>
+        </div>
+
+        <form method="post" action="/Auth/Login">
+            @Html.AntiForgeryToken()
+            
+            <div class="form-group">
+                <label for="Email">Email:</label>
+                <input type="email" id="Email" name="Email" value="teacher@gmail.com" required autocomplete="off">
+            </div>
+            
+            <div class="form-group">
+                <label for="Password">Password:</label>
+                <input type="password" id="Password" name="Password" value="teacher123" required autocomplete="off">
+            </div>
+            
+            <button type="submit">Test Login</button>
+        </form>
+
+        @if (ViewData["LoginError"] != null)
+        {
+            <div class="result error">
+                <strong>? Login Failed:</strong> @ViewData["LoginError"]
+            </div>
+        }
+    </div>
+
+    <script>
+        // Show what will be submitted
+        document.querySelector('form').addEventListener('submit', function(e) {
+            const email = document.getElementById('Email').value;
+            const password = document.getElementById('Password').value;
+            console.log('Submitting:', { email, password, passwordLength: password.length });
+        });
+    </script>
+</body>
+</html>
