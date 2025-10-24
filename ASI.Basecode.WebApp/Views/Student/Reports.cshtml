@@ -1,25 +1,43 @@
 ﻿@model ASI.Basecode.WebApp.Models.StudentReportViewModel
 @{
-    Layout = "~/Views/Student/Navigation.cshtml";
+    Layout = "~/Views/Shared/_Layout.cshtml";
     ViewData["Title"] = "Reports";
 }
 
 <div class="p-8 font-[Poppins]">
-    <div class="flex justify-between items-center mb-6 print:hidden">
+    <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6 print:hidden gap-4">
         <h2 class="text-2xl font-bold text-[#337D58]">Grade Reports</h2>
 
-        <!-- Print Button -->
-        <button onclick="window.print()" 
-            class="flex items-center gap-2 bg-[#337D58] text-white px-5 py-2 rounded-lg text-sm font-medium hover:bg-[#2a6648] transition-all duration-200 shadow-sm active:scale-95">
-            <img src="@Url.Content("~/img/printer.png")" alt="Print Icon" class="w-5 h-5" />
-            Print Grades
-        </button>
+        <div class="flex flex-col sm:flex-row items-center gap-3">
+            <!-- School Year Dropdown -->
+            <select id="schoolYear" class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#337D58] focus:outline-none">
+                <option value="">Select School Year</option>
+                <option value="2024-2025">2024–2025</option>
+                <option value="2023-2024">2023–2024</option>
+                <option value="2022-2023">2022–2023</option>
+            </select>
+
+            <!-- Term Dropdown -->
+            <select id="term" class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#337D58] focus:outline-none">
+                <option value="">Select Term</option>
+                <option value="1st Sem">1st Semester</option>
+                <option value="2nd Sem">2nd Semester</option>
+                <option value="Summer">Summer</option>
+            </select>
+
+            <!-- Print Button -->
+            <button onclick="window.print()"
+                    class="flex items-center gap-2 bg-[#337D58] text-white px-5 py-2 rounded-lg text-sm font-medium hover:bg-[#2a6648] transition-all duration-200 shadow-sm active:scale-95">
+                <img src="@Url.Content("~/img/printer.png")" alt="Print Icon" class="w-5 h-5" />
+                Print Grades
+            </button>
+        </div>
     </div>
 
     <div class="bg-white shadow-md rounded-2xl p-6">
         @if (Model.Reports != null && Model.Reports.Any())
         {
-            <table class="w-full border-collapse text-sm">
+            <table class="w-full border-collapse text-sm" id="reportTable">
                 <thead class="bg-[#337D58] text-white">
                     <tr>
                         <th class="py-3 px-4 text-left rounded-tl-2xl">Course Code</th>
@@ -45,7 +63,7 @@
         {
             <div class="flex flex-col items-center justify-center py-10 text-gray-500">
                 <svg xmlns="http://www.w3.org/2000/svg" class="w-12 h-12 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" 
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
                           d="M9 13h6m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h7l5 5v13a2 2 0 01-2 2z" />
                 </svg>
                 <p class="text-lg">No report data available yet.</p>
@@ -53,62 +71,51 @@
             </div>
         }
     </div>
-
 </div>
+
+<script>
+    // Optional: Handle filtering (demo only)
+    document.querySelectorAll('#schoolYear, #term').forEach(select => {
+        select.addEventListener('change', () => {
+            const year = document.getElementById('schoolYear').value;
+            const term = document.getElementById('term').value;
+
+            // You can later replace this with an AJAX call or page reload
+            console.log(`Filter applied: ${year} - ${term}`);
+        });
+    });
+</script>
 
 <style>
     @@media print {
-        /* Hide footer and mobile-only elements */
-        footer, nav, /* hides navigation links */
-        #mobileMenuBtn, #mobileMenu, #notifPanel, #userMenu, .print\:hidden
+        footer, nav, #mobileMenuBtn, #mobileMenu, #notifPanel, #userMenu, .print\:hidden {
+            display: none !important;
+        }
 
-    {
-        display: none !important;
-    }
+        main {
+            width: 100% !important;
+            padding: 0 !important;
+        }
 
-    /* Show user info in header (name + avatar) */
-    header .flex.items-center.relative {
-        display: flex !important;
-        gap: 1rem !important;
-    }
+        table {
+            page-break-inside: auto;
+            border-collapse: collapse;
+            width: 100% !important;
+        }
 
-    /* Keep main content full width */
-    main {
-        width: 100% !important;
-        max-width: 100% !important;
-        padding-left: 0 !important;
-        padding-right: 0 !important;
-    }
+        th, td {
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
 
-    /* Tables print cleanly */
-    table {
-        page-break-inside: auto;
-        border-collapse: collapse;
-        width: 100% !important;
-    }
+        .shadow, .shadow-md, .rounded-2xl {
+            box-shadow: none !important;
+            border-radius: 0 !important;
+        }
 
-    tr {
-        page-break-inside: avoid;
-        page-break-after: auto;
-    }
-
-    th, td {
-        -webkit-print-color-adjust: exact;
-        print-color-adjust: exact;
-    }
-
-    /* Remove shadows / rounded corners for print */
-    .shadow, .shadow-md, .rounded-2xl {
-        box-shadow: none !important;
-        border-radius: 0 !important;
-    }
-
-    /* Optional: readable fonts */
-    body {
-        font-size: 12pt !important;
-        line-height: 1.4 !important;
-    }
-
+        body {
+            font-size: 12pt !important;
+            line-height: 1.4 !important;
+        }
     }
 </style>
-

@@ -1,14 +1,14 @@
 @model ASI.Basecode.WebApp.Models.TeacherCourseViewModel
 
-<div style="background: #ffffff; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); overflow: hidden;">
+<div style="background: #ffffff; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); overflow: hidden; height: 100%; display: flex; flex-direction: column;">
     <!-- Top Color Block -->
     <div style="height: 120px; background-color: @Model.CardColor;"></div>
     
     <!-- Card Content -->
-    <div style="padding: 20px;">
-        <div style="margin-bottom: 16px;">
+    <div style="padding: 20px; flex: 1; display: flex; flex-direction: column;">
+        <div style="margin-bottom: 16px; flex: 1;">
             <p style="font-size: 14px; color: #6b7280; margin: 0 0 4px 0;">@Model.CourseCode</p>
-            <h3 style="font-size: 18px; font-weight: 700; color: #111827; margin: 0 0 4px 0;">@Model.CourseTitle</h3>
+            <h3 style="font-size: 18px; font-weight: 700; color: #111827; margin: 0 0 4px 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.2;">@Model.CourseTitle</h3>
             <p style="font-size: 14px; color: #6b7280; margin: 0;">@Model.SemesterInfo</p>
         </div>
         
@@ -16,8 +16,14 @@
         <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 16px 0;">
         
         <!-- Action Buttons -->
-        <div style="display: flex; gap: 8px;">
-            <a href="@Url.Action("FullCourseView", "Teacher", new { id = Model.Id })" style="flex: 1; background: #ffffff; color: #059669; border: 1px solid #a7f3d0; border-radius: 8px; padding: 12px; font-size: 14px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: background-color 0.2s; text-decoration: none;" onmouseover="this.style.backgroundColor='#f0fdf4'" onmouseout="this.style.backgroundColor='#ffffff'">
+        <div style="display: flex; gap: 8px; margin-top: auto;">
+            @{
+                var controller = ViewContext.RouteData.Values["controller"]?.ToString();
+                var actionUrl = controller == "Student" 
+                    ? Url.Action("CourseDetails", "Student", new { courseId = Model.Id })
+                    : Url.Action("FullCourseView", "Teacher", new { id = Model.Id });
+            }
+            <a href="@actionUrl" style="flex: 1; background: #ffffff; color: #059669; border: 1px solid #a7f3d0; border-radius: 8px; padding: 12px; font-size: 14px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: background-color 0.2s; text-decoration: none;" onmouseover="this.style.backgroundColor='#f0fdf4'" onmouseout="this.style.backgroundColor='#ffffff'">
                 <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>

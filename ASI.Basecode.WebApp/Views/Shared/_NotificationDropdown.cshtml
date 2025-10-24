@@ -1,4 +1,4 @@
-@model ASI.Basecode.Webapp.Models.NotificationsViewModel
+@model ASI.Basecode.WebApp.Models.NotificationsViewModel
 
 <div class="w-80 bg-white shadow-lg rounded-xl border border-gray-100 font-[Poppins]" data-count="@Model.Notifications.Count">
     <div class="p-4 border-b border-gray-200 flex justify-between items-center">
@@ -31,11 +31,12 @@
     }
 
     <div class="border-t border-gray-200 p-3 text-center">
-        <a href="/Student/Notifications"
+        @{
+            var controller = ViewContext.RouteData.Values["controller"]?.ToString();
+        }
+        <a href="/@controller/Notifications"
            class="text-[#337D58] text-sm font-medium hover:underline">
             View All Notifications
         </a>
     </div>
 </div>
-
-
