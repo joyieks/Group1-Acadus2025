@@ -1,10 +1,11 @@
-using ASI.Basecode.Data;
+﻿using ASI.Basecode.Data;
 using ASI.Basecode.Data.Models;
 using ASI.Basecode.Services.Interfaces;
 using ASI.Basecode.Services.ServiceModels;
 using Microsoft.Extensions.Configuration;
 using Supabase;
 using System;
+using System.Net.Http;
 using System.Threading.Tasks;
 
 namespace ASI.Basecode.Services.Services
@@ -14,11 +15,35 @@ namespace ASI.Basecode.Services.Services
         private readonly ISupabaseAuthService _supabaseAuthService;
         private readonly IConfiguration _configuration;
         private Supabase.Client _supabaseClient;
+        private static HttpClient _httpClient;
 
         public StudentService(ISupabaseAuthService supabaseAuthService, IConfiguration configuration)
         {
             _supabaseAuthService = supabaseAuthService;
             _configuration = configuration;
+        }
+
+        private HttpClient GetHttpClient()
+        {
+            if (_httpClient == null)
+            {
+                var isDevelopment = _configuration.GetValue<bool>("Development:IgnoreSSLErrors", true);
+
+                if (isDevelopment)
+                {
+                    var handler = new HttpClientHandler
+                    {
+                        ServerCertificateCustomValidationCallback = (message, cert, chain, errors) => true
+                    };
+                    _httpClient = new HttpClient(handler);
+                    Console.WriteLine("[StudentService] ✓ Custom HttpClient created with SSL validation bypassed");
+                }
+                else
+                {
+                    _httpClient = new HttpClient();
+                }
+            }
+            return _httpClient;
         }
 
         private async Task<Supabase.Client> GetSupabaseClientAsync()
@@ -27,10 +52,30 @@ namespace ASI.Basecode.Services.Services
             {
                 var url = _configuration["Supabase:Url"];
                 var serviceRoleKey = _configuration["Supabase:ServiceRoleKey"];
-                
-                // Use service role key for server-side operations
-                _supabaseClient = new Supabase.Client(url, serviceRoleKey);
+                var isDevelopment = _configuration.GetValue<bool>("Development:IgnoreSSLErrors", true);
+
+                Console.WriteLine($"[StudentService] Initializing Supabase Client");
+                Console.WriteLine($"  URL: {url}");
+                Console.WriteLine($"  Development Mode: {isDevelopment}");
+
+                var options = new SupabaseOptions
+                {
+                    AutoConnectRealtime = false,
+                    AutoRefreshToken = true
+                };
+
+                _supabaseClient = new Supabase.Client(url, serviceRoleKey, options);
+
+                // Inject custom HttpClient
+                var httpClientProperty = _supabaseClient.GetType().GetProperty("HttpClient");
+                if (httpClientProperty != null && isDevelopment)
+                {
+                    httpClientProperty.SetValue(_supabaseClient, GetHttpClient());
+                    Console.WriteLine("  ✓ Custom HttpClient injected with SSL validation bypassed");
+                }
+
                 await _supabaseClient.InitializeAsync();
+                Console.WriteLine("  ✓ Supabase Client initialized successfully");
             }
             return _supabaseClient;
         }
@@ -39,23 +84,23 @@ namespace ASI.Basecode.Services.Services
         {
             try
             {
-                // Generate a secure random password that will be immediately reset
-                // This password is never sent to the user - they will use the password reset link
-                var secureRandomPassword = Guid.NewGuid().ToString() + "Aa1!"; // Meets complexity requirements
-                
-                // Create user in Supabase Auth
+                Console.WriteLine($"\n=== CREATING STUDENT: {model.FirstName} {model.LastName} ===");
+
+                var secureRandomPassword = Guid.NewGuid().ToString() + "Aa1!";
+
+                Console.WriteLine($"Step 1: Creating Supabase Auth user...");
                 var supabaseUserId = await _supabaseAuthService.CreateUserAsync(
-                    model.Email, 
-                    secureRandomPassword, 
-                    model.FirstName, 
+                    model.Email,
+                    secureRandomPassword,
+                    model.FirstName,
                     model.LastName
                 );
 
-                Console.WriteLine($"Created user account for {model.Email}. Password reset email will be sent.");
+                Console.WriteLine($"✓ Step 1 Complete: Auth user created with ID: {supabaseUserId}");
 
                 var client = await GetSupabaseClientAsync();
 
-                // Create student record in Supabase database
+                Console.WriteLine($"Step 2: Inserting student record into database...");
                 var student = new Student
                 {
                     SupabaseUserId = supabaseUserId,
@@ -76,7 +121,9 @@ namespace ASI.Basecode.Services.Services
                 var insertedStudentResponse = await client.From<Student>().Insert(student);
                 var insertedStudent = insertedStudentResponse.Model;
 
-                // Create address record
+                Console.WriteLine($"✓ Step 2 Complete: Student record created with ID: {insertedStudent.Id}");
+
+                Console.WriteLine($"Step 3: Creating address record...");
                 var address = new Address
                 {
                     HouseNumber = model.HouseNumber,
@@ -92,7 +139,9 @@ namespace ASI.Basecode.Services.Services
                 var insertedAddressResponse = await client.From<Address>().Insert(address);
                 var insertedAddress = insertedAddressResponse.Model;
 
-                // Link student to address
+                Console.WriteLine($"✓ Step 3 Complete: Address created with ID: {insertedAddress.Id}");
+
+                Console.WriteLine($"Step 4: Linking student to address...");
                 var studentAddress = new StudentAddress
                 {
                     StudentId = insertedStudent.Id,
@@ -103,8 +152,9 @@ namespace ASI.Basecode.Services.Services
                 };
 
                 await client.From<StudentAddress>().Insert(studentAddress);
+                Console.WriteLine($"✓ Step 4 Complete: Student-Address link created");
 
-                // Create emergency contact record
+                Console.WriteLine($"Step 5: Creating emergency contact...");
                 var emergencyContact = new Contact
                 {
                     FirstName = model.EmergencyFirstName,
@@ -118,7 +168,9 @@ namespace ASI.Basecode.Services.Services
                 var insertedEmergencyContactResponse = await client.From<Contact>().Insert(emergencyContact);
                 var insertedEmergencyContact = insertedEmergencyContactResponse.Model;
 
-                // Link student to emergency contact
+                Console.WriteLine($"✓ Step 5 Complete: Emergency contact created with ID: {insertedEmergencyContact.Id}");
+
+                Console.WriteLine($"Step 6: Linking student to emergency contact...");
                 var studentEmergencyContact = new StudentEmergencyContact
                 {
                     StudentId = insertedStudent.Id,
@@ -129,39 +181,44 @@ namespace ASI.Basecode.Services.Services
                 };
 
                 await client.From<StudentEmergencyContact>().Insert(studentEmergencyContact);
+                Console.WriteLine($"✓ Step 6 Complete: Student-Emergency Contact link created");
 
-                // Send secure password setup email (no password included)
-                // This sends a one-time link that allows the student to set their own password
+                Console.WriteLine($"Step 7: Sending password setup email...");
                 try
                 {
-                    // Send password reset email through Supabase Auth
                     await _supabaseAuthService.SendPasswordSetupEmailAsync(model.Email);
-                    
-                    Console.WriteLine($"Password setup email sent to {model.Email}");
+                    Console.WriteLine($"✓ Step 7 Complete: Password setup email sent to {model.Email}");
                 }
                 catch (Exception emailEx)
                 {
-                    // Log email error but don't fail the student creation
-                    Console.WriteLine($"Warning: Failed to send password setup email for {model.Email}: {emailEx.Message}");
-                    
-                    // Note: Student account is still created, admin can resend setup email
+                    Console.WriteLine($"⚠ Step 7 Warning: Failed to send password setup email: {emailEx.Message}");
+                    Console.WriteLine($"  Note: Student account is still created. Admin can resend email manually.");
                 }
+
+                Console.WriteLine($"\n✓✓✓ STUDENT CREATION COMPLETE ✓✓✓");
+                Console.WriteLine($"  Student ID: {insertedStudent.Id}");
+                Console.WriteLine($"  Auth User ID: {supabaseUserId}");
+                Console.WriteLine($"  Email: {model.Email}\n");
 
                 return true;
             }
             catch (Exception ex)
             {
-                // If student creation fails, we should clean up the auth user
+                Console.WriteLine($"\n✗✗✗ STUDENT CREATION FAILED ✗✗✗");
+                Console.WriteLine($"  Error: {ex.Message}");
+                Console.WriteLine($"  Stack Trace: {ex.StackTrace}\n");
+
                 try
                 {
-                    // This is a simplified cleanup - in production you'd want more robust error handling
+                    Console.WriteLine($"Attempting to clean up auth user...");
                     await _supabaseAuthService.DeleteUserAsync(model.Email);
+                    Console.WriteLine($"✓ Auth user cleanup successful");
                 }
-                catch
+                catch (Exception cleanupEx)
                 {
-                    // Log the cleanup failure but don't throw
+                    Console.WriteLine($"⚠ Auth user cleanup failed: {cleanupEx.Message}");
                 }
-                
+
                 throw new Exception($"Error creating student: {ex.Message}", ex);
             }
         }
@@ -174,7 +231,7 @@ namespace ASI.Basecode.Services.Services
                 var response = await client.From<Student>()
                     .Where(x => x.Id == id)
                     .Single();
-                
+
                 return response;
             }
             catch (Exception ex)
@@ -191,7 +248,7 @@ namespace ASI.Basecode.Services.Services
                 var response = await client.From<Student>()
                     .Where(x => x.Email == email)
                     .Single();
-                
+
                 return response;
             }
             catch (Exception ex)
@@ -205,15 +262,13 @@ namespace ASI.Basecode.Services.Services
             try
             {
                 var client = await GetSupabaseClientAsync();
-                
-                // First, get the existing student
+
                 var existingStudent = await GetStudentByEmailAsync(model.Email);
                 if (existingStudent == null)
                 {
                     return false;
                 }
 
-                // Update the student record
                 existingStudent.FirstName = model.FirstName;
                 existingStudent.LastName = model.LastName;
                 existingStudent.MiddleName = model.MiddleName;
@@ -226,7 +281,6 @@ namespace ASI.Basecode.Services.Services
 
                 await client.From<Student>().Update(existingStudent);
 
-                // Update address (get existing address for this student)
                 var studentAddress = await client.From<StudentAddress>()
                     .Where(x => x.StudentId == existingStudent.Id && x.IsPrimary == true)
                     .Single();
@@ -245,7 +299,6 @@ namespace ASI.Basecode.Services.Services
 
                 await client.From<Address>().Update(address);
 
-                // Update emergency contact (get existing emergency contact for this student)
                 var studentEmergencyContact = await client.From<StudentEmergencyContact>()
                     .Where(x => x.StudentId == existingStudent.Id && x.IsPrimary == true)
                     .Single();
@@ -262,7 +315,6 @@ namespace ASI.Basecode.Services.Services
 
                 await client.From<Contact>().Update(emergencyContact);
 
-                // Update relationship
                 studentEmergencyContact.Relationship = model.Relationship;
                 await client.From<StudentEmergencyContact>().Update(studentEmergencyContact);
 
@@ -279,18 +331,14 @@ namespace ASI.Basecode.Services.Services
             try
             {
                 var client = await GetSupabaseClientAsync();
-                
-                // Get the student first to get the Supabase user ID
+
                 var student = await GetStudentByIdAsync(id);
                 if (student == null)
                 {
                     return false;
                 }
 
-                // Delete from Supabase Auth
                 await _supabaseAuthService.DeleteUserAsync(student.SupabaseUserId);
-
-                // Delete from database
                 await client.From<Student>().Where(x => x.Id == id).Delete();
 
                 return true;
@@ -300,6 +348,5 @@ namespace ASI.Basecode.Services.Services
                 throw new Exception($"Error deleting student: {ex.Message}", ex);
             }
         }
-
     }
 }

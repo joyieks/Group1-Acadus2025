@@ -39,7 +39,7 @@ namespace ASI.Basecode.WebApp.Controllers
 
             try
             {
-                // Try Supabase Auth first
+                // Authenticate with Supabase
                 var supabaseClient = await _supabaseAuthService.GetSupabaseClientForAuthAsync();
                 var session = await supabaseClient.Auth.SignIn(normalizedEmail, password);
                 
@@ -48,12 +48,16 @@ namespace ASI.Basecode.WebApp.Controllers
                     // Check if user is confirmed
                     if (session.User.EmailConfirmedAt.HasValue)
                     {
-                        // Determine user role by checking database tables
+                        // Determine user role by checking database tables and admin status
                         var userRole = await _supabaseAuthService.GetUserRoleAsync(session.User.Id);
+                        
+                        Console.WriteLine($"User {session.User.Email} logged in with role: {userRole}");
                         
                         // Redirect based on user role
                         switch (userRole)
                         {
+                            case "Admin":
+                                return RedirectToAction("Dashboard", "Admin");
                             case "Teacher":
                                 return RedirectToAction("Index", "Teacher");
                             case "Student":
@@ -76,22 +80,7 @@ namespace ASI.Basecode.WebApp.Controllers
                 Console.WriteLine($"Supabase Auth Error: {ex.Message}");
             }
 
-            // Fallback to hardcoded users for admin/teacher access (for development only)
-            // TODO: Remove these hardcoded credentials in production
-            var adminEmail = _configuration["Admin:Email"] ?? "admin@gmail.com";
-            var adminPassword = _configuration["Admin:Password"] ?? "admin123";
-            var teacherEmail = _configuration["Teacher:Email"] ?? "teacher@gmail.com";
-            var teacherPassword = _configuration["Teacher:Password"] ?? "teacher123";
-            
-            if (normalizedEmail == adminEmail && password == adminPassword)
-            {
-                return RedirectToAction("Dashboard", "Admin");
-            }
-            if (normalizedEmail == teacherEmail && password == teacherPassword)
-            {
-                return RedirectToAction("Index", "Teacher");
-            }
-
+            // If authentication failed, show error message
             ModelState.AddModelError(string.Empty, "Invalid email or password.");
             return View(model);
         }

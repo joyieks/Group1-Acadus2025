@@ -22,12 +22,8 @@ namespace ASI.Basecode.WebApp.Controllers
         [HttpGet]
         public IActionResult AddTeacher()
         {
-            var model = new TeacherDashboardViewModel
-            {
-                TotalActivities = 0,
-                GradedActivities = 0,
-                TotalCoursesHandled = 0
-            };
+            // Return the correct model type that the view expects
+            var model = new TeacherViewModel();
             return View(model);
         }
 
@@ -197,9 +193,17 @@ namespace ASI.Basecode.WebApp.Controllers
         [HttpGet]
         public async Task<IActionResult> Index()
         {
-            // This would typically fetch and display a list of teachers
-            // For now, just return the view
-            return View();
+            // Create the dashboard model with initial values
+            var model = new TeacherDashboardViewModel
+            {
+                TotalActivities = 0,
+                GradedActivities = 0,
+                TotalCoursesHandled = 0
+            };
+            
+            // TODO: Fetch real data from service
+            // For now, return with placeholder data
+            return View(model);
         }
     }
 }
