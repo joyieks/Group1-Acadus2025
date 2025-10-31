@@ -5,11 +5,21 @@ using System.Collections.Generic;
 using System.Linq;
 using static ASI.Basecode.WebApp.Models.StudentCourseDetailsViewModel;
 using static ASI.Basecode.WebApp.Models.StudentDashboardViewModel;
+using ASI.Basecode.Services.Interfaces;
+using Microsoft.AspNetCore.Http;
+using System.Threading.Tasks;
+using ASI.Basecode.Data.Models;
 
 namespace ASI.Basecode.WebApp.Controllers
 {
     public class StudentController : Controller
     {
+        private readonly ISupabaseAuthService _supabaseAuthService;
+
+        public StudentController(ISupabaseAuthService supabaseAuthService)
+        {
+            _supabaseAuthService = supabaseAuthService;
+        }
         [HttpGet]
         public IActionResult Index()
         {
@@ -119,27 +129,12 @@ namespace ASI.Basecode.WebApp.Controllers
         {
             return courseId switch
             {
-
-                CourseId = courseId ?? "default",
-                //CourseTitle = GetCourseTitleById(),
-                OverallGPA = 0,  
-                CompletedTasks = 0,
-                TotalTasks = 0,
-                PendingTasks = 0,
-                Activities = new List<StudentCourseDetailsViewModel.ActivityItem>(), 
-                Appeals = new List<StudentCourseDetailsViewModel.AppealItem>(),      
-                Feedbacks = new List<StudentCourseDetailsViewModel.FeedbackItem>()   
-            };
-
-           
-            return View(viewModel);
-
                 "1" => ( // IT101 - Introduction to Information Technology
                     CourseTitle: "Introduction to Information Technology",
-                    OverallGPA: 3.2,
-                    CompletedTasks: 8,
-                    TotalTasks: 12,
-                    PendingTasks: 4,
+                    OverallGPA:3.2,
+                    CompletedTasks:8,
+                    TotalTasks:12,
+                    PendingTasks:4,
                     Activities: new List<StudentCourseDetailsViewModel.ActivityItem>
                     {
                         //testing pagination
@@ -163,6 +158,158 @@ namespace ASI.Basecode.WebApp.Controllers
                         new() { Title = "OOP Principles Assignment", DueDate = "2025-10-25", Status = "Completed", Score = "89" },
                         new() { Title = "Data Structures Project", DueDate = "2025-11-10", Status = "In Progress", Score = "0" },
                         new() { Title = "Final Programming Exam", DueDate = "2025-12-20", Status = "Pending", Score = "0" },
+                        new() { Title = "Java Basics Lab", DueDate = "2025-10-10", Status = "Completed", Score = "92" },
+                        new() { Title = "OOP Principles Assignment", DueDate = "2025-10-25", Status = "Completed", Score = "89" },
+                        new() { Title = "Data Structures Project", DueDate = "2025-11-10", Status = "In Progress", Score = "0" },
+                        new() { Title = "Final Programming Exam", DueDate = "2025-12-20", Status = "Pending", Score = "0" },
+                        new() { Title = "Java Basics Lab", DueDate = "2025-10-10", Status = "Completed", Score = "92" },
+                        new() { Title = "OOP Principles Assignment", DueDate = "2025-10-25", Status = "Completed", Score = "89" },
+                        new() { Title = "Data Structures Project", DueDate = "2025-11-10", Status = "In Progress", Score = "0" },
+                        new() { Title = "Final Programming Exam", DueDate = "2025-12-20", Status = "Pending", Score = "0" },
+                        new() { Title = "Java Basics Lab", DueDate = "2025-10-10", Status = "Completed", Score = "92" },
+                        new() { Title = "OOP Principles Assignment", DueDate = "2025-10-25", Status = "Completed", Score = "89" },
+                        new() { Title = "Data Structures Project", DueDate = "2025-11-10", Status = "In Progress", Score = "0" },
+                        new() { Title = "Final Programming Exam", DueDate = "2025-12-20", Status = "Pending", Score = "0" },
+                        new() { Title = "Java Basics Lab", DueDate = "2025-10-10", Status = "Completed", Score = "92" },
+                        new() { Title = "OOP Principles Assignment", DueDate = "2025-10-25", Status = "Completed", Score = "89" },
+                        new() { Title = "Data Structures Project", DueDate = "2025-11-10", Status = "In Progress", Score = "0" },
+                        new() { Title = "Final Programming Exam", DueDate = "2025-12-20", Status = "Pending", Score = "0" },
+                        new() { Title = "Java Basics Lab", DueDate = "2025-10-10", Status = "Completed", Score = "92" },
+                        new() { Title = "OOP Principles Assignment", DueDate = "2025-10-25", Status = "Completed", Score = "89" },
+                        new() { Title = "Data Structures Project", DueDate = "2025-11-10", Status = "In Progress", Score = "0" },
+                        new() { Title = "Final Programming Exam", DueDate = "2025-12-20", Status = "Pending", Score = "0" },
+                        new() { Title = "Java Basics Lab", DueDate = "2025-10-10", Status = "Completed", Score = "92" },
+                        new() { Title = "OOP Principles Assignment", DueDate = "2025-10-25", Status = "Completed", Score = "89" },
+                        new() { Title = "Data Structures Project", DueDate = "2025-11-10", Status = "In Progress", Score = "0" },
+                        new() { Title = "Final Programming Exam", DueDate = "2025-12-20", Status = "Pending", Score = "0" },
+                        new() { Title = "Java Basics Lab", DueDate = "2025-10-10", Status = "Completed", Score = "92" },
+                        new() { Title = "OOP Principles Assignment", DueDate = "2025-10-25", Status = "Completed", Score = "89" },
+                        new() { Title = "Data Structures Project", DueDate = "2025-11-10", Status = "In Progress", Score = "0" },
+                        new() { Title = "Final Programming Exam", DueDate = "2025-12-20", Status = "Pending", Score = "0" },
+                        new() { Title = "Java Basics Lab", DueDate = "2025-10-10", Status = "Completed", Score = "92" },
+                        new() { Title = "OOP Principles Assignment", DueDate = "2025-10-25", Status = "Completed", Score = "89" },
+                        new() { Title = "Data Structures Project", DueDate = "2025-11-10", Status = "In Progress", Score = "0" },
+                        new() { Title = "Final Programming Exam", DueDate = "2025-12-20", Status = "Pending", Score = "0" },
+                        new() { Title = "Java Basics Lab", DueDate = "2025-10-10", Status = "Completed", Score = "92" },
+                        new() { Title = "OOP Principles Assignment", DueDate = "2025-10-25", Status = "Completed", Score = "89" },
+                        new() { Title = "Data Structures Project", DueDate = "2025-11-10", Status = "In Progress", Score = "0" },
+                        new() { Title = "Final Programming Exam", DueDate = "2025-12-20", Status = "Pending", Score = "0" },
+                        new() { Title = "Java Basics Lab", DueDate = "2025-10-10", Status = "Completed", Score = "92" },
+                        new() { Title = "OOP Principles Assignment", DueDate = "2025-10-25", Status = "Completed", Score = "89" },
+                        new() { Title = "Data Structures Project", DueDate = "2025-11-10", Status = "In Progress", Score = "0" },
+                        new() { Title = "Final Programming Exam", DueDate = "2025-12-20", Status = "Pending", Score = "0" },
+                        new() { Title = "Java Basics Lab", DueDate = "2025-10-10", Status = "Completed", Score = "92" },
+                        new() { Title = "OOP Principles Assignment", DueDate = "2025-10-25", Status = "Completed", Score = "89" },
+                        new() { Title = "Data Structures Project", DueDate = "2025-11-10", Status = "In Progress", Score = "0" },
+                        new() { Title = "Final Programming Exam", DueDate = "2025-12-20", Status = "Pending", Score = "0" },
+                        new() { Title = "Java Basics Lab", DueDate = "2025-10-10", Status = "Completed", Score = "92" },
+                        new() { Title = "OOP Principles Assignment", DueDate = "2025-10-25", Status = "Completed", Score = "89" },
+                        new() { Title = "Data Structures Project", DueDate = "2025-11-10", Status = "In Progress", Score = "0" },
+                        new() { Title = "Final Programming Exam", DueDate = "2025-12-20", Status = "Pending", Score = "0" },
+                          new() { Title = "Java Basics Lab", DueDate = "2025-10-10", Status = "Completed", Score = "92" },
+                        new() { Title = "OOP Principles Assignment", DueDate = "2025-10-25", Status = "Completed", Score = "89" },
+                        new() { Title = "Data Structures Project", DueDate = "2025-11-10", Status = "In Progress", Score = "0" },
+                        new() { Title = "Final Programming Exam", DueDate = "2025-12-20", Status = "Pending", Score = "0" },
+                          new() { Title = "Java Basics Lab", DueDate = "2025-10-10", Status = "Completed", Score = "92" },
+                        new() { Title = "OOP Principles Assignment", DueDate = "2025-10-25", Status = "Completed", Score = "89" },
+                        new() { Title = "Data Structures Project", DueDate = "2025-11-10", Status = "In Progress", Score = "0" },
+                        new() { Title = "Final Programming Exam", DueDate = "2025-12-20", Status = "Pending", Score = "0" },
+                          new() { Title = "Java Basics Lab", DueDate = "2025-10-10", Status = "Completed", Score = "92" },
+                        new() { Title = "OOP Principles Assignment", DueDate = "2025-10-25", Status = "Completed", Score = "89" },
+                        new() { Title = "Data Structures Project", DueDate = "2025-11-10", Status = "In Progress", Score = "0" },
+                        new() { Title = "Final Programming Exam", DueDate = "2025-12-20", Status = "Pending", Score = "0" },
+                          new() { Title = "Java Basics Lab", DueDate = "2025-10-10", Status = "Completed", Score = "92" },
+                        new() { Title = "OOP Principles Assignment", DueDate = "2025-10-25", Status = "Completed", Score = "89" },
+                        new() { Title = "Data Structures Project", DueDate = "2025-11-10", Status = "In Progress", Score = "0" },
+                        new() { Title = "Final Programming Exam", DueDate = "2025-12-20", Status = "Pending", Score = "0" },
+                          new() { Title = "Java Basics Lab", DueDate = "2025-10-10", Status = "Completed", Score = "92" },
+                        new() { Title = "OOP Principles Assignment", DueDate = "2025-10-25", Status = "Completed", Score = "89" },
+                        new() { Title = "Data Structures Project", DueDate = "2025-11-10", Status = "In Progress", Score = "0" },
+                        new() { Title = "Final Programming Exam", DueDate = "2025-12-20", Status = "Pending", Score = "0" },
+                          new() { Title = "Java Basics Lab", DueDate = "2025-10-10", Status = "Completed", Score = "92" },
+                        new() { Title = "OOP Principles Assignment", DueDate = "2025-10-25", Status = "Completed", Score = "89" },
+                        new() { Title = "Data Structures Project", DueDate = "2025-11-10", Status = "In Progress", Score = "0" },
+                        new() { Title = "Final Programming Exam", DueDate = "2025-12-20", Status = "Pending", Score = "0" },
+                          new() { Title = "Java Basics Lab", DueDate = "2025-10-10", Status = "Completed", Score = "92" },
+                        new() { Title = "OOP Principles Assignment", DueDate = "2025-10-25", Status = "Completed", Score = "89" },
+                        new() { Title = "Data Structures Project", DueDate = "2025-11-10", Status = "In Progress", Score = "0" },
+                        new() { Title = "Final Programming Exam", DueDate = "2025-12-20", Status = "Pending", Score = "0" },
+                          new() { Title = "Java Basics Lab", DueDate = "2025-10-10", Status = "Completed", Score = "92" },
+                        new() { Title = "OOP Principles Assignment", DueDate = "2025-10-25", Status = "Completed", Score = "89" },
+                        new() { Title = "Data Structures Project", DueDate = "2025-11-10", Status = "In Progress", Score = "0" },
+                        new() { Title = "Final Programming Exam", DueDate = "2025-12-20", Status = "Pending", Score = "0" },
+                          new() { Title = "Java Basics Lab", DueDate = "2025-10-10", Status = "Completed", Score = "92" },
+                        new() { Title = "OOP Principles Assignment", DueDate = "2025-10-25", Status = "Completed", Score = "89" },
+                        new() { Title = "Data Structures Project", DueDate = "2025-11-10", Status = "In Progress", Score = "0" },
+                        new() { Title = "Final Programming Exam", DueDate = "2025-12-20", Status = "Pending", Score = "0" },
+                          new() { Title = "Java Basics Lab", DueDate = "2025-10-10", Status = "Completed", Score = "92" },
+                        new() { Title = "OOP Principles Assignment", DueDate = "2025-10-25", Status = "Completed", Score = "89" },
+                        new() { Title = "Data Structures Project", DueDate = "2025-11-10", Status = "In Progress", Score = "0" },
+                        new() { Title = "Final Programming Exam", DueDate = "2025-12-20", Status = "Pending", Score = "0" },
+                          new() { Title = "Java Basics Lab", DueDate = "2025-10-10", Status = "Completed", Score = "92" },
+                        new() { Title = "OOP Principles Assignment", DueDate = "2025-10-25", Status = "Completed", Score = "89" },
+                        new() { Title = "Data Structures Project", DueDate = "2025-11-10", Status = "In Progress", Score = "0" },
+                        new() { Title = "Final Programming Exam", DueDate = "2025-12-20", Status = "Pending", Score = "0" },
+                          new() { Title = "Java Basics Lab", DueDate = "2025-10-10", Status = "Completed", Score = "92" },
+                        new() { Title = "OOP Principles Assignment", DueDate = "2025-10-25", Status = "Completed", Score = "89" },
+                        new() { Title = "Data Structures Project", DueDate = "2025-11-10", Status = "In Progress", Score = "0" },
+                        new() { Title = "Final Programming Exam", DueDate = "2025-12-20", Status = "Pending", Score = "0" },
+                          new() { Title = "Java Basics Lab", DueDate = "2025-10-10", Status = "Completed", Score = "92" },
+                        new() { Title = "OOP Principles Assignment", DueDate = "2025-10-25", Status = "Completed", Score = "89" },
+                        new() { Title = "Data Structures Project", DueDate = "2025-11-10", Status = "In Progress", Score = "0" },
+                        new() { Title = "Final Programming Exam", DueDate = "2025-12-20", Status = "Pending", Score = "0" },
+                          new() { Title = "Java Basics Lab", DueDate = "2025-10-10", Status = "Completed", Score = "92" },
+                        new() { Title = "OOP Principles Assignment", DueDate = "2025-10-25", Status = "Completed", Score = "89" },
+                        new() { Title = "Data Structures Project", DueDate = "2025-11-10", Status = "In Progress", Score = "0" },
+                        new() { Title = "Final Programming Exam", DueDate = "2025-12-20", Status = "Pending", Score = "0" },
+                          new() { Title = "Java Basics Lab", DueDate = "2025-10-10", Status = "Completed", Score = "92" },
+                        new() { Title = "OOP Principles Assignment", DueDate = "2025-10-25", Status = "Completed", Score = "89" },
+                        new() { Title = "Data Structures Project", DueDate = "2025-11-10", Status = "In Progress", Score = "0" },
+                        new() { Title = "Final Programming Exam", DueDate = "2025-12-20", Status = "Pending", Score = "0" },
+                          new() { Title = "Java Basics Lab", DueDate = "2025-10-10", Status = "Completed", Score = "92" },
+                        new() { Title = "OOP Principles Assignment", DueDate = "2025-10-25", Status = "Completed", Score = "89" },
+                        new() { Title = "Data Structures Project", DueDate = "2025-11-10", Status = "In Progress", Score = "0" },
+                        new() { Title = "Final Programming Exam", DueDate = "2025-12-20", Status = "Pending", Score = "0" },
+                          new() { Title = "Java Basics Lab", DueDate = "2025-10-10", Status = "Completed", Score = "92" },
+                        new() { Title = "OOP Principles Assignment", DueDate = "2025-10-25", Status = "Completed", Score = "89" },
+                        new() { Title = "Data Structures Project", DueDate = "2025-11-10", Status = "In Progress", Score = "0" },
+                        new() { Title = "Final Programming Exam", DueDate = "2025-12-20", Status = "Pending", Score = "0" },
+                          new() { Title = "Java Basics Lab", DueDate = "2025-10-10", Status = "Completed", Score = "92" },
+                        new() { Title = "OOP Principles Assignment", DueDate = "2025-10-25", Status = "Completed", Score = "89" },
+                        new() { Title = "Data Structures Project", DueDate = "2025-11-10", Status = "In Progress", Score = "0" },
+                        new() { Title = "Final Programming Exam", DueDate = "2025-12-20", Status = "Pending", Score = "0" },
+                          new() { Title = "Java Basics Lab", DueDate = "2025-10-10", Status = "Completed", Score = "92" },
+                        new() { Title = "OOP Principles Assignment", DueDate = "2025-10-25", Status = "Completed", Score = "89" },
+                        new() { Title = "Data Structures Project", DueDate = "2025-11-10", Status = "In Progress", Score = "0" },
+                        new() { Title = "Final Programming Exam", DueDate = "2025-12-20", Status = "Pending", Score = "0" },
+                          new() { Title = "Java Basics Lab", DueDate = "2025-10-10", Status = "Completed", Score = "92" },
+                        new() { Title = "OOP Principles Assignment", DueDate = "2025-10-25", Status = "Completed", Score = "89" },
+                        new() { Title = "Data Structures Project", DueDate = "2025-11-10", Status = "In Progress", Score = "0" },
+                        new() { Title = "Final Programming Exam", DueDate = "2025-12-20", Status = "Pending", Score = "0" },
+                          new() { Title = "Java Basics Lab", DueDate = "2025-10-10", Status = "Completed", Score = "92" },
+                        new() { Title = "OOP Principles Assignment", DueDate = "2025-10-25", Status = "Completed", Score = "89" },
+                        new() { Title = "Data Structures Project", DueDate = "2025-11-10", Status = "In Progress", Score = "0" },
+                        new() { Title = "Final Programming Exam", DueDate = "2025-12-20", Status = "Pending", Score = "0" },
+                          new() { Title = "Java Basics Lab", DueDate = "2025-10-10", Status = "Completed", Score = "92" },
+                        new() { Title = "OOP Principles Assignment", DueDate = "2025-10-25", Status = "Completed", Score = "89" },
+                        new() { Title = "Data Structures Project", DueDate = "2025-11-10", Status = "In Progress", Score = "0" },
+                        new() { Title = "Final Programming Exam", DueDate = "2025-12-20", Status = "Pending", Score = "0" },
+                          new() { Title = "Java Basics Lab", DueDate = "2025-10-10", Status = "Completed", Score = "92" },
+                        new() { Title = "OOP Principles Assignment", DueDate = "2025-10-25", Status = "Completed", Score = "89" },
+                        new() { Title = "Data Structures Project", DueDate = "2025-11-10", Status = "In Progress", Score = "0" },
+                        new() { Title = "Final Programming Exam", DueDate = "2025-12-20", Status = "Pending", Score = "0" },
+                          new() { Title = "Java Basics Lab", DueDate = "2025-10-10", Status = "Completed", Score = "92" },
+                        new() { Title = "OOP Principles Assignment", DueDate = "2025-10-25", Status = "Completed", Score = "89" },
+                        new() { Title = "Data Structures Project", DueDate = "2025-11-10", Status = "In Progress", Score = "0" },
+                        new() { Title = "Final Programming Exam", DueDate = "2025-12-20", Status = "Pending", Score = "0" },
+                          new() { Title = "Java Basics Lab", DueDate = "2025-10-10", Status = "Completed", Score = "92" },
+                        new() { Title = "OOP Principles Assignment", DueDate = "2025-10-25", Status = "Completed", Score = "89" },
+                        new() { Title = "Data Structures Project", DueDate = "2025-11-10", Status = "In Progress", Score = "0" },
+                        new() { Title = "Final Programming Exam", DueDate = "2025-12-20", Status = "Pending", Score = "0" },
+                          new() { Title = "Java Basics Lab", DueDate = "2025-10-10", Status = "Completed", Score = "92" },
+                        new() { Title = "OOP Principles Assignment", DueDate = "2025-10-25", Status = "Completed", Score = "89" },
+                        new() { Title = "Data Structures Project", DueDate = "2025-11-10", Status = "In Progress", Score = "0" },
+                        new() { Title = "Final Programming Exam", DueDate = "2025-12-20", Status = "Pending", Score = "0" },
                           new() { Title = "Java Basics Lab", DueDate = "2025-10-10", Status = "Completed", Score = "92" },
                         new() { Title = "OOP Principles Assignment", DueDate = "2025-10-25", Status = "Completed", Score = "89" },
                         new() { Title = "Data Structures Project", DueDate = "2025-11-10", Status = "In Progress", Score = "0" },
@@ -178,19 +325,19 @@ namespace ASI.Basecode.WebApp.Controllers
                     },
                     Appeals: new List<StudentCourseDetailsViewModel.AppealItem>
                     {
-                        new() { Title = "Quiz 2 Grade Appeal", Date = "2025-09-15", Status = "Approved", Description = "Request for grade review" }
+                        new() { Title = "Quiz2 Grade Appeal", Date = "2025-09-15", Status = "Approved", Description = "Request for grade review" }
                     },
                     Feedbacks: new List<StudentCourseDetailsViewModel.FeedbackItem>
                     {
-                        new() { Title = "Assignment 1 Feedback", Date = "2025-09-10", Content = "Excellent work on database design. Consider improving query optimization." }
+                        new() { Title = "Assignment1 Feedback", Date = "2025-09-10", Content = "Excellent work on database design. Consider improving query optimization." }
                     }
                 ),
                 "2" => ( // PROG201 - Object-Oriented Programming in Java
                     CourseTitle: "Object-Oriented Programming in Java",
-                    OverallGPA: 3.5,
-                    CompletedTasks: 10,
-                    TotalTasks: 15,
-                    PendingTasks: 5,
+                    OverallGPA:3.5,
+                    CompletedTasks:10,
+                    TotalTasks:15,
+                    PendingTasks:5,
                     Activities: new List<StudentCourseDetailsViewModel.ActivityItem>
                     {
                         new() { Title = "Java Basics Lab", DueDate = "2025-10-10", Status = "Completed", Score = "92" },
@@ -201,15 +348,15 @@ namespace ASI.Basecode.WebApp.Controllers
                     Appeals: new List<StudentCourseDetailsViewModel.AppealItem>(),
                     Feedbacks: new List<StudentCourseDetailsViewModel.FeedbackItem>
                     {
-                        new() { Title = "Lab 3 Feedback", Date = "2025-09-20", Content = "Good understanding of inheritance. Work on exception handling." }
+                        new() { Title = "Lab3 Feedback", Date = "2025-09-20", Content = "Good understanding of inheritance. Work on exception handling." }
                     }
                 ),
                 "3" => ( // ELEC102 - Digital Photography and Media Editing
                     CourseTitle: "Digital Photography and Media Editing",
-                    OverallGPA: 3.8,
-                    CompletedTasks: 6,
-                    TotalTasks: 8,
-                    PendingTasks: 2,
+                    OverallGPA:3.8,
+                    CompletedTasks:6,
+                    TotalTasks:8,
+                    PendingTasks:2,
                     Activities: new List<StudentCourseDetailsViewModel.ActivityItem>
                     {
                         new() { Title = "Photography Portfolio", DueDate = "2025-10-30", Status = "Completed", Score = "96" },
@@ -224,10 +371,10 @@ namespace ASI.Basecode.WebApp.Controllers
                 ),
                 "4" => ( // NET302 - Computer Networks and Security
                     CourseTitle: "Computer Networks and Security",
-                    OverallGPA: 0.0, // Future semester course
-                    CompletedTasks: 0,
-                    TotalTasks: 10,
-                    PendingTasks: 10,
+                    OverallGPA:0.0, // Future semester course
+                    CompletedTasks:0,
+                    TotalTasks:10,
+                    PendingTasks:10,
                     Activities: new List<StudentCourseDetailsViewModel.ActivityItem>
                     {
                         new() { Title = "Network Topology Lab", DueDate = "2026-02-15", Status = "Not Started", Score = "0" },
@@ -239,15 +386,14 @@ namespace ASI.Basecode.WebApp.Controllers
                 ),
                 _ => (
                     CourseTitle: "Unknown Course",
-                    OverallGPA: 0.0,
-                    CompletedTasks: 0,
-                    TotalTasks: 0,
-                    PendingTasks: 0,
+                    OverallGPA:0.0,
+                    CompletedTasks:0,
+                    TotalTasks:0,
+                    PendingTasks:0,
                     Activities: new List<StudentCourseDetailsViewModel.ActivityItem>(),
                     Appeals: new List<StudentCourseDetailsViewModel.AppealItem>(),
                     Feedbacks: new List<StudentCourseDetailsViewModel.FeedbackItem>()
                 ),
-
             };
 
         }
@@ -262,17 +408,6 @@ namespace ASI.Basecode.WebApp.Controllers
                 "php41" => "Free Elective - PHP",
                 _ => "Course Title"
             };
-        }
-
-
-        public IActionResult Reports()
-        {
-            var viewModel = new StudentReportViewModel
-            {
-                Reports = new List<StudentReportViewModel.ReportItem>()
-            };
-
-            return View(viewModel);
         }
 
 
@@ -386,60 +521,104 @@ namespace ASI.Basecode.WebApp.Controllers
             return View(viewModel);
         }
 
-        // Mock data example (for testing)
-        public IActionResult Profile()
+        [HttpGet]
+        public async Task<IActionResult> Profile()
         {
-            var model = new ASI.Basecode.WebApp.Models.StudentProfileViewModel
+            var supabaseUserId = HttpContext.Session.GetString("SupabaseUserId");
+            if (string.IsNullOrWhiteSpace(supabaseUserId))
             {
-                // ===== Basic Profile Information =====
-                ProfileImageUrl = "/images/sample-profile.jpg",
-                FullName = "Juan Dela Cruz",
-
-
-                // ===== Personal Info =====
-                StudentId = "123",
-                Status = "Active",
-                FirstName = "Juan",
-                MiddleName = "Santos",
-                LastName = "Dela Cruz",
-                Suffix = "",
-                DateOfBirth = "May 3, 2002",
-                Gender = "Male",
-                Course = "Bachelor of Science in Information Technology",
-                YearLevel = "4",
-                Department = "College of Computer Studies",
-                EmailAddress = "juan.delacruz@example.com",
-                PhoneNumber = "09171234567",
-
-                // ===== Address Information =====
-                HouseNumber = "123",
-                Street = "Maple Street",
-                Subdivision = "Sunnyvale Subdivision",
-                Barangay = "Barangay Mabini",
-                City = "Quezon City",
-                Province = "Metro Manila",
-                ZipCode = "1100",
-
-                // ===== Emergency Contact Information =====
-                EmergencyFirstName = "Maria",
-                EmergencyMiddleName = "Reyes",
-                EmergencyLastName = "Dela Cruz",
-                EmergencySuffix = "",
-                EmergencyContactNumber = "09181234567",
-                EmergencyRelationship = "Mother",
-
-                // ===== Security Info =====
-                PasswordLastUpdated = DateTime.Now.AddMonths(-2)
-            };
-
-            if (TempData["UploadedProfileUrl"] is string uploadedUrl && !string.IsNullOrWhiteSpace(uploadedUrl))
-            {
-                model.ProfileImageUrl = uploadedUrl;
+                ViewBag.NoDataMessage = "Session expired. Please log in again.";
+                return View(new StudentProfileViewModel());
             }
 
-            // If no profile data exists
+            var model = new StudentProfileViewModel();
+            try
+            {
+                var client = await _supabaseAuthService.GetSupabaseClientForAuthAsync();
+
+                // Student record
+                var student = await client.From<Student>()
+                    .Where(x => x.SupabaseUserId == supabaseUserId)
+                    .Single();
+
+                if (student != null)
+                {
+                    model.FirstName = student.FirstName;
+                    model.MiddleName = student.MiddleName;
+                    model.LastName = student.LastName;
+                    model.FullName = string.Join(" ", new[] { student.FirstName, student.MiddleName, student.LastName }.Where(s => !string.IsNullOrWhiteSpace(s)));
+                    model.EmailAddress = student.Email;
+                    model.Department = student.Department;
+                    model.Course = student.Program;
+                    model.YearLevel = student.YearLevel.ToString();
+                    model.Status = student.IsActive ? "Active" : "Inactive";
+                }
+
+                // Address (primary)
+                if (student != null)
+                {
+                    var studentAddress = await client.From<StudentAddress>()
+                        .Where(sa => sa.StudentId == student.Id && sa.IsPrimary == true)
+                        .Single();
+
+                    if (studentAddress != null)
+                    {
+                        var address = await client.From<Address>()
+                            .Where(a => a.Id == studentAddress.AddressId)
+                            .Single();
+                        if (address != null)
+                        {
+                            model.HouseNumber = address.HouseNumber;
+                            model.Street = address.StreetName;
+                            model.Subdivision = address.Subdivision;
+                            model.Barangay = address.Barangay;
+                            model.City = address.City;
+                            model.Province = address.Province;
+                            model.ZipCode = address.ZipCode;
+                        }
+                    }
+                }
+
+                // Emergency contact (primary)
+                if (student != null)
+                {
+                    var emergency = await client.From<StudentEmergencyContact>()
+                        .Where(ec => ec.StudentId == student.Id && ec.IsPrimary == true)
+                        .Single();
+                    if (emergency != null)
+                    {
+                        var contact = await client.From<Contact>()
+                            .Where(c => c.Id == emergency.ContactId)
+                            .Single();
+                        if (contact != null)
+                        {
+                            model.EmergencyFirstName = contact.FirstName;
+                            model.EmergencyMiddleName = contact.MiddleName;
+                            model.EmergencyLastName = contact.LastName;
+                            model.EmergencySuffix = contact.Suffix;
+                            model.EmergencyContactNumber = contact.ContactNumber;
+                            model.EmergencyRelationship = emergency.Relationship;
+                        }
+                    }
+                }
+
+                // Profile image from Auth metadata (set by upload)
+                model.ProfileImageUrl = await _supabaseAuthService.GetUserProfileImageUrlAsync(supabaseUserId);
+
+                // If recent upload exists in this session, prefer it
+                if (TempData["UploadedProfileUrl"] is string uploadedUrl && !string.IsNullOrWhiteSpace(uploadedUrl))
+                {
+                    model.ProfileImageUrl = uploadedUrl;
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error loading student profile: {ex.Message}");
+                ViewBag.NoDataMessage = "Unable to load profile data at the moment.";
+            }
+
             if (!model.HasData)
-                ViewBag.NoDataMessage = "No profile data available. Please complete your profile information.";
+                ViewBag.NoDataMessage = "No profile data available.";
 
             return View(model);
         }

@@ -7,6 +7,7 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.Http;
 
 namespace ASI.Basecode.WebApp.Controllers
 {
@@ -90,6 +91,88 @@ namespace ASI.Basecode.WebApp.Controllers
         public IActionResult ForgotPassword()
         {
             return View("~/Views/Account/ForgotPassword.cshtml");
+        }
+
+        /// <summary>
+        /// Shows the in-session Change Password page (no email link required)
+        /// </summary>
+        [HttpGet]
+        public IActionResult ChangePassword()
+        {
+            // Ignore any querystring email; rely only on the logged-in session
+            string email = string.Empty;
+            try { email = HttpContext.Session.GetString("UserEmail"); } catch { }
+            ViewBag.Email = email; // used only if we decide to show it; form no longer posts it
+
+            // Ensure stale success messages don't show up accidentally
+            if (TempData.ContainsKey("SuccessMessage"))
+            {
+                TempData.Remove("SuccessMessage");
+            }
+            return View("~/Views/Account/ChangePassword.cshtml");
+        }
+
+        /// <summary>
+        /// Changes password for a logged-in user by verifying current credentials with Supabase
+        /// </summary>
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ChangePassword(ChangePasswordRequest model)
+        {
+            if (!ModelState.IsValid)
+            {
+                return View("~/Views/Account/ChangePassword.cshtml", model);
+            }
+
+            if (model.NewPassword != model.ConfirmPassword)
+            {
+                ModelState.AddModelError(string.Empty, "Passwords do not match.");
+                return View("~/Views/Account/ChangePassword.cshtml", model);
+            }
+
+            try
+            {
+                // We don't need the email here; we use SupabaseUserId from session
+
+                // Use Admin API to update password for the authenticated user (no email link required)
+                var supabaseUserId = HttpContext.Session.GetString("SupabaseUserId");
+                if (string.IsNullOrWhiteSpace(supabaseUserId))
+                {
+                    ModelState.AddModelError(string.Empty, "Your session is missing required info. Please log in again and retry.");
+                    return View("~/Views/Account/ChangePassword.cshtml", model);
+                }
+
+                var success = await _supabaseAuthService.UpdateUserPasswordAdminAsync(supabaseUserId, model.NewPassword);
+                if (success)
+                {
+                    TempData["SuccessMessage"] = "Password updated successfully. Please log in with your new password.";
+                    return RedirectToAction("Login");
+                }
+
+                ModelState.AddModelError(string.Empty, "Failed to update password. Please try again.");
+                return View("~/Views/Account/ChangePassword.cshtml", model);
+            }
+            catch (System.Exception ex)
+            {
+                ModelState.AddModelError(string.Empty, ex.Message);
+                return View("~/Views/Account/ChangePassword.cshtml", model);
+            }
+        }
+
+        public class ChangePasswordRequest
+        {
+            [EmailAddress]
+            public string Email { get; set; }
+
+            [Required]
+            public string CurrentPassword { get; set; }
+
+            [Required]
+            [MinLength(8)]
+            public string NewPassword { get; set; }
+
+            [Required]
+            public string ConfirmPassword { get; set; }
         }
 
         /// <summary>

@@ -2,6 +2,7 @@ using ASI.Basecode.Services.Interfaces;
 using ASI.Basecode.Services.ServiceModels;
 using Microsoft.AspNetCore.Mvc;
 using System;
+using Microsoft.AspNetCore.Http;
 using System.Threading.Tasks;
 using ASI.Basecode.WebApp.Models;
 using System.Collections.Generic;
@@ -14,10 +15,12 @@ namespace ASI.Basecode.WebApp.Controllers
     public class TeacherController : Controller
     {
         private readonly ITeacherService _teacherService;
+        private readonly ISupabaseAuthService _supabaseAuthService;
 
-        public TeacherController(ITeacherService teacherService)
+        public TeacherController(ITeacherService teacherService, ISupabaseAuthService supabaseAuthService)
         {
             _teacherService = teacherService;
+            _supabaseAuthService = supabaseAuthService;
         }
 
         [HttpGet]
@@ -202,10 +205,10 @@ namespace ASI.Basecode.WebApp.Controllers
                 GradedActivities = 0,
                 TotalCoursesHandled = 0
             };
-            
             // TODO: Fetch real data from service
             // For now, return with placeholder data
             return View(model);
+        }
 
         [HttpGet]
         public IActionResult Notifications()
@@ -235,62 +238,102 @@ namespace ASI.Basecode.WebApp.Controllers
         }
 
         [HttpGet]
-        public IActionResult Profile()
+        public async Task<IActionResult> Profile()
         {
-            // Use the same model as Home/Profile for consistency
-            var model = new ASI.Basecode.WebApp.Models.StudentProfileViewModel
+            var model = new ASI.Basecode.WebApp.Models.StudentProfileViewModel();
+            try
             {
-                // ===== Basic Profile Information =====
-                ProfileImageUrl = "/images/sample-profile.jpg",
-                FullName = "Dr. Maria Santos",
+                var supabaseUserId = HttpContext.Session.GetString("SupabaseUserId");
+                if (string.IsNullOrWhiteSpace(supabaseUserId))
+                {
+                    ViewBag.NoDataMessage = "Session expired. Please log in again.";
+                    return View("~/Views/Shared/Profile.cshtml", model);
+                }
 
-                // ===== Personal Info =====
-                StudentId = "T001",
-                Status = "Active",
-                FirstName = "Maria",
-                MiddleName = "Reyes",
-                LastName = "Santos",
-                Suffix = "",
-                DateOfBirth = "January 15, 1985",
-                Gender = "Female",
-                Course = "Faculty Member",
-                YearLevel = "N/A",
-                Department = "College of Computer Studies",
-                EmailAddress = "maria.santos@example.com",
-                PhoneNumber = "09171234568",
+                var client = await _supabaseAuthService.GetSupabaseClientForAuthAsync();
 
-                // ===== Address Information =====
-                HouseNumber = "456",
-                Street = "Oak Avenue",
-                Subdivision = "Green Valley Subdivision",
-                Barangay = "Barangay San Antonio",
-                City = "Quezon City",
-                Province = "Metro Manila",
-                ZipCode = "1101",
+                // Load Teacher base info
+                var teacher = await client.From<ASI.Basecode.Data.Models.Teacher>()
+                    .Where(x => x.SupabaseUserId == supabaseUserId)
+                    .Single();
 
-                // ===== Emergency Contact Information =====
-                EmergencyFirstName = "Jose",
-                EmergencyMiddleName = "Santos",
-                EmergencyLastName = "Santos",
-                EmergencySuffix = "",
-                EmergencyContactNumber = "09181234568",
-                EmergencyRelationship = "Spouse",
+                if (teacher != null)
+                {
+                    model.FirstName = teacher.FirstName;
+                    model.MiddleName = teacher.MiddleName;
+                    model.LastName = teacher.LastName;
+                    model.FullName = string.Join(" ", new[] { teacher.FirstName, teacher.MiddleName, teacher.LastName }.Where(s => !string.IsNullOrWhiteSpace(s)));
+                    model.EmailAddress = teacher.Email;
+                    model.Department = teacher.Department;
+                    model.Course = "Faculty Member"; // role/title display
+                    model.Status = teacher.IsActive ? "Active" : "Inactive";
+                }
 
-                // ===== Security Info =====
-                PasswordLastUpdated = DateTime.Now.AddMonths(-1)
-            };
+                // Address
+                if (teacher != null)
+                {
+                    var teacherAddress = await client.From<ASI.Basecode.Data.Models.TeacherAddress>()
+                        .Where(ta => ta.TeacherId == teacher.Id && ta.IsPrimary == true)
+                        .Single();
+                    if (teacherAddress != null)
+                    {
+                        var address = await client.From<ASI.Basecode.Data.Models.Address>()
+                            .Where(a => a.Id == teacherAddress.AddressId)
+                            .Single();
+                        if (address != null)
+                        {
+                            model.HouseNumber = address.HouseNumber;
+                            model.Street = address.StreetName;
+                            model.Subdivision = address.Subdivision;
+                            model.Barangay = address.Barangay;
+                            model.City = address.City;
+                            model.Province = address.Province;
+                            model.ZipCode = address.ZipCode;
+                        }
+                    }
+                }
 
-            if (TempData["UploadedProfileUrl"] is string uploadedUrl && !string.IsNullOrWhiteSpace(uploadedUrl))
+                // Emergency contact
+                if (teacher != null)
+                {
+                    var emergency = await client.From<ASI.Basecode.Data.Models.TeacherEmergencyContact>()
+                        .Where(ec => ec.TeacherId == teacher.Id && ec.IsPrimary == true)
+                        .Single();
+                    if (emergency != null)
+                    {
+                        var contact = await client.From<ASI.Basecode.Data.Models.Contact>()
+                            .Where(c => c.Id == emergency.ContactId)
+                            .Single();
+                        if (contact != null)
+                        {
+                            model.EmergencyFirstName = contact.FirstName;
+                            model.EmergencyMiddleName = contact.MiddleName;
+                            model.EmergencyLastName = contact.LastName;
+                            model.EmergencySuffix = contact.Suffix;
+                            model.EmergencyContactNumber = contact.ContactNumber;
+                            model.EmergencyRelationship = emergency.Relationship;
+                        }
+                    }
+                }
+
+                // Profile image
+                model.ProfileImageUrl = await _supabaseAuthService.GetUserProfileImageUrlAsync(HttpContext.Session.GetString("SupabaseUserId"));
+
+                if (TempData["UploadedProfileUrl"] is string uploadedUrl && !string.IsNullOrWhiteSpace(uploadedUrl))
+                {
+                    model.ProfileImageUrl = uploadedUrl;
+                }
+            }
+            catch (Exception ex)
             {
-                model.ProfileImageUrl = uploadedUrl;
+                Console.WriteLine($"Error loading teacher profile: {ex.Message}");
+                ViewBag.NoDataMessage = "Unable to load profile data at the moment.";
             }
 
-            // If no profile data exists
             if (!model.HasData)
-                ViewBag.NoDataMessage = "No profile data available. Please complete your profile information.";
+                ViewBag.NoDataMessage = "No profile data available.";
 
             return View("~/Views/Shared/Profile.cshtml", model);
-
         }
     }
 }

@@ -4,6 +4,7 @@ using ASI.Basecode.Services.Interfaces;
 using Microsoft.Extensions.Configuration;
 using System.Threading.Tasks;
 using System;
+using Microsoft.AspNetCore.Http;
 
 namespace ASI.Basecode.WebApp.Controllers
 {
@@ -52,6 +53,13 @@ namespace ASI.Basecode.WebApp.Controllers
                         var userRole = await _supabaseAuthService.GetUserRoleAsync(session.User.Id);
                         
                         Console.WriteLine($"User {session.User.Email} logged in with role: {userRole}");
+                        // Persist essentials in server-side session for later flows
+                        try
+                        {
+                            HttpContext.Session.SetString("UserEmail", session.User.Email ?? string.Empty);
+                            HttpContext.Session.SetString("SupabaseUserId", session.User.Id ?? string.Empty);
+                        }
+                        catch { }
                         
                         // Redirect based on user role
                         switch (userRole)

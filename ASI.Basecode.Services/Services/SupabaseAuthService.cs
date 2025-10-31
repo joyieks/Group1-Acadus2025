@@ -7,6 +7,7 @@ using Supabase.Gotrue;
 using System;
 using System.Net.Http;
 using System.Threading.Tasks;
+using System.Linq;
 
 namespace ASI.Basecode.Services.Services
 {
@@ -327,6 +328,152 @@ namespace ASI.Basecode.Services.Services
                 Console.WriteLine($"Error updating user password: {ex.Message}");
                 throw new Exception($"Error updating user password in Supabase Auth: {ex.Message}", ex);
             }
+        }
+
+        /// <summary>
+        /// Updates a user's password using the Admin API (does not require user session)
+        /// </summary>
+        public async Task<bool> UpdateUserPasswordAdminAsync(string supabaseUserId, string newPassword)
+        {
+            try
+            {
+                var adminClient = GetAdminClient();
+                var attributes = new AdminUserAttributes
+                {
+                    Password = newPassword
+                };
+
+                var updated = await adminClient.UpdateUserById(supabaseUserId, attributes);
+                return updated != null;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error updating password via Admin API: {ex.Message}");
+                throw new Exception($"Error updating user password via Admin API: {ex.Message}", ex);
+            }
+        }
+
+        public async Task<string> UploadProfileImageAsync(string supabaseUserId, string fileName, System.IO.Stream fileStream, string contentType)
+        {
+            var client = await GetSupabaseClientAsync();
+            var bucket = _configuration["Supabase:ProfilePicturesBucket"] ?? "profile_pictures";
+            var safeExt = System.IO.Path.GetExtension(fileName)?.ToLowerInvariant() ?? ".jpg";
+            var objectPath = $"{supabaseUserId}/{Guid.NewGuid():N}{safeExt}";
+
+            byte[] data;
+            using (var ms = new System.IO.MemoryStream())
+            {
+                await fileStream.CopyToAsync(ms);
+                data = ms.ToArray();
+            }
+
+            await client.Storage.From(bucket).Upload(data, objectPath, new Supabase.Storage.FileOptions
+            {
+                ContentType = contentType,
+                CacheControl = "3600",
+                Upsert = true
+            });
+
+            return objectPath;
+        }
+
+        public async Task<bool> SetUserProfileImageUrlAsync(string supabaseUserId, string imageUrl, string imagePath)
+        {
+            try
+            {
+                var admin = GetAdminClient();
+                var attrs = new AdminUserAttributes
+                {
+                    Data = new System.Collections.Generic.Dictionary<string, object>
+                    {
+                        { "profile_image_url", imageUrl },
+                        { "profile_image_path", imagePath },
+                        { "profile_image_updated_at", DateTime.UtcNow.ToString("o") }
+                    }
+                };
+                var updated = await admin.UpdateUserById(supabaseUserId, attrs);
+                return updated != null;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error setting profile image url: {ex.Message}");
+                return false;
+            }
+        }
+
+        public async Task<string> GetProfileImageUrlAsync(string objectPath, int expiresInSeconds = 3600)
+        {
+            var client = await GetSupabaseClientAsync();
+            var bucket = _configuration["Supabase:ProfilePicturesBucket"] ?? "profile_pictures";
+            try
+            {
+                // Try signed URL (works for private buckets)
+                var signed = await client.Storage.From(bucket).CreateSignedUrl(objectPath, expiresInSeconds);
+                if (!string.IsNullOrWhiteSpace(signed)) return signed;
+            }
+            catch { }
+
+            // Fallback to public URL if bucket is public
+            return client.Storage.From(bucket).GetPublicUrl(objectPath);
+        }
+
+        public async Task<string> GetUserProfileImageUrlAsync(string supabaseUserId)
+        {
+            try
+            {
+                var admin = GetAdminClient();
+                var user = await admin.GetUserById(supabaseUserId);
+                if (user?.UserMetadata != null)
+                {
+                    // Try path first (preferred for signed URL)
+                    if (user.UserMetadata.ContainsKey("profile_image_path"))
+                    {
+                        var path = user.UserMetadata["profile_image_path"]?.ToString();
+                        if (!string.IsNullOrWhiteSpace(path))
+                        {
+                            return await GetProfileImageUrlAsync(path, 3600);
+                        }
+                    }
+                    // Fallback to stored URL
+                    if (user.UserMetadata.ContainsKey("profile_image_url"))
+                    {
+                        var url = user.UserMetadata["profile_image_url"]?.ToString();
+                        if (!string.IsNullOrWhiteSpace(url)) return url;
+                    }
+                }
+
+                // Fallback: look for latest file in Storage under the user's folder
+                var client = await GetSupabaseClientAsync();
+                var bucket = _configuration["Supabase:ProfilePicturesBucket"] ?? "profile_pictures";
+                try
+                {
+                    var files = await client.Storage.From(bucket).List(supabaseUserId);
+                    if (files != null && files.Count > 0)
+                    {
+                        // pick the file with latest updated_at if available, else first
+                        var latest = files
+                            .OrderByDescending(f => f.UpdatedAt ?? f.CreatedAt ?? DateTime.UtcNow)
+                            .FirstOrDefault();
+                        if (latest != null)
+                        {
+                            var path = string.IsNullOrWhiteSpace(latest.Name) ? null : $"{supabaseUserId}/{latest.Name}";
+                            if (!string.IsNullOrWhiteSpace(path))
+                            {
+                                return await GetProfileImageUrlAsync(path, 3600);
+                            }
+                        }
+                    }
+                }
+                catch (Exception ex2)
+                {
+                    Console.WriteLine($"Storage fallback failed: {ex2.Message}");
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error getting user profile image url: {ex.Message}");
+            }
+            return null;
         }
 
         /// <summary>

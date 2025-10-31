@@ -27,6 +27,31 @@ namespace ASI.Basecode.Services.Interfaces
         Task<bool> UpdateUserPasswordAsync(string supabaseUserId, string newPassword);
 
         /// <summary>
+        /// Updates user password via Admin API (does not require user session)
+        /// </summary>
+        Task<bool> UpdateUserPasswordAdminAsync(string supabaseUserId, string newPassword);
+
+        /// <summary>
+        /// Uploads a profile image to Supabase Storage and returns the object path (bucket key)
+        /// </summary>
+        Task<string> UploadProfileImageAsync(string supabaseUserId, string fileName, System.IO.Stream fileStream, string contentType);
+
+        /// <summary>
+        /// Stores the profile image URL/path in the user's auth metadata
+        /// </summary>
+        Task<bool> SetUserProfileImageUrlAsync(string supabaseUserId, string imageUrl, string imagePath);
+
+        /// <summary>
+        /// Returns a signed URL for an object path, or a public URL if bucket is public
+        /// </summary>
+        Task<string> GetProfileImageUrlAsync(string objectPath, int expiresInSeconds = 3600);
+
+        /// <summary>
+        /// Gets the user's current profile image URL (generates a fresh signed URL if needed)
+        /// </summary>
+        Task<string> GetUserProfileImageUrlAsync(string supabaseUserId);
+
+        /// <summary>
         /// Checks if user needs password setup
         /// </summary>
         Task<bool> NeedsPasswordSetupAsync(string supabaseUserId);
