@@ -150,6 +150,15 @@ namespace ASI.Basecode.WebApp.Controllers
             // Redirect to AccountController's SetPassword action
             return RedirectToAction("SetPassword", "Account");
         }
+
+        /// <summary>
+        /// Shows the forgot password page
+        /// </summary>
+        [HttpGet]
+        public IActionResult ForgotPassword()
+        {
+            return RedirectToAction("ForgotPassword", "Account");
+        }
     }
 }
 
