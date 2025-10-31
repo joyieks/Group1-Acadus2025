@@ -131,21 +131,21 @@
             <div id="userMenu" class="hidden absolute right-0 top-12 z-[9999] bg-white shadow-lg rounded-xl border border-gray-100 w-48">
                 @if (controller == "Admin")
                 {
-                    <a asp-controller="Admin" asp-action="EditProfile" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">Edit Profile</a>
+                    <a asp-controller="Admin" asp-action="EditProfile" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">Profile</a>
                 }
                 else if (controller == "Teacher")
                 {
-                    <a asp-controller="Teacher" asp-action="EditProfile" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">Edit Profile</a>
+                    <a asp-controller="Teacher" asp-action="Profile" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">Profile</a>
                 }
                 else if (controller == "Student")
                 {
-                    <a asp-controller="Student" asp-action="EditProfile" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">Edit Profile</a>
+                    <a asp-controller="Student" asp-action="Profile" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">Profile</a>
                 }
                 else
                 {
-                    <a href="/Home/Profile" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">Edit Profile</a>
+                    <a href="/Home/Profile" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">Profile</a>
                 }
-                <a href="/Auth/Index" class="block px-4 py-2 text-sm text-red-600 hover:bg-gray-50">Logout</a>
+                <a href="/Auth/Login" class="block px-4 py-2 text-sm text-red-600 hover:bg-gray-50">Logout</a>
             </div>
         </div>
     </div>
@@ -182,20 +182,20 @@
         <a href="/@controller/Notifications" class="block px-3 py-2 rounded-md text-base text-[#337D58] hover:bg-acadus-green/10">Notifications</a>
         @if (controller == "Admin")
         {
-            <a asp-controller="Admin" asp-action="EditProfile" class="block px-3 py-2 rounded-md text-base text-[#337D58] hover:bg-acadus-green/10">Edit Profile</a>
+            <a asp-controller="Admin" asp-action="Profile" class="block px-3 py-2 rounded-md text-base text-[#337D58] hover:bg-acadus-green/10">Profile</a>
         }
         else if (controller == "Teacher")
         {
-            <a asp-controller="Teacher" asp-action="EditProfile" class="block px-3 py-2 rounded-md text-base text-[#337D58] hover:bg-acadus-green/10">Edit Profile</a>
+            <a asp-controller="Teacher" asp-action="Profile" class="block px-3 py-2 rounded-md text-base text-[#337D58] hover:bg-acadus-green/10">Profile</a>
         }
         else if (controller == "Student")
         {
-            <a asp-controller="Student" asp-action="EditProfile" class="block px-3 py-2 rounded-md text-base text-[#337D58] hover:bg-acadus-green/10">Edit Profile</a>
+            <a asp-controller="Home" asp-action="Profile" class="block px-3 py-2 rounded-md text-base text-[#337D58] hover:bg-acadus-green/10">Profile</a>
         }
         else
         {
-            <a href="/Home/Profile" class="block px-3 py-2 rounded-md text-base text-[#337D58] hover:bg-acadus-green/10">Edit Profile</a>
+            <a href="/Home/Profile" class="block px-3 py-2 rounded-md text-base text-[#337D58] hover:bg-acadus-green/10">Profile</a>
         }
-        <a href="/Auth/Index" class="block px-3 py-2 rounded-md text-base text-red-600 hover:bg-red-50">Logout</a>
+        <a href="/Auth/Login" class="block px-3 py-2 rounded-md text-base text-red-600 hover:bg-red-50">Logout</a>
     </div>
 </div>

@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace ASI.Basecode.Webapp.Models
+namespace ASI.Basecode.WebApp.Models
 {
     /// <summary>
     /// View model containing notification items for display in a dropdown or page.

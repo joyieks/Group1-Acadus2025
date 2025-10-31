@@ -16,9 +16,12 @@ namespace ASI.Basecode.WebApp.Models
         public int PendingTasks { get; set; }
         public List<AppealItem> Appeals { get; set; }
         public List<FeedbackItem> Feedbacks { get; set; }
-
-
         public List<ActivityItem> Activities { get; set; } = new();
+        
+        // Pagination properties
+        public int CurrentPage { get; set; } = 1;
+        public int TotalPages { get; set; } = 1;
+        public string CurrentTab { get; set; } = "grades";
 
         public double GetCourseAverage()
         {
@@ -42,6 +45,10 @@ namespace ASI.Basecode.WebApp.Models
             public DateTime Date { get; set; }
             public string Status { get; set; } = string.Empty;
             public bool CanAppeal { get; set; } = false;
+            
+            // Additional properties for the new mock data
+            public string Title { get; set; } = string.Empty;
+            public string DueDate { get; set; } = string.Empty;
         }
 
         public class AppealItem
@@ -50,6 +57,11 @@ namespace ASI.Basecode.WebApp.Models
             public string Reason { get; set; } = string.Empty;
             public string Status { get; set; } = "Pending";
             public DateTime DateSubmitted { get; set; }
+            
+            // Additional properties for the new mock data
+            public string Title { get; set; } = string.Empty;
+            public string Date { get; set; } = string.Empty;
+            public string Description { get; set; } = string.Empty;
         }
 
         public class FeedbackItem
@@ -58,6 +70,11 @@ namespace ASI.Basecode.WebApp.Models
             public string Comment { get; set; } = string.Empty;
             public string Instructor { get; set; } = string.Empty;
             public DateTime DateGiven { get; set; }
+            
+            // Additional properties for the new mock data
+            public string Title { get; set; } = string.Empty;
+            public string Date { get; set; } = string.Empty;
+            public string Content { get; set; } = string.Empty;
         }
     }
 }

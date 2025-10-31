@@ -2,6 +2,9 @@ using Microsoft.AspNetCore.Mvc;
 using ASI.Basecode.Services.Interfaces;
 using ASI.Basecode.Services.ServiceModels;
 using System.Threading.Tasks;
+using ASI.Basecode.WebApp.Models;
+using System.Collections.Generic;
+
 
 namespace ASI.Basecode.WebApp.Controllers
 {
@@ -130,12 +133,39 @@ namespace ASI.Basecode.WebApp.Controllers
         }
 
         [HttpGet]
+
         public IActionResult Teachers()
         {
             return RedirectToAction("Index", "Teacher");
         }
 
+
+        public IActionResult Notifications()
+        {
+            var model = new NotificationsViewModel
+            {
+                Notifications = new List<NotificationsViewModel.NotificationItem>() // no seeded items
+            };
+            return View("~/Views/Shared/Notifications.cshtml", model);
+        }
+
+        [HttpGet]
+        public PartialViewResult NotificationDropdown()
+        {
+            var model = new NotificationsViewModel
+            {
+                Notifications = new List<NotificationsViewModel.NotificationItem>()
+            };
+            return PartialView("_NotificationDropdown", model);
+        }
+
+        [HttpGet]
+        public IActionResult NotificationCount()
+        {
+            var count = 0; // sync with model above; replace with real count when available
+            return Json(new { count });
+        }
+
     }
 }
-
 
