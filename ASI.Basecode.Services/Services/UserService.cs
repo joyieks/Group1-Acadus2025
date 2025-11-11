@@ -22,12 +22,12 @@ namespace ASI.Basecode.Services.Services
             _repository = repository;
         }
 
-        public LoginResult AuthenticateUser(string userId, string password, ref User user)
+        public LoginResult AuthenticateUser(string email, string password, ref User user)
         {
+            // Supabase handles password authentication
+            // This method should only retrieve the user after Supabase auth succeeds
             user = new User();
-            var passwordKey = PasswordManager.EncryptPassword(password);
-            user = _repository.GetUsers().Where(x => x.UserId == userId &&
-                                                     x.Password == passwordKey).FirstOrDefault();
+            user = _repository.GetUsers().Where(x => x.email == email).FirstOrDefault();
 
             return user != null ? LoginResult.Success : LoginResult.Failed;
         }
@@ -38,12 +38,8 @@ namespace ASI.Basecode.Services.Services
             if (!_repository.UserExists(model.UserId))
             {
                 _mapper.Map(model, user);
-                user.Password = PasswordManager.EncryptPassword(model.Password);
-                user.CreatedTime = DateTime.Now;
-                user.UpdatedTime = DateTime.Now;
-                user.CreatedBy = System.Environment.UserName;
-                user.UpdatedBy = System.Environment.UserName;
-
+                // New schema doesn't include Password field or audit fields
+                // Password handling should be moved to a dedicated password/auth service
                 _repository.AddUser(user);
             }
             else

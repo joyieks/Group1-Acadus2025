@@ -58,7 +58,7 @@ namespace ASI.Basecode.WebApp.Authentication
         public Task<ClaimsIdentity> GetClaimsIdentity(string username, string password)
         {
             ClaimsIdentity claimsIdentity = null;
-            User userData = new User();
+            ASI.Basecode.Data.Models.User userData = new ASI.Basecode.Data.Models.User();
 
             user.loginResult = LoginResult.Success;//TODO this._accountService.AuthenticateUser(username, password, ref userData);
 
@@ -77,17 +77,17 @@ namespace ASI.Basecode.WebApp.Authentication
         /// </summary>
         /// <param name="user">The user.</param>
         /// <returns>Instance of ClaimsIdentity</returns>
-        public ClaimsIdentity CreateClaimsIdentity(User user)
+        public ClaimsIdentity CreateClaimsIdentity(ASI.Basecode.Data.Models.User user)
         {
             var token = _configuration.GetTokenAuthentication();
             //TODO
             var claims = new List<Claim>()
             {
-                new Claim(ClaimTypes.NameIdentifier, user.UserId, ClaimValueTypes.String, Const.Issuer),
-                new Claim(ClaimTypes.Name, user.Name, ClaimValueTypes.String, Const.Issuer),
+                new Claim(ClaimTypes.NameIdentifier, user.id.ToString(), ClaimValueTypes.String, Const.Issuer),
+                new Claim(ClaimTypes.Name, user.firstName + " " + user.lastName, ClaimValueTypes.String, Const.Issuer),
 
-                new Claim("UserId", user.UserId, ClaimValueTypes.String, Const.Issuer),
-                new Claim("UserName", user.Name, ClaimValueTypes.String, Const.Issuer),
+                new Claim("UserId", user.id.ToString(), ClaimValueTypes.String, Const.Issuer),
+                new Claim("UserName", user.firstName + " " + user.lastName, ClaimValueTypes.String, Const.Issuer),
             };
             return new ClaimsIdentity(claims, Const.AuthenticationScheme);
         }
@@ -120,7 +120,7 @@ namespace ASI.Basecode.WebApp.Authentication
         /// </summary>
         /// <param name="user">The user.</param>
         /// <param name="isPersistent">if set to <c>true</c> [is persistent].</param>
-        public async Task SignInAsync(User user, bool isPersistent = false)
+        public async Task SignInAsync(ASI.Basecode.Data.Models.User user, bool isPersistent = false)
         {
             var claimsIdentity = this.CreateClaimsIdentity(user);
             var principal = this.CreateClaimsPrincipal(claimsIdentity);

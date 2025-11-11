@@ -35,6 +35,14 @@ namespace ASI.Basecode.WebApp
             this._services.AddScoped<IUserRepository, UserRepository>();
             this._services.AddScoped<SignInManager>();
 
+            // Course, Activity, and Submission Repositories
+            this._services.AddScoped<ICourseRepository, CourseRepository>();
+            this._services.AddScoped<IActivityRepository, ActivityRepository>();
+            this._services.AddScoped<IActivitySubmissionRepository, ActivitySubmissionRepository>();
+
+            // Teacher Service for dashboard statistics
+            this._services.AddScoped<ITeacherService, TeacherService>();
+
             this._services.AddHttpClient();
         }
     }
