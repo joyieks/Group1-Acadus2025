@@ -1,5 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
-using ASI.Basecode.Webapp.Models;
+using ASI.Basecode.WebApp.Models;
 using System.Collections.Generic;
 
 namespace ASI.Basecode.WebApp.Controllers.ViewComponents

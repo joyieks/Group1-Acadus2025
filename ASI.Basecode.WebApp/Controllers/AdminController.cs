@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
+using ASI.Basecode.WebApp.Models;
 using System.Collections.Generic;
-using ASI.Basecode.Webapp.Models;
 
 namespace ASI.Basecode.WebApp.Controllers
 {
@@ -89,6 +89,16 @@ namespace ASI.Basecode.WebApp.Controllers
         }
 
         [HttpGet]
+        public IActionResult Notifications()
+        {
+            var model = new NotificationsViewModel
+            {
+                Notifications = new List<NotificationsViewModel.NotificationItem>() // no seeded items
+            };
+            return View("~/Views/Shared/Notifications.cshtml", model);
+        }
+
+        [HttpGet]
         public PartialViewResult NotificationDropdown()
         {
             var model = new NotificationsViewModel
@@ -104,21 +114,6 @@ namespace ASI.Basecode.WebApp.Controllers
             var count = 0; // sync with model above; replace with real count when available
             return Json(new { count });
         }
-
-        [HttpGet]
-        public IActionResult Notifications()
-        {
-            var model = new ASI.Basecode.Webapp.Models.NotificationsViewModel
-            {
-                Notifications = new List<ASI.Basecode.Webapp.Models.NotificationsViewModel.NotificationItem>() // no seeded items
-            };
-
-            if (!model.HasData)
-                ViewBag.NoDataMessage = "No notifications available at the moment.";
-
-            return View(model);
-        }
     }
 }
-
 
