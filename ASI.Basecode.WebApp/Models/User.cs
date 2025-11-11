@@ -1,4 +1,4 @@
-﻿namespace ASI.Basecode.Data.Models
+namespace ASI.Basecode.WebApp.Models
 {
     /// <summary>
     /// Represents a user account in the Acadus system.

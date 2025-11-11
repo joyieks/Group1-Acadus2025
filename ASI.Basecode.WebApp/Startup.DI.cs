@@ -27,33 +27,13 @@ namespace ASI.Basecode.WebApp
             this._services.TryAddSingleton<IHttpContextAccessor, HttpContextAccessor>();
             this._services.TryAddSingleton<IActionContextAccessor, ActionContextAccessor>();
 
-            // If no DB configured, use in-memory provider so frontend runs
-            // Temporarily disabled to avoid missing EF Core InMemory package errors
-            // this._services.AddDbContext<AsiBasecodeDBContext>(options =>
-            // {
-            //     options.UseInMemoryDatabase("AsiBasecodeDev");
-            // });
+            // Database & Unit of Work
+            this._services.AddScoped<IUnitOfWork, UnitOfWork>();
 
-            /*
-             * Temporarily disabled backend service wiring while focusing on frontend only.
-             * Uncomment when backend implementations are ready.
-             *
-             * // Common
-             * this._services.AddScoped<TokenProvider>();
-             * this._services.TryAddSingleton<TokenProviderOptionsFactory>();
-             * this._services.TryAddSingleton<TokenValidationParametersFactory>();
-             * this._services.AddScoped<IUnitOfWork, UnitOfWork>();
-             *
-             * // Services
-             * this._services.TryAddSingleton<TokenValidationParametersFactory>();
-             * this._services.AddScoped<IUserService, UserService>();
-             *
-             * // Repositories
-             * this._services.AddScoped<IUserRepository, UserRepository>();
-             *
-             * // Manager Class
-             * this._services.AddScoped<SignInManager>();
-             */
+            // Enable User Authentication via UserService
+            this._services.AddScoped<IUserService, UserService>();
+            this._services.AddScoped<IUserRepository, UserRepository>();
+            this._services.AddScoped<SignInManager>();
 
             this._services.AddHttpClient();
         }
