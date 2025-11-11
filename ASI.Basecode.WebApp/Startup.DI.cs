@@ -1,6 +1,7 @@
 ﻿using ASI.Basecode.Data;
 using ASI.Basecode.Data.Interfaces;
 using ASI.Basecode.Data.Repositories;
+using ASI.Basecode.Services;
 using ASI.Basecode.Services.Interfaces;
 using ASI.Basecode.Services.ServiceModels;
 using ASI.Basecode.Services.Services;
@@ -35,13 +36,19 @@ namespace ASI.Basecode.WebApp
             this._services.AddScoped<IUserRepository, UserRepository>();
             this._services.AddScoped<SignInManager>();
 
-            // Course, Activity, and Submission Repositories
-            this._services.AddScoped<ICourseRepository, CourseRepository>();
-            this._services.AddScoped<IActivityRepository, ActivityRepository>();
-            this._services.AddScoped<IActivitySubmissionRepository, ActivitySubmissionRepository>();
+            // Repository Interfaces and Implementations (from Services namespace)
+            this._services.AddScoped<ASI.Basecode.Services.Interfaces.IUserRoleRepository, UserRoleRepository>();
+            this._services.AddScoped<ASI.Basecode.Services.Interfaces.ICourseRepository, CourseRepository>();
+            this._services.AddScoped<ASI.Basecode.Services.Interfaces.IActivityRepository, ActivityRepository>();
+            this._services.AddScoped<ASI.Basecode.Services.Interfaces.IActivitySubmissionRepository, ActivitySubmissionRepository>();
+            this._services.AddScoped<ASI.Basecode.Services.Interfaces.IStudentProfileRepository, StudentProfileRepository>();
+            this._services.AddScoped<ASI.Basecode.Services.Interfaces.ITeacherProfileRepository, TeacherProfileRepository>();
+            this._services.AddScoped<ASI.Basecode.Services.Interfaces.ICourseEnrollmentRepository, CourseEnrollmentRepository>();
 
-            // Teacher Service for dashboard statistics
-            this._services.AddScoped<ITeacherService, TeacherService>();
+            // Dashboard Services
+            this._services.AddScoped<ITeacherDashboardService, TeacherDashboardService>();
+            this._services.AddScoped<IStudentDashboardService, StudentDashboardService>();
+            this._services.AddScoped<IAdminDashboardService, AdminDashboardService>();
 
             this._services.AddHttpClient();
         }

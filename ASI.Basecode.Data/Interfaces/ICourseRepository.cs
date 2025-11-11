@@ -1,61 +1,75 @@
 using ASI.Basecode.Data.Models;
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace ASI.Basecode.Data.Interfaces
 {
     /// <summary>
-    /// Repository interface for Course entity operations.
-    /// Provides methods to query and manage courses in the database.
+    /// Repository interface for Course data access operations with Supabase.
+    /// Handles all CRUD and query operations related to courses.
     /// </summary>
     public interface ICourseRepository
     {
         /// <summary>
-        /// Gets all courses from the database.
+        /// Gets all courses taught by a specific teacher.
+        /// Supabase Query: SELECT * FROM courses WHERE instructor = teacherId
         /// </summary>
-        /// <returns>IQueryable collection of all courses.</returns>
-        IQueryable<Course> GetCourses();
+        /// <param name="teacherId">The instructor's user ID (Course.instructor FK)</param>
+        /// <returns>List of courses taught by the teacher</returns>
+        Task<List<Course>> GetCoursesByTeacherAsync(int teacherId);
 
         /// <summary>
         /// Gets a specific course by its ID.
+        /// Supabase Query: SELECT * FROM courses WHERE id = courseId LIMIT 1
         /// </summary>
-        /// <param name="courseId">The course ID to retrieve.</param>
-        /// <returns>The course if found, null otherwise.</returns>
-        Course GetCourseById(int courseId);
+        /// <param name="courseId">The course ID</param>
+        /// <returns>Course object or null if not found</returns>
+        Task<Course> GetCourseByIdAsync(int courseId);
 
         /// <summary>
-        /// Gets all courses taught by a specific instructor.
+        /// Gets all courses (use with caution - can be expensive).
+        /// Supabase Query: SELECT * FROM courses
         /// </summary>
-        /// <param name="instructorId">The User ID of the instructor.</param>
-        /// <returns>IQueryable collection of courses taught by the instructor.</returns>
-        IQueryable<Course> GetCoursesByInstructor(int instructorId);
+        /// <returns>List of all courses</returns>
+        Task<List<Course>> GetAllCoursesAsync();
 
         /// <summary>
-        /// Checks if a course exists by ID.
+        /// Gets all active courses.
+        /// Supabase Query: SELECT * FROM courses WHERE status = 'Active'
         /// </summary>
-        /// <param name="courseId">The course ID to check.</param>
-        /// <returns>True if the course exists, false otherwise.</returns>
-        bool CourseExists(int courseId);
+        /// <returns>List of active courses</returns>
+        Task<List<Course>> GetActiveCoursesAsync();
 
         /// <summary>
-        /// Adds a new course to the database.
+        /// Gets all courses for a specific semester.
+        /// Supabase Query: SELECT * FROM courses WHERE semesterId = semesterId
         /// </summary>
-        /// <param name="course">The course entity to add.</param>
-        void AddCourse(Course course);
+        /// <param name="semesterId">The semester ID</param>
+        /// <returns>List of courses in the semester</returns>
+        Task<List<Course>> GetCoursesBySemesterAsync(int semesterId);
 
         /// <summary>
-        /// Updates an existing course in the database.
+        /// Creates a new course.
+        /// Supabase: INSERT INTO courses (...)
         /// </summary>
-        /// <param name="course">The course entity with updated values.</param>
-        void UpdateCourse(Course course);
+        /// <param name="course">The course object to create</param>
+        /// <returns>The created course with ID populated</returns>
+        Task<Course> CreateCourseAsync(Course course);
 
         /// <summary>
-        /// Deletes a course from the database.
+        /// Updates an existing course.
+        /// Supabase: UPDATE courses SET ... WHERE id = courseId
         /// </summary>
-        /// <param name="courseId">The ID of the course to delete.</param>
-        void DeleteCourse(int courseId);
+        /// <param name="course">The course object with updated values</param>
+        /// <returns>True if update was successful</returns>
+        Task<bool> UpdateCourseAsync(Course course);
+
+        /// <summary>
+        /// Deletes a course by ID.
+        /// Supabase: DELETE FROM courses WHERE id = courseId
+        /// </summary>
+        /// <param name="courseId">The course ID to delete</param>
+        /// <returns>True if deletion was successful</returns>
+        Task<bool> DeleteCourseAsync(int courseId);
     }
 }

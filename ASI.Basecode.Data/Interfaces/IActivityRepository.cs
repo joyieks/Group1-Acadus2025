@@ -1,83 +1,86 @@
 using ASI.Basecode.Data.Models;
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace ASI.Basecode.Data.Interfaces
 {
     /// <summary>
-    /// Repository interface for Activity entity operations.
-    /// Provides methods to query and manage activities (assignments, quizzes, exams) in the database.
+    /// Repository interface for Activity data access operations with Supabase.
+    /// Handles all CRUD and query operations related to course activities (assignments, quizzes, etc.).
     /// </summary>
     public interface IActivityRepository
     {
         /// <summary>
-        /// Gets all activities from the database.
+        /// Gets all activities for a specific course.
+        /// Supabase Query: SELECT * FROM activities WHERE courseId = courseId
         /// </summary>
-        /// <returns>IQueryable collection of all activities.</returns>
-        IQueryable<Activity> GetActivities();
+        /// <param name="courseId">The course ID</param>
+        /// <returns>List of activities in the course</returns>
+        Task<List<Activity>> GetActivitiesByCourseAsync(int courseId);
+
+        /// <summary>
+        /// Gets all activities for multiple courses (batch query).
+        /// Supabase Query: SELECT * FROM activities WHERE courseId IN (...)
+        /// </summary>
+        /// <param name="courseIds">List of course IDs</param>
+        /// <returns>List of all activities across the specified courses</returns>
+        Task<List<Activity>> GetActivitiesByCourseIdsAsync(List<int> courseIds);
 
         /// <summary>
         /// Gets a specific activity by its ID.
+        /// Supabase Query: SELECT * FROM activities WHERE id = activityId LIMIT 1
         /// </summary>
-        /// <param name="activityId">The activity ID to retrieve.</param>
-        /// <returns>The activity if found, null otherwise.</returns>
-        Activity GetActivityById(int activityId);
+        /// <param name="activityId">The activity ID</param>
+        /// <returns>Activity object or null if not found</returns>
+        Task<Activity> GetActivityByIdAsync(int activityId);
 
         /// <summary>
-        /// Gets all activities for a specific course.
+        /// Gets all non-archived activities for a course.
+        /// Supabase Query: SELECT * FROM activities WHERE courseId = courseId AND isArchived = false
         /// </summary>
-        /// <param name="courseId">The course ID to filter activities.</param>
-        /// <returns>IQueryable collection of activities in the course.</returns>
-        IQueryable<Activity> GetActivitiesByCourse(int courseId);
+        /// <param name="courseId">The course ID</param>
+        /// <returns>List of active (non-archived) activities</returns>
+        Task<List<Activity>> GetActiveActivitiesByCourseAsync(int courseId);
 
         /// <summary>
-        /// Gets all activities for a specific course that are not archived.
+        /// Gets activities that are due soon or overdue.
+        /// Supabase Query: SELECT * FROM activities WHERE dueDate BETWEEN NOW() AND NOW() + INTERVAL
         /// </summary>
-        /// <param name="courseId">The course ID to filter activities.</param>
-        /// <returns>IQueryable collection of non-archived activities in the course.</returns>
-        IQueryable<Activity> GetActiveActivitiesByCourse(int courseId);
+        /// <param name="courseId">The course ID</param>
+        /// <param name="daysAhead">Number of days to look ahead</param>
+        /// <returns>List of activities due within the specified timeframe</returns>
+        Task<List<Activity>> GetUpcomingActivitiesByCourseAsync(int courseId, int daysAhead = 7);
 
         /// <summary>
-        /// Checks if an activity exists by ID.
+        /// Creates a new activity.
+        /// Supabase: INSERT INTO activities (...)
         /// </summary>
-        /// <param name="activityId">The activity ID to check.</param>
-        /// <returns>True if the activity exists, false otherwise.</returns>
-        bool ActivityExists(int activityId);
+        /// <param name="activity">The activity object to create</param>
+        /// <returns>The created activity with ID populated</returns>
+        Task<Activity> CreateActivityAsync(Activity activity);
 
         /// <summary>
-        /// Adds a new activity to the database.
+        /// Updates an existing activity.
+        /// Supabase: UPDATE activities SET ... WHERE id = activityId
         /// </summary>
-        /// <param name="activity">The activity entity to add.</param>
-        void AddActivity(Activity activity);
+        /// <param name="activity">The activity object with updated values</param>
+        /// <returns>True if update was successful</returns>
+        Task<bool> UpdateActivityAsync(Activity activity);
 
         /// <summary>
-        /// Updates an existing activity in the database.
+        /// Soft-deletes an activity by setting isArchived = true.
+        /// Supabase: UPDATE activities SET isArchived = true WHERE id = activityId
         /// </summary>
-        /// <param name="activity">The activity entity with updated values.</param>
-        void UpdateActivity(Activity activity);
+        /// <param name="activityId">The activity ID to archive</param>
+        /// <returns>True if archive was successful</returns>
+        Task<bool> ArchiveActivityAsync(int activityId);
 
         /// <summary>
-        /// Deletes an activity from the database.
+        /// Hard-deletes an activity from the database.
+        /// Supabase: DELETE FROM activities WHERE id = activityId
         /// </summary>
-        /// <param name="activityId">The ID of the activity to delete.</param>
-        void DeleteActivity(int activityId);
-
-        /// <summary>
-        /// Archives an activity by setting isArchived to true and archivedAt to current time.
-        /// </summary>
-        /// <param name="activityId">The ID of the activity to archive.</param>
-        void ArchiveActivity(int activityId);
-
-        /// <summary>
-        /// Gets all activities due within a specific date range (this week, for example).
-        /// </summary>
-        /// <param name="courseIds">List of course IDs to filter activities.</param>
-        /// <param name="startDate">The start date of the range.</param>
-        /// <param name="endDate">The end date of the range.</param>
-        /// <returns>IQueryable collection of activities due within the date range.</returns>
-        IQueryable<Activity> GetActivitiesByDueDateRange(List<int> courseIds, DateTime startDate, DateTime endDate);
+        /// <param name="activityId">The activity ID to delete</param>
+        /// <returns>True if deletion was successful</returns>
+        Task<bool> DeleteActivityAsync(int activityId);
     }
 }

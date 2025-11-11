@@ -1,9 +1,11 @@
+using Supabase.Postgrest.Models;
+
 namespace ASI.Basecode.Data.Models
 {
     /// <summary>
     /// Represents emergency contact information for a user.
     /// </summary>
-    public class EmergencyContact
+    public class EmergencyContact : BaseModel
     {
         /// <summary>
         /// Primary key identifier for the emergency contact.

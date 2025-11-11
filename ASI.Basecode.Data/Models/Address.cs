@@ -1,9 +1,11 @@
+using Supabase.Postgrest.Models;
+
 namespace ASI.Basecode.Data.Models
 {
     /// <summary>
     /// Represents a physical address (for users).
     /// </summary>
-    public class Address
+    public class Address : BaseModel
     {
         /// <summary>
         /// Primary key identifier for the address.

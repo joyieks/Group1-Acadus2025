@@ -7,6 +7,7 @@ using static ASI.Basecode.Resources.Constants.Enums;
 using Microsoft.Extensions.Configuration;
 using Microsoft.AspNetCore.Http;
 using System;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Session;
 using DataModels = ASI.Basecode.Data.Models;
 
@@ -34,7 +35,7 @@ namespace ASI.Basecode.WebApp.Controllers
         }
 
         [HttpPost]
-        public IActionResult Login(LoginModel model)
+        public async Task<IActionResult> Login(LoginModel model)
         {
             if (!ModelState.IsValid)
             {
@@ -44,6 +45,17 @@ namespace ASI.Basecode.WebApp.Controllers
             var normalizedEmail = model.Email.Trim().ToLowerInvariant();
             var password = model.Password;
             
+            // Step 0: Initialize Supabase connection
+            try
+            {
+                await AsiBasecodeDBContext.InitializeSupabaseAsync(_configuration);
+            }
+            catch (Exception ex)
+            {
+                // Log Supabase initialization error but continue to dev fallback
+                System.Diagnostics.Debug.WriteLine($"Supabase initialization failed: {ex.Message}");
+            }
+            
             // Step 1: Try authenticating via UserService (Supabase/Database)
             try
             {
@@ -52,18 +64,32 @@ namespace ASI.Basecode.WebApp.Controllers
                 
                 if (authResult == LoginResult.Success && user != null)
                 {
+                    // Fetch user roles from database
+                    var client = AsiBasecodeDBContext.SupabaseClient;
+                    var userRoles = await client.From<DataModels.UserRole>()
+                        .Where(ur => ur.userId == user.id)
+                        .Get();
+                    
                     // Store user in session
                     HttpContext.Session.SetString("UserId", user.id.ToString());
-                    HttpContext.Session.SetString("UserName", user.email ?? "User");
+                    HttpContext.Session.SetString("UserEmail", user.email ?? "User");
+                    HttpContext.Session.SetString("UserName", $"{user.firstName} {user.lastName}");
+                    
+                    // Store first role (or could store all roles as comma-separated)
+                    if (userRoles?.Models?.Count > 0)
+                    {
+                        HttpContext.Session.SetString("UserRoleId", userRoles.Models[0].roleId.ToString());
+                    }
                     
                     // Redirect based on role (this would need to be enhanced with actual role data)
                     return RedirectToAction("Index", "Student");
                 }
             }
-            catch (Exception)
+            catch (Exception ex)
             {
                 // If database access fails, continue to dev user fallback
                 // This allows development to work even if database isn't configured
+                System.Diagnostics.Debug.WriteLine($"Database authentication failed: {ex.Message}");
             }
 
             // Step 2: Fall back to hardcoded dev users for testing/development
@@ -73,6 +99,7 @@ namespace ASI.Basecode.WebApp.Controllers
             {
                 // Store dev user in session
                 HttpContext.Session.SetString("UserId", devUser.Email);
+                HttpContext.Session.SetString("UserEmail", devUser.Email);
                 HttpContext.Session.SetString("UserName", devUser.Name);
                 HttpContext.Session.SetString("UserRole", devUser.Role);
                 

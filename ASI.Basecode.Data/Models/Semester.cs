@@ -1,9 +1,11 @@
+using Supabase.Postgrest.Models;
+
 namespace ASI.Basecode.Data.Models
 {
     /// <summary>
     /// Represents a semester/term in the academic calendar.
     /// </summary>
-    public class Semester
+    public class Semester : BaseModel
     {
         /// <summary>
         /// Primary key identifier for the semester.

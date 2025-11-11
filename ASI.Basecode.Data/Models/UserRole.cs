@@ -6,32 +6,32 @@ using Supabase.Postgrest.Models;
 namespace ASI.Basecode.Data.Models
 {
     /// <summary>
-    /// Represents teacher-specific profile information.
-    /// Each user can have at most one teacher profile (enforced by UNIQUE constraint on userId).
+    /// Junction/Many-to-Many table linking users to their roles.
+    /// Supports multiple roles per user (e.g., user can be both Student and Admin).
     /// </summary>
-    [Table("teacher_profile")]
-    public class TeacherProfile : BaseModel
+    [Table("user_role")]
+    public class UserRole : BaseModel
     {
         /// <summary>
-        /// Primary key identifier for the teacher profile.
+        /// Primary key identifier for the user role assignment.
         /// </summary>
         [Key]
         [Column("id")]
         public int id { get; set; }
 
         /// <summary>
-        /// Foreign key to User table (UNIQUE).
-        /// Links this profile to exactly one user.
+        /// Foreign key to User table.
+        /// Identifies which user has this role.
         /// </summary>
         [Column("user_id")]
         public int userId { get; set; }
 
         /// <summary>
-        /// Foreign key to Department table.
-        /// Indicates which department the teacher belongs to.
+        /// Foreign key to Role table.
+        /// Identifies which role the user has.
         /// </summary>
-        [Column("department_id")]
-        public int departmentId { get; set; }
+        [Column("role_id")]
+        public int roleId { get; set; }
 
         /// <summary>
         /// Navigation property to User.
@@ -41,11 +41,10 @@ namespace ASI.Basecode.Data.Models
         public virtual User User { get; set; }
 
         /// <summary>
-        /// Navigation property to Department.
+        /// Navigation property to Role.
         /// Optional - only loaded if explicitly included in query.
         /// </summary>
-        [ForeignKey("departmentId")]
-        public virtual Department Department { get; set; }
+        [ForeignKey("roleId")]
+        public virtual Role Role { get; set; }
     }
 }
-

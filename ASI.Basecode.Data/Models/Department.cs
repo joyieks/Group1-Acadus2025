@@ -1,9 +1,11 @@
+using Supabase.Postgrest.Models;
+
 namespace ASI.Basecode.Data.Models
 {
     /// <summary>
     /// Represents an academic department in the institution.
     /// </summary>
-    public class Department
+    public class Department : BaseModel
     {
         /// <summary>
         /// Primary key identifier for the department.

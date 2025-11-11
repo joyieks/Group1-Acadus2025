@@ -1,4 +1,5 @@
 using System;
+using Supabase.Postgrest.Models;
 
 namespace ASI.Basecode.Data.Models
 {
@@ -6,7 +7,7 @@ namespace ASI.Basecode.Data.Models
     /// Represents a student's grade/submission for an activity.
     /// Tracks the score a student received on a course activity.
     /// </summary>
-    public class ActivitySubmission
+    public class ActivitySubmission : BaseModel
     {
         /// <summary>
         /// Primary key identifier for the submission record.

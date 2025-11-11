@@ -1,4 +1,5 @@
 using System;
+using Supabase.Postgrest.Models;
 
 namespace ASI.Basecode.Data.Models
 {
@@ -6,7 +7,7 @@ namespace ASI.Basecode.Data.Models
     /// Represents a student's enrollment in a course.
     /// Junction table linking students (users) to courses.
     /// </summary>
-    public class CourseEnrollment
+    public class CourseEnrollment : BaseModel
     {
         /// <summary>
         /// Primary key identifier for the enrollment record.

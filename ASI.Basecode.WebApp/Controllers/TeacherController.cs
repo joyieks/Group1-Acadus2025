@@ -1,49 +1,22 @@
 using Microsoft.AspNetCore.Mvc;
 using ASI.Basecode.WebApp.Models;
-using ASI.Basecode.Services.Interfaces;
-using ASI.Basecode.Services.Utilities;
 using System.Collections.Generic;
 using System.Linq;
 using System;
-using Microsoft.AspNetCore.Http;
 
 namespace ASI.Basecode.WebApp.Controllers
 {
     public class TeacherController : Controller
     {
-        private readonly ITeacherService _teacherService;
-
-        public TeacherController(ITeacherService teacherService)
-        {
-            _teacherService = teacherService;
-        }
-
         [HttpGet]
         public IActionResult Index()
         {
-            // Extract teacher ID from session
-            string userIdSession = HttpContext.Session.GetString("UserId");
-            int teacherId = !string.IsNullOrEmpty(userIdSession) && int.TryParse(userIdSession, out int id) ? id : 1;
-
-            // Calculate current week dates (Monday to Sunday)
-            DateTime weekStartDate = DateUtility.GetWeekStartDate();
-            DateTime weekEndDate = DateUtility.GetWeekEndDate();
-            string weekDisplayText = DateUtility.GetWeekDisplayText();
-
-            // Create model with week-based statistics
             var model = new TeacherDashboardViewModel
             {
-                // Week-scoped statistics
-                TotalActivities = _teacherService.GetTotalActivitiesForTeacherByWeek(teacherId, weekStartDate, weekEndDate),
-                GradedActivities = _teacherService.GetGradedActivitiesCountForTeacherByWeek(teacherId, weekStartDate, weekEndDate),
-                TotalCoursesHandled = _teacherService.GetTotalCoursesForTeacher(teacherId),
-                
-                // Week metadata for display
-                WeekStartDate = weekStartDate,
-                WeekEndDate = weekEndDate,
-                WeekDisplayText = weekDisplayText
+                TotalActivities = 0,
+                GradedActivities = 0,
+                TotalCoursesHandled = 0
             };
-
             return View(model);
         }
 

@@ -3,7 +3,6 @@ using ASI.Basecode.WebApp;
 using ASI.Basecode.WebApp.Extensions.Configuration;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -42,9 +41,11 @@ builder.Services.AddSession(options =>
     options.Cookie.IsEssential = true;
 });
 
-// Register your DbContext with Supabase provider
-builder.Services.AddDbContext<AsiBasecodeDBContext>(options => 
-    options.UseNpgsql(builder.Configuration.GetConnectionString("SupabaseConnection")));
+// Register your DbContext (internally supports Supabase)
+builder.Services.AddDbContext<AsiBasecodeDBContext>(options =>
+{
+    // DbContext will be configured for Supabase or other providers as needed
+});
 
 // Register IConfiguration so your context's constructor can read appsettings.json
 builder.Services.AddSingleton<IConfiguration>(builder.Configuration);

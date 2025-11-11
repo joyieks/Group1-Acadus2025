@@ -21,27 +21,38 @@ namespace ASI.Basecode.Data
         //Students
         //public virtual DbSet<TaskItem> TaskItem { get; set; }
 
+        // Core Entity Sets
         public virtual DbSet<User> Users { get; set; }
         public virtual DbSet<Role> Roles { get; set; }
+        public virtual DbSet<UserRole> UserRoles { get; set; }
+
+        // Profile Entity Sets
         public virtual DbSet<StudentProfile> StudentProfiles { get; set; }
         public virtual DbSet<TeacherProfile> TeacherProfiles { get; set; }
         public virtual DbSet<AdminProfile> AdminProfiles { get; set; }
+
+        // Lookup Entity Sets
         public virtual DbSet<Semester> Semesters { get; set; }
         public virtual DbSet<Department> Departments { get; set; }
         public virtual DbSet<Program> Programs { get; set; }
         public virtual DbSet<Address> Addresses { get; set; }
         public virtual DbSet<EmergencyContact> EmergencyContacts { get; set; }
+
+        // Course Entity Sets
         public virtual DbSet<Course> Courses { get; set; }
         public virtual DbSet<CourseEnrollment> CourseEnrollments { get; set; }
+
+        // Activity Entity Sets
         public virtual DbSet<Activity> Activities { get; set; }
         public virtual DbSet<ActivitySubmission> ActivitySubmissions { get; set; }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<User>(entity =>
             {
                 entity.HasKey(e => e.id);
 
-                entity.ToTable("Users");
+                entity.ToTable("users");
 
                 entity.Property(e => e.id)
                     .ValueGeneratedOnAdd()

@@ -1,11 +1,12 @@
 using System;
+using Supabase.Postgrest.Models;
 
 namespace ASI.Basecode.Data.Models
 {
     /// <summary>
     /// Represents a course offered by the institution.
     /// </summary>
-    public class Course
+    public class Course : BaseModel
     {
         /// <summary>
         /// Primary key identifier for the course.

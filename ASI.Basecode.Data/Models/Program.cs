@@ -1,9 +1,11 @@
+using Supabase.Postgrest.Models;
+
 namespace ASI.Basecode.Data.Models
 {
     /// <summary>
     /// Represents an academic program/degree offered by the institution.
     /// </summary>
-    public class Program
+    public class Program : BaseModel
     {
         /// <summary>
         /// Primary key identifier for the program.

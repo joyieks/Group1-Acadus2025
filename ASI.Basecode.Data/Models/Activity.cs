@@ -1,4 +1,5 @@
 using System;
+using Supabase.Postgrest.Models;
 
 namespace ASI.Basecode.Data.Models
 {
@@ -6,7 +7,7 @@ namespace ASI.Basecode.Data.Models
     /// Represents an activity/assignment within a course.
     /// Can be quizzes, exams, assignments, projects, etc.
     /// </summary>
-    public class Activity
+    public class Activity : BaseModel
     {
         /// <summary>
         /// Primary key identifier for the activity.
