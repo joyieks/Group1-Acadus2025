@@ -4,31 +4,31 @@ using Supabase.Postgrest.Models;
 
 namespace ASI.Basecode.Data.Models
 {
-    [Table("contacts")]
+    [Table("emergencyContact")]
     public class Contact : BaseModel
     {
         [PrimaryKey("id", false)]
         public int Id { get; set; }
 
-        [Column("first_name")]
+        [Column("created_at")]
+        public DateTime CreatedAt { get; set; }
+
+        [Column("firstName")]
         public string FirstName { get; set; }
 
-        [Column("last_name")]
-        public string LastName { get; set; }
-
-        [Column("middle_name")]
+        [Column("middleName")]
         public string MiddleName { get; set; }
+
+        [Column("lastName")]
+        public string LastName { get; set; }
 
         [Column("suffix")]
         public string Suffix { get; set; }
 
-        [Column("contact_number")]
-        public string ContactNumber { get; set; }
+        [Column("contactNumber")]
+        public string ContactNumber { get; set; }  // Keep as string - Supabase will handle conversion to numeric
 
-        [Column("email")]
-        public string Email { get; set; }
-
-        [Column("created_at")]
-        public DateTime CreatedAt { get; set; }
+        [Column("relationship")]
+        public string Relationship { get; set; }  // Added - this column exists in the table
     }
 }

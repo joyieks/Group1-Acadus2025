@@ -252,28 +252,39 @@ namespace ASI.Basecode.WebApp.Controllers
 
                 var client = await _supabaseAuthService.GetSupabaseClientForAuthAsync();
 
-                // Load Teacher base info
-                var teacher = await client.From<ASI.Basecode.Data.Models.Teacher>()
-                    .Where(x => x.SupabaseUserId == supabaseUserId)
+                // Load user info (all personal data is in users table)
+                var user = await client.From<ASI.Basecode.Data.Models.SupabaseUserNew>()
+                    .Where(x => x.UserTypeId == supabaseUserId)
                     .Single();
 
-                if (teacher != null)
+                if (user != null)
                 {
-                    model.FirstName = teacher.FirstName;
-                    model.MiddleName = teacher.MiddleName;
-                    model.LastName = teacher.LastName;
-                    model.FullName = string.Join(" ", new[] { teacher.FirstName, teacher.MiddleName, teacher.LastName }.Where(s => !string.IsNullOrWhiteSpace(s)));
-                    model.EmailAddress = teacher.Email;
-                    model.Department = teacher.Department;
-                    model.Course = "Faculty Member"; // role/title display
-                    model.Status = teacher.IsActive ? "Active" : "Inactive";
+                    model.FirstName = user.FirstName;
+                    model.MiddleName = user.MiddleName;
+                    model.LastName = user.LastName;
+                    model.FullName = string.Join(" ", new[] { user.FirstName, user.MiddleName, user.LastName }.Where(s => !string.IsNullOrWhiteSpace(s)));
+                    model.EmailAddress = user.Email;
+                    
+                    // Get teacherProfile for department info
+                    var teacherProfile = await client.From<ASI.Basecode.Data.Models.Teacher>()
+                            .Where(x => x.TeacherId == supabaseUserId)
+                         .Single();
+
+                    model.Department = teacherProfile?.DepartmentId?.ToString() ?? "N/A";
+    model.Course = "Faculty Member"; // role/title display
+           model.Status = user.IsActive ? "Active" : "Inactive";
                 }
 
                 // Address
-                if (teacher != null)
+                if (user != null)
                 {
+                    // Get teacherProfile first
+                    var teacherProfile = await client.From<ASI.Basecode.Data.Models.Teacher>()
+                        .Where(x => x.TeacherId == supabaseUserId)
+                        .Single();
+
                     var teacherAddress = await client.From<ASI.Basecode.Data.Models.TeacherAddress>()
-                        .Where(ta => ta.TeacherId == teacher.Id && ta.IsPrimary == true)
+                        .Where(ta => ta.TeacherId == teacherProfile.Id && ta.IsPrimary == true)  // Fixed: use teacherProfile.Id (int)
                         .Single();
                     if (teacherAddress != null)
                     {
@@ -294,10 +305,15 @@ namespace ASI.Basecode.WebApp.Controllers
                 }
 
                 // Emergency contact
-                if (teacher != null)
+                if (user != null)
                 {
+                    // Get teacherProfile first
+                    var teacherProfile = await client.From<ASI.Basecode.Data.Models.Teacher>()
+                        .Where(x => x.TeacherId == supabaseUserId)
+                        .Single();
+
                     var emergency = await client.From<ASI.Basecode.Data.Models.TeacherEmergencyContact>()
-                        .Where(ec => ec.TeacherId == teacher.Id && ec.IsPrimary == true)
+                        .Where(ec => ec.TeacherId == teacherProfile.Id && ec.IsPrimary == true)  // Fixed: use teacherProfile.Id (int)
                         .Single();
                     if (emergency != null)
                     {

@@ -7,8 +7,8 @@ namespace ASI.Basecode.Services.Interfaces
     public interface IStudentService
     {
         Task<bool> CreateStudentAsync(StudentViewModel model);
-        Task<Student> GetStudentByIdAsync(int id);
-        Task<Student> GetStudentByEmailAsync(string email);
+        Task<SupabaseUserNew> GetStudentByIdAsync(int id);  // Changed return type
+        Task<SupabaseUserNew> GetStudentByEmailAsync(string email);  // Changed return type
         Task<bool> UpdateStudentAsync(StudentViewModel model);
         Task<bool> DeleteStudentAsync(int id);
     }

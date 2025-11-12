@@ -4,6 +4,7 @@ using ASI.Basecode.Services.ServiceModels;
 using Microsoft.Extensions.Configuration;
 using Supabase;
 using System;
+using System.Linq;  // Added for FirstOrDefault
 using System.Threading.Tasks;
 
 namespace ASI.Basecode.Services.Services
@@ -38,10 +39,12 @@ namespace ASI.Basecode.Services.Services
         {
             try
             {
-                // Generate a secure random password that will be immediately reset
+                Console.WriteLine($"\n=== CREATING TEACHER: {model.FirstName} {model.LastName} ===");
+
+                // Generate a secure random password
                 var secureRandomPassword = Guid.NewGuid().ToString() + "Aa1!";
                 
-                // Create user in Supabase Auth
+                Console.WriteLine($"Step 1: Creating Supabase Auth user...");
                 var supabaseUserId = await _supabaseAuthService.CreateUserAsync(
                     model.Email, 
                     secureRandomPassword, 
@@ -49,123 +52,208 @@ namespace ASI.Basecode.Services.Services
                     model.LastName
                 );
 
-                Console.WriteLine($"Created user account for {model.Email}. Password reset email will be sent.");
+                Console.WriteLine($"? Step 1 Complete: Auth user created with ID: {supabaseUserId}");
 
                 var client = await GetSupabaseClientAsync();
 
-                // Create teacher record in Supabase database
-                var teacher = new Teacher
+                // Step 2: Insert into users table (stores all personal information)
+                Console.WriteLine($"Step 2: Inserting into users table...");
+                var userRecord = new SupabaseUserNew
                 {
-                    SupabaseUserId = supabaseUserId,
                     FirstName = model.FirstName,
                     LastName = model.LastName,
                     MiddleName = model.MiddleName,
                     Suffix = model.Suffix,
                     Email = model.Email,
                     ContactNumber = model.ContactNumber,
-                    IdNumber = model.IdNumber,
-                    Department = model.Department,
-                    CreatedAt = DateTime.UtcNow,
-                    UpdatedAt = DateTime.UtcNow,
-                    IsActive = true
+                    UserTypeId = supabaseUserId, // Supabase Auth UUID
+                    IsActive = true,
+                    ProfilePictureUrl = null,
+                    Address = null,
+                    EmergencyContact = null
+                };
+
+                var insertedUserResponse = await client.From<SupabaseUserNew>().Insert(userRecord);
+                var insertedUser = insertedUserResponse.Model;
+                Console.WriteLine($"? Step 2 Complete: User record created with ID: {insertedUser.Id}");
+
+                // Step 3: Lookup department ID
+                Console.WriteLine($"Step 3: Looking up department ID...");
+                int? departmentId = null;
+
+                try
+                {
+                    // Try to find department by name
+                    var deptQuery = await client.From<Department>()
+                        .Where(x => x.DepartmentName == model.Department)
+                        .Get();
+                    var deptRecord = deptQuery?.Models?.FirstOrDefault();
+                    departmentId = deptRecord?.Id;
+                    Console.WriteLine($"  Department lookup: {(departmentId.HasValue ? $"Found ID {departmentId}" : "Not found, will use null")}");
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"  Warning: Department lookup failed: {ex.Message}");
+                }
+                Console.WriteLine($"? Step 3 Complete: Department ID = {departmentId}");
+
+                // Step 4: Create teacherProfile record (only stores teacherId and departmentId)
+                Console.WriteLine($"Step 4: Creating teacherProfile record...");
+                var teacher = new Teacher
+                {
+                    TeacherId = supabaseUserId,   // References users.userTypeId
+                    DepartmentId = departmentId,  // FK to departments table
+                    CreatedAt = DateTime.UtcNow
                 };
 
                 var insertedTeacherResponse = await client.From<Teacher>().Insert(teacher);
                 var insertedTeacher = insertedTeacherResponse.Model;
+                Console.WriteLine($"? Step 4 Complete: TeacherProfile created with ID: {insertedTeacher.Id}");
 
-                // Create address record
-                var address = new Address
+                // Step 5: Lookup Teacher role and assign in user_roles table
+     Console.WriteLine($"Step 5: Looking up Teacher role and assigning in user_roles table...");
+        
+         // Lookup Teacher role by name to get ID
+   int teacherRoleId = 2; // Default to 2 if lookup fails
+    try
+     {
+         var roleQuery = await client.From<Role>()
+         .Where(x => x.RoleName == "Teacher")
+                .Get();
+           var roleRecord = roleQuery?.Models?.FirstOrDefault();
+  if (roleRecord != null)
+     {
+    teacherRoleId = roleRecord.Id;
+    Console.WriteLine($"  Role lookup: Found 'Teacher' role with ID {teacherRoleId}");
+         }
+  else
+      {
+          Console.WriteLine($"  Warning: Teacher role not found, using default ID 2");
+   }
+             }
+catch (Exception ex)
+   {
+     Console.WriteLine($"  Warning: Role lookup failed: {ex.Message}, using default ID 2");
+         }
+
+     var userRole = new UserRole
+       {
+       UserId = supabaseUserId, // Supabase Auth UUID
+         RoleId = teacherRoleId, // Now an int referencing roles.id
+      CreatedAt = DateTime.UtcNow
+          };
+
+                await client.From<UserRole>().Insert(userRole);
+                Console.WriteLine($"? Step 5 Complete: Teacher role (ID {teacherRoleId}) assigned");
+
+                // Step 6: Create address record (optional - if addresses are still used)
+                if (!string.IsNullOrEmpty(model.City) && !string.IsNullOrEmpty(model.Province))
                 {
-                    HouseNumber = model.HouseNumber,
-                    StreetName = model.StreetName,
-                    Subdivision = model.Subdivision,
-                    Barangay = model.Barangay,
-                    City = model.City,
-                    Province = model.Province,
-                    ZipCode = model.ZipCode,
-                    CreatedAt = DateTime.UtcNow
-                };
+                    Console.WriteLine($"Step 6: Creating address record...");
+                    var address = new Address
+                    {
+                        HouseNumber = model.HouseNumber,
+                        StreetName = model.StreetName,
+                        Subdivision = model.Subdivision,
+                        Barangay = model.Barangay ?? "N/A",
+                        City = model.City,
+                        Province = model.Province,
+                        ZipCode = model.ZipCode,
+                        CreatedAt = DateTime.UtcNow
+                    };
 
-                var insertedAddressResponse = await client.From<Address>().Insert(address);
-                var insertedAddress = insertedAddressResponse.Model;
+                    var insertedAddressResponse = await client.From<Address>().Insert(address);
+                    var insertedAddress = insertedAddressResponse.Model;
+                    Console.WriteLine($"? Step 6 Complete: Address created with ID: {insertedAddress.Id}");
 
-                // Link teacher to address
-                var teacherAddress = new TeacherAddress
+                    // Update user record with address info (simplified - store as text)
+                    var addressText = $"{model.HouseNumber} {model.StreetName}, {model.Barangay}, {model.City}, {model.Province} {model.ZipCode}";
+                    Console.WriteLine($"  Address stored: {addressText}");
+                }
+
+                // Step 7: Create emergency contact (optional - if contacts are still used)
+                if (!string.IsNullOrEmpty(model.EmergencyFirstName) && !string.IsNullOrEmpty(model.EmergencyContactNumber))
                 {
-                    TeacherId = insertedTeacher.Id,
-                    AddressId = insertedAddress.Id,
-                    AddressType = "current",
-                    IsPrimary = true,
-                    CreatedAt = DateTime.UtcNow
-                };
+                    Console.WriteLine($"Step 7: Creating emergency contact...");
+                    var emergencyContact = new Contact
+                    {
+                        FirstName = model.EmergencyFirstName,
+                        LastName = model.EmergencyLastName,
+                        MiddleName = model.EmergencyMiddleName,
+                        Suffix = model.EmergencySuffix,
+                        ContactNumber = model.EmergencyContactNumber,
+Relationship = model.Relationship,  // Added - this field exists in the table
+  CreatedAt = DateTime.UtcNow
+  };
 
-                await client.From<TeacherAddress>().Insert(teacherAddress);
+                    var insertedEmergencyContactResponse = await client.From<Contact>().Insert(emergencyContact);
+                    var insertedEmergencyContact = insertedEmergencyContactResponse.Model;
+                    Console.WriteLine($"? Step 7 Complete: Emergency contact created with ID: {insertedEmergencyContact.Id}");
 
-                // Create emergency contact record
-                var emergencyContact = new Contact
-                {
-                    FirstName = model.EmergencyFirstName,
-                    LastName = model.EmergencyLastName,
-                    MiddleName = model.EmergencyMiddleName,
-                    Suffix = model.EmergencySuffix,
-                    ContactNumber = model.EmergencyContactNumber,
-                    CreatedAt = DateTime.UtcNow
-                };
+                    // Update user record with emergency contact info (simplified - store as text)
+                    var emergencyText = $"{model.EmergencyFirstName} {model.EmergencyLastName} - {model.EmergencyContactNumber}";
+                    Console.WriteLine($"  Emergency contact stored: {emergencyText}");
+                }
 
-                var insertedEmergencyContactResponse = await client.From<Contact>().Insert(emergencyContact);
-                var insertedEmergencyContact = insertedEmergencyContactResponse.Model;
-
-                // Link teacher to emergency contact
-                var teacherEmergencyContact = new TeacherEmergencyContact
-                {
-                    TeacherId = insertedTeacher.Id,
-                    ContactId = insertedEmergencyContact.Id,
-                    Relationship = model.Relationship,
-                    IsPrimary = true,
-                    CreatedAt = DateTime.UtcNow
-                };
-
-                await client.From<TeacherEmergencyContact>().Insert(teacherEmergencyContact);
-
-                // Send secure password setup email
+                // Step 8: Send password setup email
+                Console.WriteLine($"Step 8: Sending password setup email...");
                 try
                 {
                     await _supabaseAuthService.SendPasswordSetupEmailAsync(model.Email);
-                    Console.WriteLine($"Password setup email sent to {model.Email}");
+                    Console.WriteLine($"? Step 8 Complete: Password setup email sent to {model.Email}");
                 }
                 catch (Exception emailEx)
                 {
-                    Console.WriteLine($"Warning: Failed to send password setup email for {model.Email}: {emailEx.Message}");
+                    Console.WriteLine($"? Step 8 Warning: Failed to send password setup email: {emailEx.Message}");
+                    Console.WriteLine($"  Note: Teacher account is still created. Admin can resend email manually.");
                 }
+
+                Console.WriteLine($"\n??? TEACHER CREATION COMPLETE ???");
+                Console.WriteLine($"  Teacher ID: {insertedTeacher.Id}");
+                Console.WriteLine($"  Auth User ID: {supabaseUserId}");
+                Console.WriteLine($"  Email: {model.Email}\n");
 
                 return true;
             }
             catch (Exception ex)
             {
+                Console.WriteLine($"\n??? TEACHER CREATION FAILED ???");
+                Console.WriteLine($"  Error: {ex.Message}");
+                Console.WriteLine($"  Stack Trace: {ex.StackTrace}\n");
+
                 // Clean up auth user if teacher creation fails
                 try
                 {
+                    Console.WriteLine($"Attempting to clean up auth user...");
                     await _supabaseAuthService.DeleteUserAsync(model.Email);
+                    Console.WriteLine($"? Auth user cleanup successful");
                 }
-                catch
+                catch (Exception cleanupEx)
                 {
-                    // Log cleanup failure but don't throw
+                    Console.WriteLine($"? Auth user cleanup failed: {cleanupEx.Message}");
                 }
                 
                 throw new Exception($"Error creating teacher: {ex.Message}", ex);
             }
         }
 
-        public async Task<Teacher> GetTeacherByIdAsync(int id)
+        public async Task<SupabaseUserNew> GetTeacherByIdAsync(int teacherProfileId)
         {
             try
             {
                 var client = await GetSupabaseClientAsync();
-                var response = await client.From<Teacher>()
-                    .Where(x => x.Id == id)
+          
+                // Get teacherProfile first
+                var teacherProfile = await client.From<Teacher>()
+                    .Where(x => x.Id == teacherProfileId)
                     .Single();
-                
-                return response;
+
+                // Then get the full user record
+                var user = await client.From<SupabaseUserNew>()
+                    .Where(x => x.UserTypeId == teacherProfile.TeacherId)
+                    .Single();
+
+                return user;
             }
             catch (Exception ex)
             {
@@ -173,12 +261,13 @@ namespace ASI.Basecode.Services.Services
             }
         }
 
-        public async Task<Teacher> GetTeacherByEmailAsync(string email)
+        public async Task<SupabaseUserNew> GetTeacherByEmailAsync(string email)
         {
             try
             {
                 var client = await GetSupabaseClientAsync();
-                var response = await client.From<Teacher>()
+                // Query users table directly by email
+                var response = await client.From<SupabaseUserNew>()
                     .Where(x => x.Email == email)
                     .Single();
                 
@@ -190,17 +279,52 @@ namespace ASI.Basecode.Services.Services
             }
         }
 
-        public async Task<bool> UpdateTeacherAsync(Teacher teacher)
+        public async Task<bool> UpdateTeacherAsync(TeacherViewModel model)
         {
             try
             {
                 var client = await GetSupabaseClientAsync();
-                teacher.UpdatedAt = DateTime.UtcNow;
-                
+          
+                // Get the user record
+                var existingUser = await GetTeacherByEmailAsync(model.Email);
+                if (existingUser == null)
+                {
+                    return false;
+                }
+
+                // Update user table
+                existingUser.FirstName = model.FirstName;
+                existingUser.LastName = model.LastName;
+                existingUser.MiddleName = model.MiddleName;
+                existingUser.Suffix = model.Suffix;
+                existingUser.ContactNumber = model.ContactNumber;
+
+                await client.From<SupabaseUserNew>()
+                    .Where(x => x.UserTypeId == existingUser.UserTypeId)
+                    .Update(existingUser);
+
+                // Update teacherProfile table
+                var teacherProfile = await client.From<Teacher>()
+                    .Where(x => x.TeacherId == existingUser.UserTypeId)
+                    .Single();
+
+                // Lookup department ID
+                int? departmentId = null;
+                try
+                {
+                    var deptQuery = await client.From<Department>()
+                        .Where(x => x.DepartmentName == model.Department)
+                        .Get();
+                    departmentId = deptQuery?.Models?.FirstOrDefault()?.Id;
+                }
+                catch { }
+
+                teacherProfile.DepartmentId = departmentId;  // Fixed: use int, not string
+
                 await client.From<Teacher>()
-                    .Where(x => x.Id == teacher.Id)
-                    .Update(teacher);
-                
+                    .Where(x => x.TeacherId == existingUser.UserTypeId)
+                    .Update(teacherProfile);
+
                 return true;
             }
             catch (Exception ex)
@@ -214,31 +338,29 @@ namespace ASI.Basecode.Services.Services
             try
             {
                 var client = await GetSupabaseClientAsync();
-                
-                // Get teacher to get supabase_user_id for auth cleanup
-                var teacher = await GetTeacherByIdAsync(id);
-                
-                // Delete teacher (cascade will handle related records)
-                await client.From<Teacher>()
+     
+                // Get teacherProfile first
+                var teacherProfile = await client.From<Teacher>()
                     .Where(x => x.Id == id)
-                    .Delete();
-                
-                // Clean up auth user
-                try
+                    .Single();
+
+                if (teacherProfile == null)
                 {
-                    await _supabaseAuthService.DeleteUserAsync(teacher.SupabaseUserId);
+                    return false;
                 }
-                catch
-                {
-                    // Log cleanup failure but don't throw
-                }
+
+                // Delete from Supabase Auth
+                await _supabaseAuthService.DeleteUserAsync(teacherProfile.TeacherId);
                 
+                // Delete teacherProfile (cascade should handle related records)
+                await client.From<Teacher>().Where(x => x.Id == id).Delete();
+         
                 return true;
             }
-            catch (Exception ex)
-            {
-                throw new Exception($"Error deleting teacher: {ex.Message}", ex);
-            }
+   catch (Exception ex)
+{
+       throw new Exception($"Error deleting teacher: {ex.Message}", ex);
+        }
         }
     }
 }

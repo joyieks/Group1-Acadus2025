@@ -573,79 +573,124 @@ namespace ASI.Basecode.Services.Services
         }
 
         /// <summary>
-        /// Determines user role based on Supabase user ID by checking admin email, then teachers and students tables
+        /// Determines user role based on Supabase user ID by checking the users, user_roles, and roles tables
         /// </summary>
         public async Task<string> GetUserRoleAsync(string supabaseUserId)
         {
             try
-            {
-                var client = await GetSupabaseClientAsync();
-                
-                // First, get the user's email from Supabase Auth to check if they're an admin
+       {
+             var client = await GetSupabaseClientAsync();
+  
+        Console.WriteLine($"=== ROLE LOOKUP DEBUG ===");
+     Console.WriteLine($"Looking up role for Supabase Auth User ID: {supabaseUserId}");
+   
+         // Step 1: Get the user from the users table using their userTypeId (Supabase Auth ID)
+            SupabaseUserNew userRecord = null;
                 try
-                {
-                    var adminClient = GetAdminClient();
-                    var user = await adminClient.GetUserById(supabaseUserId);
-                    
-                    if (user != null && !string.IsNullOrEmpty(user.Email))
-                    {
-                        var normalizedEmail = user.Email.Trim().ToLowerInvariant();
-                        
-                        // Check if this is the admin email
-                        var adminEmail = _configuration["Admin:Email"] ?? "admin@gmail.com";
-                        if (normalizedEmail == adminEmail.ToLowerInvariant())
-                        {
-                            Console.WriteLine($"User {user.Email} identified as Admin");
-                            return "Admin";
-                        }
-                        
-                        // Check user metadata for admin role
-                        if (user.UserMetadata != null && user.UserMetadata.ContainsKey("role"))
-                        {
-                            var metadataRole = user.UserMetadata["role"]?.ToString();
-                            if (!string.IsNullOrEmpty(metadataRole) && metadataRole.Equals("Admin", StringComparison.OrdinalIgnoreCase))
-                            {
-                                Console.WriteLine($"User {user.Email} identified as Admin from metadata");
-                                return "Admin";
-                            }
-                        }
-                    }
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"Error checking admin status: {ex.Message}");
-                }
+      {
+            var userQuery = await client
+ .From<SupabaseUserNew>()
+           .Where(x => x.UserTypeId == supabaseUserId)
+           .Get();
 
-                // Check if user is a teacher
-                var teacherResponse = await client
-                    .From<Teacher>()
-                    .Where(x => x.SupabaseUserId == supabaseUserId)
-                    .Single();
+  userRecord = userQuery?.Models?.FirstOrDefault();
+                   
+            if (userRecord != null)
+    {
+          Console.WriteLine($"✓ Found user in users table:");
+          Console.WriteLine($"  - User ID: {userRecord.Id}");
+   Console.WriteLine($"  - Email: {userRecord.Email}");
+      Console.WriteLine($"  - Name: {userRecord.FirstName} {userRecord.LastName}");
+  }
+     else
+       {
+               Console.WriteLine($"✗ No user found in users table with userTypeId: {supabaseUserId}");
+            Console.WriteLine($"  User needs to be added to the users table first");
+         return "Student"; // Default to Student if not in database
+      }
+   }
+         catch (Exception ex)
+   {
+     Console.WriteLine($"✗ Error querying users table: {ex.Message}");
+  return "Student";
+  }
 
-                if (teacherResponse != null)
-                {
-                    return "Teacher";
-                }
+         // Step 2: Get the user's role from user_roles table
+      // Convert userId to string for comparison
+             string userIdString = userRecord.Id.ToString();
+     UserRole userRoleRecord = null;
+      try
+     {
+         // Get ALL user_roles and filter in memory since Supabase doesn't support complex queries
+     var allUserRoles = await client
+                .From<UserRole>()
+           .Get();
 
-                // Check if user is a student
-                var studentResponse = await client
-                    .From<Student>()
-                    .Where(x => x.SupabaseUserId == supabaseUserId)
-                    .Single();
-
-                if (studentResponse != null)
-                {
-                    return "Student";
-                }
-
-                // Default to Student if no role found
-                return "Student";
-            }
-            catch (Exception ex)
+    // FIXED: Use supabaseUserId (userTypeId) instead of userRecord.Id (database ID)
+            // The user_roles.userId column contains the Supabase Auth UUID, not the database ID
+            userRoleRecord = allUserRoles?.Models?.FirstOrDefault(x => x.UserId == supabaseUserId);
+        
+ if (userRoleRecord != null)
             {
-                Console.WriteLine($"Error determining user role: {ex.Message}");
-                return "Student";
+       Console.WriteLine($"✓ Found user_role mapping:");
+   Console.WriteLine($"  - User Role ID: {userRoleRecord.Id}");
+      Console.WriteLine($"  - User ID: {userRoleRecord.UserId}");
+     Console.WriteLine($"  - Role ID: {userRoleRecord.RoleId}");
             }
+            else
+   {
+      Console.WriteLine($"✗ No role mapping found in user_roles table for userTypeId: {supabaseUserId}");
+      Console.WriteLine($"  User needs to be assigned a role in user_roles table");
+       return "Student"; // Default to Student if no role assigned
+}
+     }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"✗ Error querying user_roles table: {ex.Message}");
+            return "Student";
+   }
+
+         // Step 3: Get the role name from roles table by ID
+  try
+       {
+   // userRoleRecord.RoleId is now an integer referencing roles.id
+ var roleQuery = await client
+       .From<Role>()
+       .Where(x => x.Id == userRoleRecord.RoleId)
+        .Get();
+
+        var roleRecord = roleQuery?.Models?.FirstOrDefault();
+
+    if (roleRecord != null && !string.IsNullOrEmpty(roleRecord.RoleName))
+   {
+       Console.WriteLine($"✓ Found role:");
+  Console.WriteLine($"  - Role ID: {roleRecord.Id}");
+            Console.WriteLine($"  - Role Name: {roleRecord.RoleName}");
+   Console.WriteLine($"=== ROLE LOOKUP SUCCESS: {roleRecord.RoleName} ===");
+                return roleRecord.RoleName;
+   }
+     else
+            {
+ Console.WriteLine($"✗ No role found in roles table with ID: {userRoleRecord.RoleId}");
+    Console.WriteLine($"  Role ID might be invalid or role was deleted");
+       }
+   }
+     catch (Exception ex)
+        {
+      Console.WriteLine($"✗ Error querying roles table: {ex.Message}");
+ }
+
+                // If we got here, something went wrong - default to Student
+    Console.WriteLine($"=== ROLE LOOKUP FAILED: Defaulting to Student ===");
+           return "Student";
+}
+       catch (Exception ex)
+       {
+  Console.WriteLine($"✗ FATAL ERROR in GetUserRoleAsync: {ex.Message}");
+      Console.WriteLine($"Stack Trace: {ex.StackTrace}");
+       // Return Student as safe default instead of throwing
+      return "Student";
+}
         }
     }
 }

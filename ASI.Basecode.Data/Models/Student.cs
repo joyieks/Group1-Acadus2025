@@ -5,49 +5,25 @@ using Supabase.Postgrest.Models;
 
 namespace ASI.Basecode.Data.Models
 {
-    [Table("students")] // This must match the table name in Supabase
+    [Table("studentProfile")]
     public class Student : BaseModel
     {
         [PrimaryKey("id", false)]
         public int Id { get; set; }
 
-        [Column("supabase_user_id")]
-        public string SupabaseUserId { get; set; }
+        [Column("studentId")]
+        public string StudentId { get; set; }  // References users.userTypeId
 
-        [Column("first_name")]
-        public string FirstName { get; set; }
+        [Column("yearLevel")]
+        public int? YearLevel { get; set; }
 
-        [Column("last_name")]
-        public string LastName { get; set; }
+        [Column("programId")]  // Changed from "program" to "programId" (FK to programs table)
+        public int? ProgramId { get; set; }
 
-        [Column("middle_name")]
-        public string MiddleName { get; set; }
-
-        [Column("suffix")]
-        public string Suffix { get; set; }
-
-        [Column("email")]
-        public string Email { get; set; }
-
-        [Column("contact_number")]
-        public string ContactNumber { get; set; }
-
-        [Column("year_level")]
-        public int YearLevel { get; set; }
-
-        [Column("program")]
-        public string Program { get; set; }
-
-        [Column("department")]
-        public string Department { get; set; }
+        [Column("departmentId")]
+        public int? DepartmentId { get; set; }  // Changed from string to int to match departments table
 
         [Column("created_at")]
         public DateTime CreatedAt { get; set; }
-
-        [Column("updated_at")]
-        public DateTime UpdatedAt { get; set; }
-
-        [Column("is_active")]
-        public bool IsActive { get; set; } = true;
     }
 }
