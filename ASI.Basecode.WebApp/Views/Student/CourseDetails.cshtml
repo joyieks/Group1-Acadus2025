@@ -59,7 +59,6 @@
         <!-- Tab Buttons -->
         <div class="flex space-x-6 border-b mb-6">
             <button class="tab-btn active" data-tab="grades">All Grades</button>
-            <button class="tab-btn" data-tab="appeals">Appeals</button>
             <button class="tab-btn" data-tab="feedback">Feedback</button>
         </div>
 
@@ -189,77 +188,6 @@
             }
         </div>
 
-        <!-- Appeals Tab -->
-        <div id="tab-appeals" class="tab-content hidden">
-            @if (Model.Appeals == null || !Model.Appeals.Any())
-            {
-                <div class="text-center py-12">
-                    <h3 class="text-lg font-medium text-gray-700 mb-2">No Appeals Submitted</h3>
-                    <p class="text-gray-500">You haven't submitted any appeals for this course yet.</p>
-                </div>
-            }
-            else
-            {
-                <div class="space-y-4">
-                    @foreach (var appeal in Model.Appeals)
-                    {
-                        <div class="border rounded-lg p-4 bg-white shadow-sm">
-                            <div class="flex justify-between items-center mb-2">
-                                <h4 class="font-semibold text-gray-800">@(string.IsNullOrEmpty(appeal.Title) ? appeal.ActivityName : appeal.Title)</h4>
-                                <span class="text-sm px-3 py-1 rounded-full
-                                            @(appeal.Status == "Approved" ? "bg-green-100 text-green-700" : 
-                                              appeal.Status == "Rejected" ? "bg-red-100 text-red-700" : "bg-yellow-100 text-yellow-700")">
-                                    @appeal.Status
-                                </span>
-                            </div>
-                            <p class="text-gray-600 text-sm mb-1">@(string.IsNullOrEmpty(appeal.Description) ? appeal.Reason : appeal.Description)</p>
-                            <p class="text-gray-400 text-xs">
-                                @if (!string.IsNullOrEmpty(appeal.Date))
-                                {
-                                    @appeal.Date
-                                }
-                                else
-                                {
-                                    @appeal.DateSubmitted.ToString("MMM dd, yyyy")
-                                }
-                            </p>
-                        </div>
-                    }
-                </div>
-                
-                @if (Model.TotalPages > 1)
-                {
-                    <div class="mt-6 flex justify-center">
-                        <nav class="flex items-center space-x-2">
-                            @if (Model.CurrentPage > 1)
-                            {
-                                <a href="@Url.Action("CourseDetails", "Student", new { courseId = Model.CourseId, tab = "appeals", page = Model.CurrentPage - 1 })" 
-                                   class="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50">
-                                    Previous
-                                </a>
-                            }
-                            
-                            @for (int i = Math.Max(1, Model.CurrentPage - 2); i <= Math.Min(Model.TotalPages, Model.CurrentPage + 2); i++)
-                            {
-                                <a href="@Url.Action("CourseDetails", "Student", new { courseId = Model.CourseId, tab = "appeals", page = i })" 
-                                   class="px-3 py-2 text-sm font-medium @(i == Model.CurrentPage ? "text-white bg-acadus-green" : "text-gray-500 bg-white border border-gray-300") rounded-md hover:bg-gray-50">
-                                    @i
-                                </a>
-                            }
-                            
-                            @if (Model.CurrentPage < Model.TotalPages)
-                            {
-                                <a href="@Url.Action("CourseDetails", "Student", new { courseId = Model.CourseId, tab = "appeals", page = Model.CurrentPage + 1 })" 
-                                   class="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50">
-                                    Next
-                                </a>
-                            }
-                        </nav>
-                    </div>
-                }
-            }
-        </div>
-
         <!-- Feedback Tab -->
         <div id="tab-feedback" class="tab-content hidden">
             @if (Model.Feedbacks == null || !Model.Feedbacks.Any())
@@ -328,37 +256,6 @@
         </div>
     </div>
 
-    <!-- Appeal Modal -->
-    <div id="appeal-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50">
-        <div class="bg-white rounded-xl shadow-xl w-full max-w-md p-6 relative">
-            <button id="close-appeal" class="absolute top-3 right-3 text-gray-400 hover:text-gray-600 text-xl font-bold">&times;</button>
-
-            <h2 class="text-2xl font-semibold text-[#337D58] mb-4">Submit an Appeal</h2>
-
-            <form id="appeal-form">
-                <div class="mb-4">
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Activity</label>
-                    <input type="text" id="appeal-activity" class="w-full border border-gray-300 rounded-lg px-3 py-2 bg-gray-100" readonly />
-                </div>
-
-                <div class="mb-4">
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Reason for Appeal</label>
-                    <textarea id="appeal-reason" class="w-full border border-gray-300 rounded-lg px-3 py-2" rows="3" placeholder="Explain your reason..."></textarea>
-                </div>
-
-                <div class="mb-4">
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Additional Notes (optional)</label>
-                    <textarea id="appeal-notes" class="w-full border border-gray-300 rounded-lg px-3 py-2" rows="2" placeholder="Add any extra details..."></textarea>
-                </div>
-
-                <div class="flex justify-end space-x-3">
-                    <button type="button" id="cancel-appeal" class="px-4 py-2 rounded-lg border border-gray-300 text-gray-600 hover:bg-gray-50">Cancel</button>
-                    <button type="submit" class="px-4 py-2 rounded-lg bg-[#337D58] text-white hover:bg-[#2b6c4d]">Submit</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
 </main>
 
 <!-- Styles for Tabs -->
@@ -418,52 +315,3 @@
         if (activeContent) activeContent.classList.remove("hidden");
     });
 </script>
-
-<!-- Javascript for Appeal Modal -->
-<script>
-    document.addEventListener("DOMContentLoaded", () => {
-        const modal = document.getElementById("appeal-modal");
-        const closeBtn = document.getElementById("close-appeal");
-        const cancelBtn = document.getElementById("cancel-appeal");
-        const appealButtons = document.querySelectorAll(".appeal-btn");
-        const activityInput = document.getElementById("appeal-activity");
-        const appealForm = document.getElementById("appeal-form");
-
-        // Open modal when an Appeal button is clicked
-        appealButtons.forEach(btn => {
-            btn.addEventListener("click", () => {
-                const activityTitle = btn.getAttribute("data-activity");
-                activityInput.value = activityTitle;
-                modal.classList.remove("hidden");
-                document.body.classList.add("overflow-hidden");
-            });
-        });
-
-        // Close modal
-        [closeBtn, cancelBtn].forEach(el => {
-            el.addEventListener("click", () => {
-                modal.classList.add("hidden");
-                document.body.classList.remove("overflow-hidden");
-            });
-        });
-
-        // Form submission (mock)
-        appealForm.addEventListener("submit", (e) => {
-            e.preventDefault();
-            const activity = activityInput.value;
-            const reason = document.getElementById("appeal-reason").value;
-
-            if (!reason.trim()) {
-                alert("Please provide a reason for your appeal.");
-                return;
-            }
-
-            // In real app, send via fetch/AJAX to backend
-            alert(`Appeal submitted for: ${activity}\nReason: ${reason}`);
-            modal.classList.add("hidden");
-            appealForm.reset();
-            document.body.classList.remove("overflow-hidden");
-        });
-    });
-</script>
-

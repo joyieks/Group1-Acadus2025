@@ -10,6 +10,8 @@ namespace ASI.Basecode.WebApp.Controllers
 {
     public class StudentController : Controller
     {
+
+        //Dashboard (Recent Tasks & Recently Graded Tasks)
         [HttpGet]
         public IActionResult Index()
         {
@@ -22,7 +24,8 @@ namespace ASI.Basecode.WebApp.Controllers
 
             return View(viewModel);
         }
-
+        
+        //Courses (COurses enrolled by the students)
         [HttpGet]
         public IActionResult Courses()
         {
@@ -65,6 +68,7 @@ namespace ASI.Basecode.WebApp.Controllers
             return View(courses.ToArray());
         }
 
+        //Details about the course selected
         public IActionResult CourseDetails(string courseId, string tab = "grades", int page = 1)
         {
             // Get course details based on courseId
@@ -74,13 +78,11 @@ namespace ASI.Basecode.WebApp.Controllers
             
             // Get the appropriate data based on tab
             var allActivities = courseData.Activities;
-            var allAppeals = courseData.Appeals;
             var allFeedbacks = courseData.Feedbacks;
             
             // Calculate pagination
             var totalItems = tab switch
             {
-                "appeals" => allAppeals.Count,
                 "feedback" => allFeedbacks.Count,
                 _ => allActivities.Count
             };
@@ -91,7 +93,6 @@ namespace ASI.Basecode.WebApp.Controllers
             
             // Get paginated data
             var paginatedActivities = allActivities.Skip(skip).Take(pageSize).ToList();
-            var paginatedAppeals = allAppeals.Skip(skip).Take(pageSize).ToList();
             var paginatedFeedbacks = allFeedbacks.Skip(skip).Take(pageSize).ToList();
             
             var viewModel = new StudentCourseDetailsViewModel
@@ -103,7 +104,6 @@ namespace ASI.Basecode.WebApp.Controllers
                 TotalTasks = courseData.TotalTasks,
                 PendingTasks = courseData.PendingTasks,
                 Activities = paginatedActivities,
-                Appeals = paginatedAppeals,
                 Feedbacks = paginatedFeedbacks,
                 CurrentPage = currentPage,
                 TotalPages = totalPages,
@@ -113,9 +113,9 @@ namespace ASI.Basecode.WebApp.Controllers
             return View(viewModel);
         }
 
+        //Mock Data for Courses
         private (string CourseTitle, double OverallGPA, int CompletedTasks, int TotalTasks, int PendingTasks, 
                 List<StudentCourseDetailsViewModel.ActivityItem> Activities,
-                List<StudentCourseDetailsViewModel.AppealItem> Appeals,
                 List<StudentCourseDetailsViewModel.FeedbackItem> Feedbacks) GetCourseDataById(string courseId)
         {
             return courseId switch
@@ -162,10 +162,6 @@ namespace ASI.Basecode.WebApp.Controllers
                         new() { Title = "Data Structures Project", DueDate = "2025-11-10", Status = "In Progress", Score = "0" },
                         new() { Title = "Final Programming Exam", DueDate = "2025-12-20", Status = "Pending", Score = "0" }
                     },
-                    Appeals: new List<StudentCourseDetailsViewModel.AppealItem>
-                    {
-                        new() { Title = "Quiz 2 Grade Appeal", Date = "2025-09-15", Status = "Approved", Description = "Request for grade review" }
-                    },
                     Feedbacks: new List<StudentCourseDetailsViewModel.FeedbackItem>
                     {
                         new() { Title = "Assignment 1 Feedback", Date = "2025-09-10", Content = "Excellent work on database design. Consider improving query optimization." }
@@ -184,7 +180,6 @@ namespace ASI.Basecode.WebApp.Controllers
                         new() { Title = "Data Structures Project", DueDate = "2025-11-10", Status = "In Progress", Score = "0" },
                         new() { Title = "Final Programming Exam", DueDate = "2025-12-20", Status = "Pending", Score = "0" }
                     },
-                    Appeals: new List<StudentCourseDetailsViewModel.AppealItem>(),
                     Feedbacks: new List<StudentCourseDetailsViewModel.FeedbackItem>
                     {
                         new() { Title = "Lab 3 Feedback", Date = "2025-09-20", Content = "Good understanding of inheritance. Work on exception handling." }
@@ -202,7 +197,6 @@ namespace ASI.Basecode.WebApp.Controllers
                         new() { Title = "Photo Editing Project", DueDate = "2025-11-15", Status = "In Progress", Score = "0" },
                         new() { Title = "Final Creative Project", DueDate = "2025-12-10", Status = "Pending", Score = "0" }
                     },
-                    Appeals: new List<StudentCourseDetailsViewModel.AppealItem>(),
                     Feedbacks: new List<StudentCourseDetailsViewModel.FeedbackItem>
                     {
                         new() { Title = "Portfolio Review", Date = "2025-10-05", Content = "Outstanding creative work! Excellent use of lighting and composition." }
@@ -220,7 +214,6 @@ namespace ASI.Basecode.WebApp.Controllers
                         new() { Title = "Security Protocols Assignment", DueDate = "2026-03-01", Status = "Not Started", Score = "0" },
                         new() { Title = "Final Network Project", DueDate = "2026-05-30", Status = "Not Started", Score = "0" }
                     },
-                    Appeals: new List<StudentCourseDetailsViewModel.AppealItem>(),
                     Feedbacks: new List<StudentCourseDetailsViewModel.FeedbackItem>()
                 ),
                 _ => (
@@ -230,96 +223,14 @@ namespace ASI.Basecode.WebApp.Controllers
                     TotalTasks: 0,
                     PendingTasks: 0,
                     Activities: new List<StudentCourseDetailsViewModel.ActivityItem>(),
-                    Appeals: new List<StudentCourseDetailsViewModel.AppealItem>(),
                     Feedbacks: new List<StudentCourseDetailsViewModel.FeedbackItem>()
                 ),
 
             };
         }
 
-        private string GetCourseTitleById(string? courseId)
-        {
-            return courseId switch
-            {
-                "cs101" => "Introduction to Computer Science",
-                "math201" => "Discrete Mathematics",
-                "eng102" => "Technical Writing",
-                "php41" => "Free Elective - PHP",
-                _ => "Course Title"
-            };
-        }
-        // -------------------- Notifications Controller --------------------
-        [HttpGet]
-        public IActionResult Notifications()
-        {
-            var model = new NotificationsViewModel
-            {
-                Notifications = new List<NotificationsViewModel.NotificationItem>
-        {
-            new NotificationsViewModel.NotificationItem
-            {
-                Title = "New Message from Admin",
-                Message = "Your account has been successfully verified.",
-                Date = DateTime.Now.AddMinutes(-15),
-                IsRead = false
-            },
-            new NotificationsViewModel.NotificationItem
-            {
-                Title = "System Maintenance",
-                Message = "Scheduled maintenance on October 30, 2025, from 1:00 AM to 3:00 AM.",
-                Date = DateTime.Now.AddHours(-2),
-                IsRead = true
-            },
-            new NotificationsViewModel.NotificationItem
-            {
-                Title = "Grade Update",
-                Message = "Your final grade for IT 331 (Database Systems) has been posted.",
-                Date = DateTime.Now.AddDays(-1),
-                IsRead = false
-            }
-        }
-            };
-
-            if (!model.HasData)
-                ViewBag.NoDataMessage = "No notifications available at the moment.";
-
-            return View("~/Views/Shared/Notifications.cshtml", model);
-        }
-
-        [HttpGet]
-        public PartialViewResult NotificationDropdown()
-        {
-            var model = new NotificationsViewModel
-            {
-                Notifications = new List<NotificationsViewModel.NotificationItem>
-        {
-            new NotificationsViewModel.NotificationItem
-            {
-                Title = "New Assignment Posted",
-                Message = "A new assignment is available in IT 335.",
-                Date = DateTime.Now.AddHours(-3),
-                IsRead = false
-            },
-            new NotificationsViewModel.NotificationItem
-            {
-                Title = "Reminder",
-                Message = "Submit your project proposal before October 28.",
-                Date = DateTime.Now.AddDays(-2),
-                IsRead = true
-            }
-        }
-            };
-            return PartialView("_NotificationDropdown", model);
-        }
-
-        [HttpGet]
-        public IActionResult NotificationCount()
-        {
-            var count = 2; // example unread count
-            return Json(new { count });
-        }
-
-        // -------------------- Reports Controller --------------------
+        
+        // Reports (Overall Grades of student), this includes the mock data
         public IActionResult Reports()
         {
             var viewModel = new StudentReportViewModel

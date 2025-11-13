@@ -88,32 +88,6 @@ namespace ASI.Basecode.WebApp.Controllers
             return View();
         }
 
-        [HttpGet]
-        public IActionResult Notifications()
-        {
-            var model = new NotificationsViewModel
-            {
-                Notifications = new List<NotificationsViewModel.NotificationItem>() // no seeded items
-            };
-            return View("~/Views/Shared/Notifications.cshtml", model);
-        }
-
-        [HttpGet]
-        public PartialViewResult NotificationDropdown()
-        {
-            var model = new NotificationsViewModel
-            {
-                Notifications = new List<NotificationsViewModel.NotificationItem>()
-            };
-            return PartialView("_NotificationDropdown", model);
-        }
-
-        [HttpGet]
-        public IActionResult NotificationCount()
-        {
-            var count = 0; // sync with model above; replace with real count when available
-            return Json(new { count });
-        }
     }
 }
 
