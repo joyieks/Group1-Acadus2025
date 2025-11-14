@@ -11,5 +11,8 @@ namespace ASI.Basecode.Services.Interfaces
         Task<StudentCourseDetailsViewModel> GetCourseDetailsAsync(string studentId, string courseId);
 
         Task<List<StudentReportViewModel.ReportItem>> GetStudentReportsAsync(string studentId);
+
+        Task<StudentDashboardViewModel> GetStudentDashboardAsync(string studentId);
+        
     }
 }

@@ -116,5 +116,10 @@ namespace ASI.Basecode.Services.Services
         {
             return await _studentCourseRepository.GetStudentCourseReportsAsync(studentId);
         }
+
+        public async Task<StudentDashboardViewModel> GetStudentDashboardAsync(string studentId)
+        {
+            return await _studentCourseRepository.GetStudentDashboardAsync(studentId);
+        }
     }
 }

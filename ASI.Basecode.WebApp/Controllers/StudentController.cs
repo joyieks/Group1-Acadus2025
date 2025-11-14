@@ -24,15 +24,14 @@ namespace ASI.Basecode.WebApp.Controllers
         }
 
         [HttpGet]
-        public IActionResult Index()
+        public async Task<IActionResult> Index()
         {
-            var viewModel = new StudentDashboardViewModel
-            {
-                RecentlyGradedTasks = new List<StudentDashboardViewModel.TaskItem>(),
-                ToBeGradedTasks = new List<StudentDashboardViewModel.TaskItem>()
-            };
+            var studentId = "edb1283a-f04b-4922-8c23-d2efbaab257b"; // from claims
+            if (string.IsNullOrWhiteSpace(studentId))
+                return Unauthorized();
 
-            return View(viewModel);
+            var dashboard = await _studentCourseService.GetStudentDashboardAsync(studentId);
+            return View(dashboard);
         }
 
         [HttpGet]

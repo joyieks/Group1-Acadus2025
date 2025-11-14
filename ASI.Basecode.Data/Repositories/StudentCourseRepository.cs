@@ -140,6 +140,55 @@ namespace ASI.Basecode.Data.Repositories
             return 5.00;
         }
 
+        public async Task<StudentDashboardViewModel> GetStudentDashboardAsync(string studentId)
+        {
+            var dashboard = new StudentDashboardViewModel
+            {
+                UserName = "First Name", // Optional: fetch from user table if needed
+                RecentlyGradedTasks = new List<StudentDashboardViewModel.TaskItem>(),
+                ToBeGradedTasks = new List<StudentDashboardViewModel.TaskItem>()
+            };
+
+            var courses = await GetCoursesByStudentIdAsync(studentId);
+            foreach (var course in courses)
+            {
+                var activities = await GetActivitiesByCourseIdAsync(course.Id);
+                var submissions = await GetSubmissionsByStudentAndCourseAsync(studentId, course.Id);
+
+                foreach (var submission in submissions)
+                {
+                    var activity = activities.FirstOrDefault(a => a.Id == submission.ActivityId);
+                    if (activity == null) continue;
+
+                    var task = new StudentDashboardViewModel.TaskItem
+                    {
+                        Title = activity.Title,
+                        UserAction = submission.SubmissionStatus,
+                        Score = submission.SubmissionStatus == "Graded" ? submission.Score.ToString() : null,
+                        DueDate = activity.DueDate,
+                        Priority = GetPriority(activity.DueDate),
+                        StudentId = int.TryParse(studentId, out var sid) ? sid : null,
+                        CourseId = activity.CourseId
+                    };
+
+                    if (submission.SubmissionStatus == "Graded")
+                        dashboard.RecentlyGradedTasks.Add(task);
+                    else
+                        dashboard.ToBeGradedTasks.Add(task);
+                }
+            }
+
+            return dashboard;
+        }
+
+        private string GetPriority(DateTime dueDate)
+        {
+            var daysLeft = (dueDate - DateTime.Now).TotalDays;
+            if (daysLeft <= 2) return "High";
+            if (daysLeft <= 5) return "Normal";
+            return "Low";
+        }
+
 
 
     }
