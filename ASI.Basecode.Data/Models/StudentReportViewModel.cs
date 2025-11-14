@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace ASI.Basecode.WebApp.Models
+namespace ASI.Basecode.Data.Models
 {
     public class StudentReportViewModel
     {
@@ -12,6 +12,7 @@ namespace ASI.Basecode.WebApp.Models
             public string CourseTitle { get; set; } = string.Empty;
             public double MidtermGrade { get; set; }
             public double FinalGrade { get; set; }
+
         }
     }
 }

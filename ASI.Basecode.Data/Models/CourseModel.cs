@@ -19,21 +19,21 @@ namespace ASI.Basecode.Data.Models
         /// <summary>
         /// Gets or sets the course name.
         /// </summary>
-        [Column("name")]
+        [Column("courseName")]
         public string Name { get; set; }
 
         /// <summary>
         /// Gets or sets the course code.
         /// </summary>
-        [Column("code")]
+        [Column("courseCode")]
         public string Code { get; set; }
 
         /// <summary>
         /// Gets or sets the teacher ID for the course.
         /// </summary>
-        [Column("teacher_id")]
-        public int TeacherId { get; set; }  // int4 in database
-
+        [Column("instructor")]
+        public string TeacherId { get; set; }  // int4 in database
+        
         /// <summary>
         /// Gets or sets the course status.
         /// </summary>
@@ -43,7 +43,7 @@ namespace ASI.Basecode.Data.Models
         /// <summary>
         /// Gets or sets the maximum capacity for the course.
         /// </summary>
-        [Column("max_capacity")]
+        [Column("capacity")]
         public int MaxCapacity { get; set; }
 
         /// <summary>
@@ -61,7 +61,7 @@ namespace ASI.Basecode.Data.Models
         /// <summary>
         /// Gets or sets the semester information for the course.
         /// </summary>
-        [Column("semester_info")]
+        [Column("semesterId")]
         public string SemesterInfo { get; set; }
     }
 }

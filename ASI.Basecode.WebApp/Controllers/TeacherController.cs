@@ -29,44 +29,44 @@ using System;
         /// Displays the teacher dashboard with statistics.
         /// </summary>
         /// <returns>The dashboard view.</returns>
-        [HttpGet]
-        public async Task<IActionResult> Index()
-        {
-            await AsiBasecodeDBContext.InitializeSupabaseAsync(_configuration);
-            var client = AsiBasecodeDBContext.SupabaseClient;
+        //[HttpGet]
+        //public async Task<IActionResult> Index()
+        //{
+        //    await AsiBasecodeDBContext.InitializeSupabaseAsync(_configuration);
+        //    var client = AsiBasecodeDBContext.SupabaseClient;
 
-            // TODO: Replace with actual teacher ID from authentication
-            int teacherId = 1; // Example teacher ID
+        //    // TODO: Replace with actual teacher ID from authentication
+        //    int teacherId = 1; // Example teacher ID
 
-            // Get total activities for the teacher
-            var activitiesResponse = await client.From<ActivityModel>()
-                .Filter("teacher_id", Supabase.Postgrest.Constants.Operator.Equals, teacherId)
-                .Get();
-            var activities = activitiesResponse.Models;
-            int totalActivities = activities.Count;
+        //    // Get total activities for the teacher
+        //    var activitiesResponse = await client.From<ActivityModel>()
+        //        .Filter("teacher_id", Supabase.Postgrest.Constants.Operator.Equals, teacherId)
+        //        .Get();
+        //    var activities = activitiesResponse.Models;
+        //    int totalActivities = activities.Count;
 
-            // Get graded activities for the teacher
-            int gradedActivities = activities.Count(a => a.IsGraded);
+        //    // Get graded activities for the teacher
+        //    int gradedActivities = activities.Count(a => a.IsGraded);
 
-            // Get total courses handled by the teacher
-            var coursesResponse = await client.From<CourseModel>()
-                .Filter("teacher_id", Supabase.Postgrest.Constants.Operator.Equals, teacherId)
-                .Get();
-            var courses = coursesResponse.Models;
-            int totalCoursesHandled = courses.Count;
+        //    // Get total courses handled by the teacher
+        //    var coursesResponse = await client.From<CourseModel>()
+        //        .Filter("teacher_id", Supabase.Postgrest.Constants.Operator.Equals, teacherId)
+        //        .Get();
+        //    var courses = coursesResponse.Models;
+        //    int totalCoursesHandled = courses.Count;
 
-            // TODO: Implement calendar events retrieval if needed
-            var calendarEvents = new List<string>();
+        //    // TODO: Implement calendar events retrieval if needed
+        //    var calendarEvents = new List<string>();
 
-            var model = new TeacherDashboardViewModel
-            {
-                TotalActivities = totalActivities,
-                GradedActivities = gradedActivities,
-                TotalCoursesHandled = totalCoursesHandled,
-                CalendarEvents = calendarEvents
-            };
-            return View(model);
-        }
+        //    var model = new TeacherDashboardViewModel
+        //    {
+        //        TotalActivities = totalActivities,
+        //        GradedActivities = gradedActivities,
+        //        TotalCoursesHandled = totalCoursesHandled,
+        //        CalendarEvents = calendarEvents
+        //    };
+        //    return View(model);
+        //}
 
         /// <summary>
         /// Displays the teacher's courses view.
@@ -247,47 +247,47 @@ using System;
         /// </summary>
         /// <param name="studentId">The student ID.</param>
         /// <returns>JSON result with student details.</returns>
-        [HttpGet]
-        public async Task<IActionResult> GetStudentDetails(long studentId)
-        {
-            try
-            {
-                await AsiBasecodeDBContext.InitializeSupabaseAsync(_configuration);
-                var client = AsiBasecodeDBContext.SupabaseClient;
+        //[HttpGet]
+        //public async Task<IActionResult> GetStudentDetails(long studentId)
+        //{
+        //    try
+        //    {
+        //        await AsiBasecodeDBContext.InitializeSupabaseAsync(_configuration);
+        //        var client = AsiBasecodeDBContext.SupabaseClient;
 
-                var userResponse = await client.From<UserModel>()
-                    .Filter("id", Supabase.Postgrest.Constants.Operator.Equals, studentId)
-                    .Get();
+        //        var userResponse = await client.From<UserModel>()
+        //            .Filter("id", Supabase.Postgrest.Constants.Operator.Equals, studentId)
+        //            .Get();
 
-                var student = userResponse.Models.FirstOrDefault();
-                if (student == null)
-                {
-                    return Json(new { success = false, message = "Student not found." });
-                }
+        //        var student = userResponse.Models.FirstOrDefault();
+        //        if (student == null)
+        //        {
+        //            return Json(new { success = false, message = "Student not found." });
+        //        }
 
-                return Json(new
-                {
-                    success = true,
-                    data = new
-                    {
-                        id = student.Id,
-                        email = student.Email,
-                        firstName = student.FirstName,
-                        lastName = student.LastName,
-                        middleName = student.MiddleName,
-                        studentId = student.StudentId,
-                        program = student.Program,
-                        yearLevel = student.YearLevel,
-                        contactNumber = student.ContactNumber,
-                        isActive = student.IsActive
-                    }
-                });
-            }
-            catch (Exception ex)
-            {
-                return Json(new { success = false, message = $"Error: {ex.Message}" });
-            }
-        }
+        //        return Json(new
+        //        {
+        //            success = true,
+        //            data = new
+        //            {
+        //                id = student.Id,
+        //                email = student.Email,
+        //                firstName = student.FirstName,
+        //                lastName = student.LastName,
+        //                middleName = student.MiddleName,
+        //                studentId = student.StudentId,
+        //                program = student.Program,
+        //                yearLevel = student.YearLevel,
+        //                contactNumber = student.ContactNumber,
+        //                isActive = student.IsActive
+        //            }
+        //        });
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        return Json(new { success = false, message = $"Error: {ex.Message}" });
+        //    }
+        //}
 
         /// <summary>
         /// Archives a course activity.
@@ -410,66 +410,66 @@ using System;
         /// <param name="activityId">The activity ID.</param>
         /// <param name="grade">The grade value.</param>
         /// <returns>JSON result indicating success or failure.</returns>
-        [HttpPost]
-        public async Task<IActionResult> AddOrUpdateGrade(long studentId, int activityId, decimal grade)
-        {
-            try
-            {
-                await AsiBasecodeDBContext.InitializeSupabaseAsync(_configuration);
-                var client = AsiBasecodeDBContext.SupabaseClient;
+        //[HttpPost]
+        //public async Task<IActionResult> AddOrUpdateGrade(long studentId, int activityId, decimal grade)
+        //{
+        //    try
+        //    {
+        //        await AsiBasecodeDBContext.InitializeSupabaseAsync(_configuration);
+        //        var client = AsiBasecodeDBContext.SupabaseClient;
 
-                // TODO: Get teacher ID from authentication
-                int teacherId = 1; // Placeholder
+        //        // TODO: Get teacher ID from authentication
+        //        int teacherId = 1; // Placeholder
 
-                // Check if grade already exists
-                var existingGradeResponse = await client.From<GradeModel>()
-                    .Filter("student_id", Supabase.Postgrest.Constants.Operator.Equals, studentId)
-                    .Filter("activity_id", Supabase.Postgrest.Constants.Operator.Equals, activityId)
-                    .Get();
+        //        // Check if grade already exists
+        //        var existingGradeResponse = await client.From<GradeModel>()
+        //            .Filter("student_id", Supabase.Postgrest.Constants.Operator.Equals, studentId)
+        //            .Filter("activity_id", Supabase.Postgrest.Constants.Operator.Equals, activityId)
+        //            .Get();
 
-                var existingGrade = existingGradeResponse.Models.FirstOrDefault();
+        //        var existingGrade = existingGradeResponse.Models.FirstOrDefault();
 
-                if (existingGrade != null)
-                {
-                    // Update existing grade
-                    existingGrade.Grade = grade;
-                    existingGrade.UpdatedAt = DateTime.UtcNow;
-                    existingGrade.GradedBy = teacherId;
-                    await existingGrade.Update<GradeModel>();
-                    return Json(new { success = true, message = "Grade updated successfully." });
-                }
-                else
-                {
-                    // Create new grade
-                    var newGrade = new GradeModel
-                    {
-                        StudentId = studentId,
-                        ActivityId = activityId,
-                        Grade = grade,
-                        GradedAt = DateTime.UtcNow,
-                        GradedBy = teacherId
-                    };
-                    await client.From<GradeModel>().Insert(newGrade);
+        //        if (existingGrade != null)
+        //        {
+        //            // Update existing grade
+        //            existingGrade.Grade = grade;
+        //            existingGrade.UpdatedAt = DateTime.UtcNow;
+        //            existingGrade.GradedBy = teacherId;
+        //            await existingGrade.Update<GradeModel>();
+        //            return Json(new { success = true, message = "Grade updated successfully." });
+        //        }
+        //        else
+        //        {
+        //            // Create new grade
+        //            var newGrade = new GradeModel
+        //            {
+        //                StudentId = studentId,
+        //                ActivityId = activityId,
+        //                Grade = grade,
+        //                GradedAt = DateTime.UtcNow,
+        //                GradedBy = teacherId
+        //            };
+        //            await client.From<GradeModel>().Insert(newGrade);
                     
-                    // Mark activity as graded if not already
-                    var activityResponse = await client.From<ActivityModel>()
-                        .Filter("id", Supabase.Postgrest.Constants.Operator.Equals, activityId)
-                        .Get();
-                    var activity = activityResponse.Models.FirstOrDefault();
-                    if (activity != null && !activity.IsGraded)
-                    {
-                        activity.IsGraded = true;
-                        await activity.Update<ActivityModel>();
-                    }
+        //            // Mark activity as graded if not already
+        //            var activityResponse = await client.From<ActivityModel>()
+        //                .Filter("id", Supabase.Postgrest.Constants.Operator.Equals, activityId)
+        //                .Get();
+        //            var activity = activityResponse.Models.FirstOrDefault();
+        //            if (activity != null && !activity.IsGraded)
+        //            {
+        //                activity.IsGraded = true;
+        //                await activity.Update<ActivityModel>();
+        //            }
 
-                    return Json(new { success = true, message = "Grade added successfully." });
-                }
-            }
-            catch (Exception ex)
-            {
-                return Json(new { success = false, message = $"Error: {ex.Message}" });
-            }
-        }
+        //            return Json(new { success = true, message = "Grade added successfully." });
+        //        }
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        return Json(new { success = false, message = $"Error: {ex.Message}" });
+        //    }
+        //}
 
         /// <summary>
         /// Retrieves grades filtered by various criteria.
@@ -616,57 +616,57 @@ using System;
         /// </summary>
         /// <param name="model">The activity model with required data.</param>
         /// <returns>JSON result indicating success or failure.</returns>
-        [HttpPost]
-        public async Task<IActionResult> CreateActivity([FromBody] ActivityModel model)
-        {
-            if (!ModelState.IsValid)
-            {
-                return Json(new { success = false, message = "Invalid activity data.", errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage) });
-            }
-            try
-            {
-                await AsiBasecodeDBContext.InitializeSupabaseAsync(_configuration);
-                var client = AsiBasecodeDBContext.SupabaseClient;
+        //[HttpPost]
+        //public async Task<IActionResult> CreateActivity([FromBody] ActivityModel model)
+        //{
+        //    if (!ModelState.IsValid)
+        //    {
+        //        return Json(new { success = false, message = "Invalid activity data.", errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage) });
+        //    }
+        //    try
+        //    {
+        //        await AsiBasecodeDBContext.InitializeSupabaseAsync(_configuration);
+        //        var client = AsiBasecodeDBContext.SupabaseClient;
 
-                // TODO: Get teacher ID from authentication
-                model.TeacherId = 1; // Placeholder
-                model.CreatedAt = DateTime.UtcNow;
-                model.IsArchived = false;
-                model.IsGraded = false;
+        //        // TODO: Get teacher ID from authentication
+        //        model.TeacherId = 1; // Placeholder
+        //        model.CreatedAt = DateTime.UtcNow;
+        //        model.IsArchived = false;
+        //        model.IsGraded = false;
 
-                // Save activity
-                var insertResponse = await client.From<ActivityModel>().Insert(model);
-                var createdActivity = insertResponse.Models.FirstOrDefault();
-                if (createdActivity == null)
-                {
-                    return Json(new { success = false, message = "Failed to create activity." });
-                }
+        //        // Save activity
+        //        var insertResponse = await client.From<ActivityModel>().Insert(model);
+        //        var createdActivity = insertResponse.Models.FirstOrDefault();
+        //        if (createdActivity == null)
+        //        {
+        //            return Json(new { success = false, message = "Failed to create activity." });
+        //        }
 
-                // Grade computation: Initialize grade records for all enrolled students in the course
-                var enrollmentsResponse = await client.From<EnrollmentModel>()
-                    .Filter("course_id", Supabase.Postgrest.Constants.Operator.Equals, model.CourseId)
-                    .Filter("status", Supabase.Postgrest.Constants.Operator.Equals, "active")
-                    .Get();
-                var enrolledStudents = enrollmentsResponse.Models;
-                var gradeModels = enrolledStudents.Select(e => new GradeModel
-                {
-                    StudentId = e.StudentId,
-                    ActivityId = createdActivity.Id,
-                    Grade = 0, // Default grade
-                    GradedAt = DateTime.MinValue, // Use default value for non-nullable DateTime
-                    GradedBy = 0 // Use default value for non-nullable int
-                }).ToList();
-                if (gradeModels.Any())
-                {
-                    await client.From<GradeModel>().Insert(gradeModels);
-                }
+        //        // Grade computation: Initialize grade records for all enrolled students in the course
+        //        var enrollmentsResponse = await client.From<EnrollmentModel>()
+        //            .Filter("course_id", Supabase.Postgrest.Constants.Operator.Equals, model.CourseId)
+        //            .Filter("status", Supabase.Postgrest.Constants.Operator.Equals, "active")
+        //            .Get();
+        //        var enrolledStudents = enrollmentsResponse.Models;
+        //        var gradeModels = enrolledStudents.Select(e => new GradeModel
+        //        {
+        //            StudentId = e.StudentId,
+        //            ActivityId = createdActivity.Id,
+        //            Grade = 0, // Default grade
+        //            GradedAt = DateTime.MinValue, // Use default value for non-nullable DateTime
+        //            GradedBy = 0 // Use default value for non-nullable int
+        //        }).ToList();
+        //        if (gradeModels.Any())
+        //        {
+        //            await client.From<GradeModel>().Insert(gradeModels);
+        //        }
 
-                return Json(new { success = true, message = "Activity created successfully.", activityId = createdActivity.Id });
-            }
-            catch (Exception ex)
-            {
-                return Json(new { success = false, message = $"Error: {ex.Message}" });
-            }
-        }
+        //        return Json(new { success = true, message = "Activity created successfully.", activityId = createdActivity.Id });
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        return Json(new { success = false, message = $"Error: {ex.Message}" });
+        //    }
+        //}
     }
 }

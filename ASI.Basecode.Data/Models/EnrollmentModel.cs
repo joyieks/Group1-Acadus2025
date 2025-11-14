@@ -7,22 +7,22 @@ namespace ASI.Basecode.Data.Models
     /// <summary>
     /// Represents a student enrollment in a course.
     /// </summary>
-    [Table("enrollments")]
+    [Table("course_enrollment")]
     public class EnrollmentModel : BaseModel
     {
         [PrimaryKey("id", false)]
         public int Id { get; set; }
 
         [Column("student_id")]
-        public long StudentId { get; set; }  // Changed from Guid to long
+        public string StudentId { get; set; }  // Changed from Guid to long
 
         [Column("course_id")]
         public int CourseId { get; set; }
 
-        [Column("enrolled_at")]
+        [Column("created_at")]
         public DateTime EnrolledAt { get; set; }
 
-        [Column("status")]
+        [Column("enrollmentStatus")]
         public string Status { get; set; } // "active", "dropped", "completed"
 
         [Column("dropped_at")]

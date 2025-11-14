@@ -11,7 +11,7 @@ public class CourseCardViewComponent : ViewComponent
     /// </summary>
     /// <param name="course">The course view model.</param>
     /// <returns>The view component result.</returns>
-    public IViewComponentResult Invoke(TeacherCourseViewModel course)
+    public IViewComponentResult Invoke(CourseCardViewModel course)
     {
         return View(course);
     }

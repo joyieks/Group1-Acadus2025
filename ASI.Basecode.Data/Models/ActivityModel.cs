@@ -10,28 +10,25 @@ namespace ASI.Basecode.Data.Models
         [PrimaryKey("id", false)]
         public int Id { get; set; }
 
-        [Column("title")]
+        [Column("activityTitle")]
         public string Title { get; set; }
 
         [Column("description")]
         public string Description { get; set; }
 
-        [Column("teacher_id")]
-        public int TeacherId { get; set; }  // int4 in database
-
-        [Column("course_id")]
+        [Column("courseId")]
         public int CourseId { get; set; }
 
-        [Column("is_graded")]
-        public bool IsGraded { get; set; }
+        [Column("maxScore")]
+        public int maxScore { get; set; }
 
-        [Column("due_date")]
+        [Column("dueDate")]
         public DateTime DueDate { get; set; }
 
         [Column("created_at")]
         public DateTime CreatedAt { get; set; }
 
-        [Column("is_archived")]
+        [Column("isArchived")]
         public bool IsArchived { get; set; }
 
         [Column("archived_at")]

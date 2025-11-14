@@ -1,4 +1,8 @@
 ﻿using ASI.Basecode.Data;
+using ASI.Basecode.Data.Interfaces;
+using ASI.Basecode.Data.Repositories;
+using ASI.Basecode.Services.Interfaces;
+using ASI.Basecode.Services.Services;
 using ASI.Basecode.WebApp;
 using ASI.Basecode.WebApp.Extensions.Configuration;
 using Microsoft.AspNetCore.Builder;
@@ -72,6 +76,8 @@ builder.Services.AddDbContext<AsiBasecodeDBContext>();
 // Register IConfiguration so your context's constructor can read appsettings.json
 builder.Services.AddSingleton<IConfiguration>(builder.Configuration);
 
+
+
 // Configure HttpClient with SSL bypass for development
 if (builder.Environment.EnvironmentName == "Development")
 {
@@ -85,6 +91,24 @@ if (builder.Environment.EnvironmentName == "Development")
         return handler;
     });
 }
+
+// Register Supabase Client as a singleton
+builder.Services.AddSingleton(provider =>
+{
+    var configuration = provider.GetRequiredService<IConfiguration>();
+    var url = configuration["Supabase:Url"];
+    var key = configuration["Supabase:AnonKey"];
+
+    if (string.IsNullOrEmpty(url) || string.IsNullOrEmpty(key))
+        throw new InvalidOperationException("Supabase configuration (Url or AnonKey) is missing in appsettings.json.");
+
+    var client = new Supabase.Client(url, key);
+    client.InitializeAsync().Wait(); // sync init at startup
+    return client;
+});
+
+builder.Services.AddScoped<IStudentCourseService, StudentCourseService>();
+builder.Services.AddScoped<IStudentCourseRepository, StudentCourseRepository>();
 
 var configurer = new StartupConfigurer(builder.Configuration);
 configurer.ConfigureServices(builder.Services);
