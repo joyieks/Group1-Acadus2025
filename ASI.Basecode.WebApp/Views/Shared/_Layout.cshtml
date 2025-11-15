@@ -64,14 +64,16 @@
             // ------------------ Notifications ------------------
             async function loadDropdown() {
                 const controller = '@ViewContext.RouteData.Values["controller"]?.ToString()';
-                const response = await fetch(`/${controller}/NotificationDropdown`, { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
-                const html = await response.text();
-                notifPanel.innerHTML = html;
-                positionNotifPanel();
-
-                const root = notifPanel.querySelector('[data-count]');
+                try {
+                    const response = await fetch(`/${controller}/NotificationDropdown`, { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+                    const html = await response.text();
+                    if (notifPanel) notifPanel.innerHTML = html;
+                    positionNotifPanel();
+                } catch (e) { console.error(e); }
+                const root = notifPanel ? notifPanel.querySelector('[data-count]') : null;
                 const count = root ? parseInt(root.getAttribute('data-count') || '0') : 0;
-                document.getElementById('notifDot').style.display = count > 0 ? 'block' : 'none';
+                const dot = document.getElementById('notifDot');
+                if (dot) dot.style.display = count > 0 ? 'block' : 'none';
             }
 
             (async function initNotifDot() {
@@ -79,11 +81,13 @@
                     const controller = '@ViewContext.RouteData.Values["controller"]?.ToString()';
                     const res = await fetch(`/${controller}/NotificationCount`, { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
                     const data = await res.json();
-                    document.getElementById('notifDot').style.display = (data && data.count > 0) ? 'block' : 'none';
+                    const dot = document.getElementById('notifDot');
+                    if (dot) dot.style.display = (data && data.count > 0) ? 'block' : 'none';
                 } catch (_) {}
             })();
 
             function openNotif() {
+                if (!notifPanel) return;
                 if (notifPanel.parentElement !== document.body) {
                     document.body.appendChild(notifPanel);
                 }
@@ -95,11 +99,13 @@
             }
 
             function closeNotif() {
+                if (!notifPanel) return;
                 notifPanel.classList.add('hidden');
                 notifPanel.innerHTML = '';
             }
 
             function positionNotifPanel() {
+                if (!notifBtn || !notifPanel) return;
                 const rect = notifBtn.getBoundingClientRect();
                 const top = rect.bottom + 8;
                 const right = (window.innerWidth - rect.right) + 6;
@@ -110,9 +116,10 @@
             function toggleNotif(e) {
                 e.preventDefault();
                 e.stopPropagation();
+                if (!notifPanel) return;
                 if (notifPanel.classList.contains('hidden')) {
                     openNotif();
-                    userMenu.classList.add('hidden');
+                    if (userMenu) userMenu.classList.add('hidden');
                 } else {
                     closeNotif();
                 }
@@ -123,72 +130,83 @@
             }
 
             // ------------------ User Menu ------------------
+            function positionUserMenu() {
+                if (!userMenu) return;
+                const ref = userAvatarBtn || userMenuBtn;
+                if (!ref) return;
+                const rect = ref.getBoundingClientRect();
+                const top = rect.bottom + 8;
+                const right = (window.innerWidth - rect.right) + 6;
+                userMenu.style.top = top + 'px';
+                userMenu.style.right = right + 'px';
+            }
+
+            function openUserMenu() {
+                if (!userMenu) return;
+                if (userMenu.parentElement !== document.body) {
+                    document.body.appendChild(userMenu);
+                }
+                userMenu.style.position = 'fixed';
+                userMenu.style.zIndex = '999999';
+                userMenu.classList.remove('hidden');
+                positionUserMenu();
+                if (notifPanel) closeNotif();
+            }
+
+            function closeUserMenu() {
+                if (!userMenu) return;
+                userMenu.classList.add('hidden');
+            }
+
             function toggleUserMenu(e) {
                 e.preventDefault();
                 e.stopPropagation();
+                if (!userMenu) return;
                 if (userMenu.classList.contains('hidden')) {
-                    userMenu.classList.remove('hidden');
-                    closeNotif();
+                    openUserMenu();
                 } else {
-                    userMenu.classList.add('hidden');
+                    closeUserMenu();
                 }
             }
 
-            if (userMenuBtn) {
-                userMenuBtn.addEventListener('click', toggleUserMenu);
-            }
-            if (userAvatarBtn) {
-                userAvatarBtn.addEventListener('click', toggleUserMenu);
-            }
+            if (userMenuBtn) userMenuBtn.addEventListener('click', toggleUserMenu);
+            if (userAvatarBtn) userAvatarBtn.addEventListener('click', toggleUserMenu);
 
             // ------------------ Mobile Menu Overlay ------------------
             if (mobileMenuBtn && mobileMenu && mobileMenuCloseBtn) {
-                // Open mobile menu
                 mobileMenuBtn.addEventListener('click', function(e) {
                     e.preventDefault();
                     e.stopPropagation();
                     mobileMenu.classList.remove('hidden');
                     closeNotif();
-                    userMenu.classList.add('hidden');
+                    closeUserMenu();
                 });
 
-                // Close mobile menu
                 mobileMenuCloseBtn.addEventListener('click', function(e) {
                     e.preventDefault();
                     mobileMenu.classList.add('hidden');
                 });
 
-                // Click outside closes menu
                 document.addEventListener('click', function() {
                     mobileMenu.classList.add('hidden');
                 });
 
-                // Prevent closing when clicking inside
                 mobileMenu.addEventListener('click', function(e) {
                     e.stopPropagation();
                 });
             }
 
             // ------------------ Global behavior ------------------
-            // Close notifications or user menu when clicking outside
             document.addEventListener('click', function() {
                 closeNotif();
-                if (userMenu) {
-                    userMenu.classList.add('hidden');
-                }
+                closeUserMenu();
             });
 
-            // Prevent closing when clicking inside panels
-            if (notifPanel) {
-                notifPanel.addEventListener('click', function(e) { e.stopPropagation(); });
-            }
-            if (userMenu) {
-                userMenu.addEventListener('click', function(e) { e.stopPropagation(); });
-            }
+            if (notifPanel) notifPanel.addEventListener('click', function(e) { e.stopPropagation(); });
+            if (userMenu) userMenu.addEventListener('click', function(e) { e.stopPropagation(); });
 
-            // Reposition notifications on resize/scroll
-            window.addEventListener('resize', function() { if (notifPanel && !notifPanel.classList.contains('hidden')) positionNotifPanel(); });
-            window.addEventListener('scroll', function() { if (notifPanel && !notifPanel.classList.contains('hidden')) positionNotifPanel(); }, true);
+            window.addEventListener('resize', function() { if (notifPanel && !notifPanel.classList.contains('hidden')) positionNotifPanel(); if (userMenu && !userMenu.classList.contains('hidden')) positionUserMenu(); });
+            window.addEventListener('scroll', function() { if (notifPanel && !notifPanel.classList.contains('hidden')) positionNotifPanel(); if (userMenu && !userMenu.classList.contains('hidden')) positionUserMenu(); }, true);
         })();
     </script>
 </body>
