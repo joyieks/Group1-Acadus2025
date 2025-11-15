@@ -20,14 +20,21 @@
         
         <!-- Search Bar and Create Course Button -->
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px; gap:16px;">
-            <div style="display:flex; gap:12px; flex:1; max-width:600px;">
-                <input type="text" id="courseSearch" placeholder="Search for a course ID or title" 
-                       style="flex:1; padding:10px 16px; border:1px solid #d1d5db; border-radius:8px; font-size:14px; background:#e5e7eb;">
-                <button onclick="searchCourses()" 
+            <form method="get" asp-action="Courses" style="display:flex; gap:12px; flex:1; max-width:600px;">
+                <input type="text" name="search" id="courseSearch" placeholder="Search by course code or name" 
+                       value="@ViewData["SearchTerm"]"
+                       style="flex:1; padding:10px 16px; border:1px solid #d1d5db; border-radius:8px; font-size:14px; background:#ffffff;">
+                <button type="submit" 
                         style="background:#059669; color:#fff; border:none; border-radius:8px; padding:10px 24px; font-weight:600; cursor:pointer; font-size:14px;">
                     Search
                 </button>
-            </div>
+                @if (!string.IsNullOrWhiteSpace(ViewData["SearchTerm"]?.ToString()))
+                {
+                    <a asp-action="Courses" style="background:#6b7280; color:#fff; border:none; border-radius:8px; padding:10px 24px; font-weight:600; cursor:pointer; text-decoration:none; font-size:14px; white-space:nowrap;">
+                        Clear
+                    </a>
+                }
+            </form>
             <a asp-controller="Admin" asp-action="AddCourse" style="background:#059669; color:#fff; border:none; border-radius:8px; padding:10px 24px; font-weight:600; cursor:pointer; text-decoration:none; font-size:14px; white-space:nowrap;">Create A Course</a>
         </div>
 

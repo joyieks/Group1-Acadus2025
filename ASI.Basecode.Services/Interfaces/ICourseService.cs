@@ -48,6 +48,11 @@ namespace ASI.Basecode.Services.Interfaces
         Task<List<SemesterModel>> GetAllSemestersAsync();
 
         /// <summary>
+        /// Searches for courses by code or name.
+        /// </summary>
+        Task<List<CourseModel>> SearchCoursesAsync(string searchTerm);
+
+        /// <summary>
         /// Creates a new course with validation.
         /// </summary>
         Task<(bool Success, string Message, int? CourseId)> CreateCourseAsync(

@@ -21,14 +21,16 @@ namespace ASI.Basecode.WebApp.Controllers
         private readonly ISupabaseAuthService _supabaseAuthService;
         private readonly IAdminService _adminService;
         private readonly ICourseService _courseService;
+        private readonly IUserService _userService;
 
-        public AdminController(IStudentService studentService, ITeacherService teacherService, ISupabaseAuthService supabaseAuthService, IAdminService adminService, ICourseService courseService)
+        public AdminController(IStudentService studentService, ITeacherService teacherService, ISupabaseAuthService supabaseAuthService, IAdminService adminService, ICourseService courseService, IUserService userService)
         {
             _studentService = studentService;
             _teacherService = teacherService;
             _supabaseAuthService = supabaseAuthService;
             _adminService = adminService;
             _courseService = courseService;
+            _userService = userService;
         }
 
         [HttpGet]
@@ -53,20 +55,92 @@ namespace ASI.Basecode.WebApp.Controllers
         }
 
         [HttpGet]
-        public IActionResult Users()
+        public async Task<IActionResult> Users(string tab = "all", string search = null)
         {
-            return View();
+            try
+            {
+                var (totalStudents, totalInstructors, totalCourses) = await _adminService.GetDashboardStatisticsAsync();
+                
+                Console.WriteLine($"=== AdminController.Users ===");
+                Console.WriteLine($"Tab: {tab}, Search: {search ?? "none"}");
+
+                // Fetch users based on search and tab
+                List<SupabaseUserNew> allUsers;
+                List<SupabaseUserNew> students;
+                List<SupabaseUserNew> instructors;
+                List<SupabaseUserNew> displayedUsers;
+
+                if (!string.IsNullOrWhiteSpace(search))
+                {
+                    // Search across all users
+                    allUsers = await _userService.SearchUsersAsync(search, null);
+                    students = await _userService.SearchUsersAsync(search, "1");
+                    instructors = await _userService.SearchUsersAsync(search, "2");
+                }
+                else
+                {
+                    // Fetch all users
+                    allUsers = await _userService.GetAllUsersAsync();
+                    students = await _userService.GetStudentsAsync();
+                    instructors = await _userService.GetInstructorsAsync();
+                }
+
+                // Determine which list to display based on tab
+                displayedUsers = tab switch
+                {
+                    "students" => students,
+                    "instructors" => instructors,
+                    _ => allUsers
+                };
+
+                // Resolve roles for displayed users using user_roles join -> roles
+                // Note: Pass users.id (converted to string) not userTypeId
+                var displayedWithRoles = new List<UserWithRoleViewModel>();
+                foreach (var u in displayedUsers)
+                {
+                    var rolesForUser = await _userService.GetUserRolesAsync(u.Id.ToString());
+                    displayedWithRoles.Add(new UserWithRoleViewModel
+                    {
+                        User = u,
+                        Roles = rolesForUser
+                    });
+                }
+
+                var viewModel = new UsersTableViewModel
+                {
+                    AllUsers = allUsers,
+                    Students = students,
+                    Instructors = instructors,
+                    DisplayedUsers = displayedUsers,
+                    DisplayedUsersWithRoles = displayedWithRoles,
+                    SearchTerm = search,
+                    ActiveTab = tab,
+                    TotalStudents = totalStudents,
+                    TotalInstructors = totalInstructors
+                };
+
+                Console.WriteLine($"ViewModel created - All: {allUsers.Count}, Students: {students.Count}, Instructors: {instructors.Count}, Displayed: {displayedUsers.Count}");
+                Console.WriteLine($"=== End Users ===");
+
+                return View(viewModel);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error loading users: {ex.Message}");
+                Console.WriteLine($"Stack Trace: {ex.StackTrace}");
+                return View(new UsersTableViewModel());
+            }
         }
 
         [HttpGet]
         public IActionResult AddStudent()
         {
-            return View(new StudentViewModel());
+            return View(new StudentCreateViewModel());
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> AddStudent(StudentViewModel model)
+        public async Task<IActionResult> AddStudent(StudentCreateViewModel model)
         {
             if (!ModelState.IsValid)
             {
@@ -75,11 +149,38 @@ namespace ASI.Basecode.WebApp.Controllers
 
             try
             {
-                var success = await _studentService.CreateStudentAsync(model);
+                // Map ViewModel to DTO
+                var studentDto = new StudentCreateDto
+                {
+                    FirstName = model.FirstName,
+                    MiddleName = model.MiddleName,
+                    LastName = model.LastName,
+                    Suffix = model.Suffix,
+                    Email = model.Email,
+                    ContactNumber = model.ContactNumber,
+                    HouseNumber = model.HouseNumber,
+                    StreetName = model.StreetName,
+                    Subdivision = model.Subdivision,
+                    Barangay = model.Barangay,
+                    City = model.City,
+                    Province = model.Province,
+                    ZipCode = model.ZipCode,
+                    YearLevel = model.YearLevel,
+                    ProgramId = model.ProgramId,
+                    DepartmentId = model.DepartmentId,
+                    EmergencyContactFirstName = model.EmergencyContactFirstName,
+                    EmergencyContactMiddleName = model.EmergencyContactMiddleName,
+                    EmergencyContactLastName = model.EmergencyContactLastName,
+                    EmergencyContactSuffix = model.EmergencyContactSuffix,
+                    EmergencyContactNumber = model.EmergencyContactNumber,
+                    EmergencyContactRelationship = model.EmergencyContactRelationship
+                };
+
+                var success = await _userService.CreateStudentAsync(studentDto);
                 
                 if (success)
                 {
-                    TempData["SuccessMessage"] = $"Student {model.FirstName} {model.LastName} has been successfully created! A confirmation email has been sent to {model.Email}. The student must click the confirmation link in the email before they can log in. The temporary password has been logged for admin reference.";
+                    TempData["SuccessMessage"] = $"Student {model.FirstName} {model.LastName} has been successfully created!";
                     return RedirectToAction("Users");
                 }
                 else
@@ -98,16 +199,79 @@ namespace ASI.Basecode.WebApp.Controllers
         [HttpGet]
         public IActionResult AddTeacher()
         {
-            return RedirectToAction("AddTeacher", "Teacher");
+            return View(new TeacherCreateViewModel());
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> AddTeacher(TeacherCreateViewModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                return View(model);
+            }
+
+            try
+            {
+                // Map ViewModel to DTO
+                var teacherDto = new TeacherCreateDto
+                {
+                    FirstName = model.FirstName,
+                    MiddleName = model.MiddleName,
+                    LastName = model.LastName,
+                    Suffix = model.Suffix,
+                    Email = model.Email,
+                    ContactNumber = model.ContactNumber,
+                    HouseNumber = model.HouseNumber,
+                    StreetName = model.StreetName,
+                    Subdivision = model.Subdivision,
+                    Barangay = model.Barangay,
+                    City = model.City,
+                    Province = model.Province,
+                    ZipCode = model.ZipCode,
+                    DepartmentId = model.DepartmentId
+                };
+
+                var success = await _userService.CreateTeacherAsync(teacherDto);
+                
+                if (success)
+                {
+                    TempData["SuccessMessage"] = $"Teacher {model.FirstName} {model.LastName} has been successfully created!";
+                    return RedirectToAction("Users");
+                }
+                else
+                {
+                    ModelState.AddModelError(string.Empty, "Failed to create teacher. Please try again.");
+                    return View(model);
+                }
+            }
+            catch (System.Exception ex)
+            {
+                ModelState.AddModelError(string.Empty, $"Error creating teacher: {ex.Message}");
+                return View(model);
+            }
         }
 
         [HttpGet]
-        public async Task<IActionResult> Courses()
+        public async Task<IActionResult> Courses(string search)
         {
             try
             {
-                var courses = await _courseService.GetAllCoursesAsync();
-                Console.WriteLine($"=== AdminController.Courses ===");
+                List<CourseModel> courses;
+
+                if (!string.IsNullOrWhiteSpace(search))
+                {
+                    courses = await _courseService.SearchCoursesAsync(search);
+                    ViewData["SearchTerm"] = search;
+                    Console.WriteLine($"=== AdminController.Courses (Search) ===");
+                    Console.WriteLine($"Search term: '{search}'");
+                }
+                else
+                {
+                    courses = await _courseService.GetAllCoursesAsync();
+                    Console.WriteLine($"=== AdminController.Courses ===");
+                }
+
                 Console.WriteLine($"Retrieved {courses.Count} courses");
                 return View(courses);
             }

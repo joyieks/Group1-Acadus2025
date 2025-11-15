@@ -40,6 +40,7 @@ namespace ASI.Basecode.WebApp
             this._services.AddScoped<ASI.Basecode.Services.Interfaces.ITeacherService, ASI.Basecode.Services.Services.TeacherService>();
             this._services.AddScoped<ASI.Basecode.Services.Interfaces.IAdminService, ASI.Basecode.Services.Services.AdminService>();
             this._services.AddScoped<ASI.Basecode.Services.Interfaces.ICourseService, ASI.Basecode.Services.Services.CourseService>();
+            this._services.AddScoped<ASI.Basecode.Services.Interfaces.IUserService, ASI.Basecode.Services.Services.UserService>();
             
             // Production Services
             this._services.AddScoped<ASI.Basecode.Services.Interfaces.IPasswordGenerator, ASI.Basecode.Services.Services.PasswordGenerator>();

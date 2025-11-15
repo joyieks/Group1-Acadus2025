@@ -44,6 +44,41 @@ namespace ASI.Basecode.Services.Services
         }
 
         /// <summary>
+        /// Searches for courses by code or name.
+        /// </summary>
+        public async Task<List<CourseModel>> SearchCoursesAsync(string searchTerm)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(searchTerm))
+                {
+                    return await GetAllCoursesAsync();
+                }
+
+                var client = await _supabaseAuthService.GetSupabaseClientForAuthAsync();
+                var allCourses = await GetAllCoursesAsync();
+
+                // Filter courses by code or name (case-insensitive)
+                var searchLower = searchTerm.ToLower();
+                var filteredCourses = allCourses
+                    .Where(c => 
+                        (c.Code != null && c.Code.ToLower().Contains(searchLower)) ||
+                        (c.Name != null && c.Name.ToLower().Contains(searchLower))
+                    )
+                    .ToList();
+
+                Console.WriteLine($"Search for '{searchTerm}' returned {filteredCourses.Count} courses");
+                return filteredCourses;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error searching courses: {ex.Message}");
+                Console.WriteLine($"Stack Trace: {ex.StackTrace}");
+                return new List<CourseModel>();
+            }
+        }
+
+        /// <summary>
         /// Retrieves a specific course by ID.
         /// </summary>
         public async Task<CourseModel> GetCourseByIdAsync(int courseId)
