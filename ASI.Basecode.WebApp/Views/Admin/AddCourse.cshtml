@@ -41,22 +41,10 @@
                         <textarea name="Description" rows="4" placeholder="Provide a detailed description of the course..." required style="width:100%; padding:12px; border:1px solid #d1d5db; border-radius:8px; font-size:14px; resize:vertical;"></textarea>
                     </div>
 
-                    <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:20px;">
+                    <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:20px; margin-bottom:20px;">
                         <div>
                             <label style="display:block; font-weight:600; color:#374151; margin-bottom:8px; font-size:14px;">Credits *</label>
                             <input type="number" name="Credits" placeholder="3" min="1" max="6" required style="width:100%; padding:12px; border:1px solid #d1d5db; border-radius:8px; font-size:14px;"/>
-                        </div>
-                        <div>
-                            <label style="display:block; font-weight:600; color:#374151; margin-bottom:8px; font-size:14px;">Department *</label>
-                            <select name="Department" required style="width:100%; padding:12px; border:1px solid #d1d5db; border-radius:8px; font-size:14px;">
-                                <option value="">Select Department</option>
-                                <option value="Computer Science">Computer Science</option>
-                                <option value="Mathematics">Mathematics</option>
-                                <option value="Engineering">Engineering</option>
-                                <option value="Business">Business</option>
-                                <option value="Arts">Arts</option>
-                                <option value="Science">Science</option>
-                            </select>
                         </div>
                         <div>
                             <label style="display:block; font-weight:600; color:#374151; margin-bottom:8px; font-size:14px;">Level *</label>
@@ -67,14 +55,6 @@
                                 <option value="Doctorate">Doctorate</option>
                             </select>
                         </div>
-                    </div>
-                </section>
-
-                <!-- Schedule & Capacity Section -->
-                <section style="margin-bottom:32px;">
-                    <h2 style="font-size:18px; font-weight:700; color:#111827; margin:0 0 20px 0; padding-bottom:12px; border-bottom:2px solid #E8F9E8;">Schedule & Capacity</h2>
-                    
-                    <div style="display:grid; grid-template-columns:repeat(2, 1fr); gap:20px; margin-bottom:20px;">
                         <div>
                             <label style="display:block; font-weight:600; color:#374151; margin-bottom:8px; font-size:14px;">Semester *</label>
                             <select name="Semester" required style="width:100%; padding:12px; border:1px solid #d1d5db; border-radius:8px; font-size:14px;">
@@ -84,61 +64,15 @@
                                 <option value="Summer 2026">Summer 2026</option>
                             </select>
                         </div>
-                        <div>
-                            <label style="display:block; font-weight:600; color:#374151; margin-bottom:8px; font-size:14px;">Year *</label>
-                            <input type="number" name="Year" placeholder="2025" min="2025" max="2030" required style="width:100%; padding:12px; border:1px solid #d1d5db; border-radius:8px; font-size:14px;"/>
-                        </div>
-                    </div>
-
-                    <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:20px; margin-bottom:20px;">
-                        <div>
-                            <label style="display:block; font-weight:600; color:#374151; margin-bottom:8px; font-size:14px;">Days *</label>
-                            <select name="Days" required style="width:100%; padding:12px; border:1px solid #d1d5db; border-radius:8px; font-size:14px;">
-                                <option value="">Select Days</option>
-                                <option value="MWF">Monday, Wednesday, Friday</option>
-                                <option value="TTh">Tuesday, Thursday</option>
-                                <option value="MW">Monday, Wednesday</option>
-                                <option value="Daily">Daily</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label style="display:block; font-weight:600; color:#374151; margin-bottom:8px; font-size:14px;">Start Time *</label>
-                            <input type="time" name="StartTime" required style="width:100%; padding:12px; border:1px solid #d1d5db; border-radius:8px; font-size:14px;"/>
-                        </div>
-                        <div>
-                            <label style="display:block; font-weight:600; color:#374151; margin-bottom:8px; font-size:14px;">End Time *</label>
-                            <input type="time" name="EndTime" required style="width:100%; padding:12px; border:1px solid #d1d5db; border-radius:8px; font-size:14px;"/>
-                        </div>
                     </div>
 
                     <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:20px;">
                         <div>
-                            <label style="display:block; font-weight:600; color:#374151; margin-bottom:8px; font-size:14px;">Room/Location *</label>
-                            <input type="text" name="Room" placeholder="e.g., Room 301" required style="width:100%; padding:12px; border:1px solid #d1d5db; border-radius:8px; font-size:14px;"/>
-                        </div>
-                        <div>
-                            <label style="display:block; font-weight:600; color:#374151; margin-bottom:8px; font-size:14px;">Max Capacity *</label>
+                            <label style="display:block; font-weight:600; color:#374151; margin-bottom:8px; font-size:14px;">Capacity *</label>
                             <input type="number" name="MaxCapacity" placeholder="30" min="1" required style="width:100%; padding:12px; border:1px solid #d1d5db; border-radius:8px; font-size:14px;"/>
                         </div>
                         <div>
-                            <label style="display:block; font-weight:600; color:#374151; margin-bottom:8px; font-size:14px;">Mode *</label>
-                            <select name="Mode" required style="width:100%; padding:12px; border:1px solid #d1d5db; border-radius:8px; font-size:14px;">
-                                <option value="">Select Mode</option>
-                                <option value="In-Person">In-Person</option>
-                                <option value="Online">Online</option>
-                                <option value="Hybrid">Hybrid</option>
-                            </select>
-                        </div>
-                    </div>
-                </section>
-
-                <!-- Instructor Information Section -->
-                <section style="margin-bottom:32px;">
-                    <h2 style="font-size:18px; font-weight:700; color:#111827; margin:0 0 20px 0; padding-bottom:12px; border-bottom:2px solid #E8F9E8;">Instructor Information</h2>
-                    
-                    <div style="display:grid; grid-template-columns:repeat(2, 1fr); gap:20px;">
-                        <div>
-                            <label style="display:block; font-weight:600; color:#374151; margin-bottom:8px; font-size:14px;">Primary Instructor *</label>
+                            <label style="display:block; font-weight:600; color:#374151; margin-bottom:8px; font-size:14px;">Instructor *</label>
                             <select name="InstructorId" required style="width:100%; padding:12px; border:1px solid #d1d5db; border-radius:8px; font-size:14px;">
                                 <option value="">Select Instructor</option>
                                 <option value="1">Dr. John Smith - Computer Science</option>
@@ -148,38 +82,7 @@
                             </select>
                         </div>
                         <div>
-                            <label style="display:block; font-weight:600; color:#374151; margin-bottom:8px; font-size:14px;">Teaching Assistant (Optional)</label>
-                            <select name="TAId" style="width:100%; padding:12px; border:1px solid #d1d5db; border-radius:8px; font-size:14px;">
-                                <option value="">No TA</option>
-                                <option value="5">Sarah Johnson</option>
-                                <option value="6">Michael Lee</option>
-                                <option value="7">Amanda White</option>
-                            </select>
-                        </div>
-                    </div>
-                </section>
-
-                <!-- Prerequisites & Additional Info Section -->
-                <section style="margin-bottom:32px;">
-                    <h2 style="font-size:18px; font-weight:700; color:#111827; margin:0 0 20px 0; padding-bottom:12px; border-bottom:2px solid #E8F9E8;">Prerequisites & Additional Information</h2>
-                    
-                    <div style="margin-bottom:20px;">
-                        <label style="display:block; font-weight:600; color:#374151; margin-bottom:8px; font-size:14px;">Prerequisites (Optional)</label>
-                        <textarea name="Prerequisites" rows="3" placeholder="List any prerequisite courses or requirements..." style="width:100%; padding:12px; border:1px solid #d1d5db; border-radius:8px; font-size:14px; resize:vertical;"></textarea>
-                    </div>
-
-                    <div style="margin-bottom:20px;">
-                        <label style="display:block; font-weight:600; color:#374151; margin-bottom:8px; font-size:14px;">Learning Objectives (Optional)</label>
-                        <textarea name="LearningObjectives" rows="3" placeholder="What will students learn in this course?" style="width:100%; padding:12px; border:1px solid #d1d5db; border-radius:8px; font-size:14px; resize:vertical;"></textarea>
-                    </div>
-
-                    <div style="display:grid; grid-template-columns:repeat(2, 1fr); gap:20px;">
-                        <div>
-                            <label style="display:block; font-weight:600; color:#374151; margin-bottom:8px; font-size:14px;">Textbook (Optional)</label>
-                            <input type="text" name="Textbook" placeholder="e.g., Introduction to Algorithms, 3rd Edition" style="width:100%; padding:12px; border:1px solid #d1d5db; border-radius:8px; font-size:14px;"/>
-                        </div>
-                        <div>
-                            <label style="display:block; font-weight:600; color:#374151; margin-bottom:8px; font-size:14px;">Course Status *</label>
+                            <label style="display:block; font-weight:600; color:#374151; margin-bottom:8px; font-size:14px;">Status *</label>
                             <select name="Status" required style="width:100%; padding:12px; border:1px solid #d1d5db; border-radius:8px; font-size:14px;">
                                 <option value="Active">Active</option>
                                 <option value="Draft">Draft</option>

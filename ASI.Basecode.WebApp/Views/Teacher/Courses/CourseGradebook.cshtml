@@ -1,0 +1,169 @@
+@model ASI.Basecode.WebApp.Models.TeacherCourseViewModel
+@{
+    Layout = "~/Views/Shared/_AuthenticatedLayout.cshtml";
+    ViewData["Title"] = "Course Gradebook";
+}
+
+<!-- Hero Section -->
+<section class="hero-section" style="background:#E8F9E8; display:flex; align-items:center; justify-content:center; text-align:center; position:relative; padding: 40px 0;">
+    <a href="/Teacher/FullCourseView/@Model.Id" style="position:absolute; top:20px; left:20px; background:#ffffff; color:#059669; border:1px solid #d1d5db; border-radius:8px; padding:8px 16px; font-weight:600; text-decoration:none; transition:background 0.3s; display:flex; align-items:center; gap:8px;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M19 12H5"></path>
+            <path d="M12 19l-7-7 7-7"></path>
+        </svg>
+        Back to Course
+    </a>
+    <div style="max-width: 1200px; margin: 0 auto; padding: 0 16px;">
+        <p style="margin:0 0 4px 0; color:#4b5563; font-size:20px;">@Model.CourseCode</p>
+        <h1 style="font-size:48px; font-weight:800; margin:0 0 4px 0; color:#111827;">Course Gradebook</h1>
+        <p style="margin:0 0 16px 0; color:#4b5563; font-size:18px;">@Model.SemesterInfo</p>
+        <p style="margin:0 0 0 0; color:#6b7280; font-size:14px;">View and manage student grades for this course.</p>
+    </div>
+</section>
+
+<!-- White Section with Student Grades -->
+<section style="background:#ffffff; padding: 40px 0;">
+    <div style="max-width: 1200px; margin: 0 auto; padding: 0 16px;">
+        <h2 style="margin:0 0 24px 0; font-weight:800; font-size:24px; color:#111827;">Student Grades</h2>
+
+        <div style="display:grid; grid-template-columns: 3fr 5fr; gap:24px;">
+            <!-- Left Column: Student List -->
+            <div>
+                <h3 style="margin:0 0 16px 0; font-weight:700; font-size:18px; color:#111827;">Students</h3>
+                <div style="border-radius:8px; overflow:hidden; border:1px solid #e5e7eb;">
+                    <table id="studentTable" style="width:100%; border-collapse:collapse;">
+                        <thead style="background:#059669;">
+                            <tr>
+                                <th style="padding:12px 16px; text-align:left; font-weight:700; color:#fff;">Student ID</th>
+                                <th style="padding:12px 16px; text-align:left; font-weight:700; color:#fff;">Name</th>
+                                <th style="padding:12px 16px; text-align:left; font-weight:700; color:#fff;">Overall Grade</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr style="border-bottom:1px solid #e5e7eb;">
+                                <td style="padding:16px; color:#111827; font-weight:500;">2021001</td>
+                                <td style="padding:16px; color:#111827;">John Smith</td>
+                                <td style="padding:16px; color:#059669; font-weight:600;">A (95%)</td>
+                            </tr>
+                            <tr style="background:#f9fafb; border-bottom:1px solid #e5e7eb;">
+                                <td style="padding:16px; color:#111827; font-weight:500;">2021002</td>
+                                <td style="padding:16px; color:#111827;">Jane Doe</td>
+                                <td style="padding:16px; color:#059669; font-weight:600;">A- (92%)</td>
+                            </tr>
+                            <tr style="border-bottom:1px solid #e5e7eb;">
+                                <td style="padding:16px; color:#111827; font-weight:500;">2021003</td>
+                                <td style="padding:16px; color:#111827;">Bob Johnson</td>
+                                <td style="padding:16px; color:#d97706; font-weight:600;">B+ (88%)</td>
+                            </tr>
+                            <tr style="background:#f9fafb; border-bottom:1px solid #e5e7eb;">
+                                <td style="padding:16px; color:#111827; font-weight:500;">2021004</td>
+                                <td style="padding:16px; color:#111827;">Alice Brown</td>
+                                <td style="padding:16px; color:#d97706; font-weight:600;">B (85%)</td>
+                            </tr>
+                            <tr style="border-bottom:1px solid #e5e7eb;">
+                                <td style="padding:16px; color:#111827; font-weight:500;">2021005</td>
+                                <td style="padding:16px; color:#111827;">Charlie Wilson</td>
+                                <td style="padding:16px; color:#dc2626; font-weight:600;">C (75%)</td>
+                            </tr>
+                            <tr style="background:#f9fafb; border-bottom:1px solid #e5e7eb;">
+                                <td style="padding:16px; color:#111827; font-weight:500;">2021006</td>
+                                <td style="padding:16px; color:#111827;">David Lee</td>
+                                <td style="padding:16px; color:#059669; font-weight:600;">A (93%)</td>
+                            </tr>
+                            <tr style="border-bottom:1px solid #e5e7eb;">
+                                <td style="padding:16px; color:#111827; font-weight:500;">2021007</td>
+                                <td style="padding:16px; color:#111827;">Emma Davis</td>
+                                <td style="padding:16px; color:#d97706; font-weight:600;">B- (82%)</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Right Column: Grades -->
+            <div>
+                <h3 style="margin:0 0 16px 0; font-weight:700; font-size:18px; color:#111827;">Grades</h3>
+
+                <!-- Average Section -->
+                <div style="background:#f9fafb; border:1px solid #e5e7eb; border-radius:8px; padding:16px; margin-bottom:20px;">
+                    <h4 style="margin:0 0 8px 0; font-weight:600; color:#374151; font-size:14px;">Average (Based on all graded activities)</h4>
+                    <div style="font-size:24px; font-weight:800; color:#059669;">87.5%</div>
+                    <div style="font-size:14px; color:#6b7280; margin-top:4px;">Grade: B+</div>
+                </div>
+
+                <!-- Grades Table -->
+                <div style="border-radius:8px; overflow:hidden; border:1px solid #e5e7eb;">
+                    <table style="width:100%; border-collapse:collapse;">
+                        <thead style="background:#f9fafb;">
+                            <tr>
+                                <th style="padding:12px 16px; text-align:left; font-weight:600; color:#374151; border-bottom:1px solid #e5e7eb;">Activity Name</th>
+                                <th style="padding:12px 16px; text-align:left; font-weight:600; color:#374151; border-bottom:1px solid #e5e7eb;">Raw Score</th>
+                                <th style="padding:12px 16px; text-align:left; font-weight:600; color:#374151; border-bottom:1px solid #e5e7eb;">Perfect Score</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr style="border-bottom:1px solid #f3f4f6;">
+                                <td style="padding:12px 16px; color:#111827; font-weight:500;">Quiz 1: Introduction to Programming</td>
+                                <td style="padding:12px 16px; color:#111827;">45/50</td>
+                                <td style="padding:12px 16px; color:#059669; font-weight:600;">50/50</td>
+                            </tr>
+                            <tr style="background:#f9fafb; border-bottom:1px solid #f3f4f6;">
+                                <td style="padding:12px 16px; color:#111827; font-weight:500;">Assignment 1: Hello World Program</td>
+                                <td style="padding:12px 16px; color:#111827;">95/100</td>
+                                <td style="padding:12px 16px; color:#059669; font-weight:600;">100/100</td>
+                            </tr>
+                            <tr style="border-bottom:1px solid #f3f4f6;">
+                                <td style="padding:12px 16px; color:#111827; font-weight:500;">Midterm Exam</td>
+                                <td style="padding:12px 16px; color:#111827;">85/100</td>
+                                <td style="padding:12px 16px; color:#059669; font-weight:600;">100/100</td>
+                            </tr>
+                            <tr style="background:#f9fafb; border-bottom:1px solid #f3f4f6;">
+                                <td style="padding:12px 16px; color:#111827; font-weight:500;">Lab Exercise 1: Variables & Data Types</td>
+                                <td style="padding:12px 16px; color:#111827;">50/50</td>
+                                <td style="padding:12px 16px; color:#059669; font-weight:600;">50/50</td>
+                            </tr>
+                            <tr style="border-bottom:1px solid #f3f4f6;">
+                                <td style="padding:12px 16px; color:#111827; font-weight:500;">Project 1: Calculator Application</td>
+                                <td style="padding:12px 16px; color:#111827;">180/200</td>
+                                <td style="padding:12px 16px; color:#059669; font-weight:600;">200/200</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+@section Scripts {
+    <style>
+        /* Table styling */
+        #studentTable {
+            border: none !important;
+        }
+        #studentTable thead th {
+            border-bottom: 1px solid #f3f4f6 !important;
+        }
+        #studentTable tbody td {
+            border-bottom: 1px solid #f3f4f6 !important;
+        }
+    </style>
+    <script>
+        $(document).ready(function() {
+            $('#studentTable').DataTable({
+                "pageLength": 10,
+                "lengthChange": false,
+                "searching": false,
+                "ordering": true,
+                "info": true,
+                "paging": true,
+                "language": {
+                    "paginate": {
+                        "previous": "Prev",
+                        "next": "Next"
+                    }
+                }
+            });
+        });
+    </script>
+}

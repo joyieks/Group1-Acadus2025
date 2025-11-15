@@ -1,7 +1,7 @@
 @model ASI.Basecode.WebApp.Models.TeacherDashboardViewModel
 @{
     ViewData["Title"] = "Teachers - Acadus";
-    Layout = "~/Views/Shared/_Layout.cshtml";
+    Layout = "~/Views/Shared/_AuthenticatedLayout.cshtml";
 }
 
 <!-- White Section with Statistics Cards -->
@@ -21,13 +21,8 @@
         <h2 style="text-align:center; font-weight:800; margin:0 0 2px 0; font-size:28px; color:#111827;">Overview</h2>
         <p style="text-align:center; margin:0 0 24px 0; color:#4b5563; font-size:16px;">Stay on top of your upcoming tasks and responsibilities</p>
 
-        <div style="display:grid; grid-template-columns: repeat(5, 1fr); gap:24px;">
-            <div style="grid-column: span 2;">
-                @await Component.InvokeAsync("Calendar")
-            </div>
-            <div style="grid-column: span 3;">
-                @await Component.InvokeAsync("RecentActivity")
-            </div>
+        <div style="display:grid; grid-template-columns: 1fr;">
+            @await Component.InvokeAsync("RecentActivity")
         </div>
     </div>
 </section>

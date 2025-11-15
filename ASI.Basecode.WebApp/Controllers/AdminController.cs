@@ -88,6 +88,13 @@ namespace ASI.Basecode.WebApp.Controllers
         }
 
         [HttpGet]
+        public IActionResult ViewTeacher(string id)
+        {
+            // TODO: Load teacher data by id
+            return View();
+        }
+
+        [HttpGet]
         public IActionResult EditUser(string id)
         {
             // TODO: Load user data by id
