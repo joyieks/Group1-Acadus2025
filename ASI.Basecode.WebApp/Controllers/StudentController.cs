@@ -73,7 +73,7 @@ namespace ASI.Basecode.WebApp.Controllers
                 Id = c.Id,
                 CourseCode = c.Code,
                 CourseTitle = c.Name,
-                SemesterInfo = c.SemesterInfo,
+                SemesterInfo = $"Level: {c.Level}",
                 CardColor = GetRandomCardColor()
             }).ToArray();
 
@@ -210,7 +210,7 @@ namespace ASI.Basecode.WebApp.Controllers
                   model.Department = studentProfile?.DepartmentId?.ToString() ?? "N/A";
                   model.Course = studentProfile?.ProgramId?.ToString() ?? "N/A";  // Fixed: use ProgramId
   model.YearLevel = studentProfile?.YearLevel?.ToString() ?? "N/A";
-    model.Status = user.IsActive ? "Active" : "Inactive";
+    model.Status = user.IsActive ?? false ? "Active" : "Inactive";
                 }
 
                // Address (primary)

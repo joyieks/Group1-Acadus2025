@@ -168,17 +168,17 @@ using System.Security.Claims;
 
             // Optionally, fetch activities for this course
             var activitiesResponse = await client.From<ActivityModel>()
-                .Filter("course_id", Supabase.Postgrest.Constants.Operator.Equals, id)
+                .Filter("course_id", Supabase.Postgrest.Constants.Operator.Equals, (int)id)
                 .Get();
             var activities = activitiesResponse.Models;
 
             // Map to your view model as needed
             var viewModel = new TeacherCourseViewModel
             {
-                Id = course.Id,
+                Id = (int)course.Id,
                 CourseCode = course.Code,
                 CourseTitle = course.Name,
-                SemesterInfo = course.SemesterInfo ?? string.Empty, // Adjust property as needed
+                SemesterInfo = $"Level: {course.Level}", // Display course level
                 CardColor = "#E8F9E8" // Or fetch from DB if available
             };
 
@@ -238,16 +238,8 @@ using System.Security.Claims;
                 enrollment.DroppedAt = DateTime.UtcNow;
                 await enrollment.Update<EnrollmentModel>();
 
-                // Update course enrolled count
-                var courseResponse = await client.From<CourseModel>()
-                    .Filter("id", Supabase.Postgrest.Constants.Operator.Equals, courseId)
-                    .Get();
-                var course = courseResponse.Models.FirstOrDefault();
-                if (course != null)
-                {
-                    course.EnrolledCount = Math.Max(0, course.EnrolledCount - 1);
-                    await course.Update<CourseModel>();
-                }
+                // Note: EnrolledCount was removed from CourseModel. 
+                // Course enrollment is now tracked through the enrollment table only.
 
                 return Json(new { success = true, message = "Student dropped successfully." });
             }

@@ -9,8 +9,8 @@ namespace ASI.Basecode.Data.Interfaces
         // Change parameter to string
         Task<List<CourseModel>> GetCoursesByStudentIdAsync(string studentId);
 
-        Task<List<ActivityModel>> GetActivitiesByCourseIdAsync(int courseId);
-        Task<List<ActivitySubmissionModel>> GetSubmissionsByStudentAndCourseAsync(string studentId, int courseId);
+        Task<List<ActivityModel>> GetActivitiesByCourseIdAsync(long courseId);
+        Task<List<ActivitySubmissionModel>> GetSubmissionsByStudentAndCourseAsync(string studentId, long courseId);
 
         Task<SupabaseUserNew> GetUserByUserTypeIdAsync(string userTypeId);
 

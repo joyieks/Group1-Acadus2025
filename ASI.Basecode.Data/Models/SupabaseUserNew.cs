@@ -38,7 +38,7 @@ namespace ASI.Basecode.Data.Models
         public string UserTypeId { get; set; }
 
         [Column("isActive")]
-        public bool IsActive { get; set; }
+        public bool? IsActive { get; set; }
 
         [Column("profilePictureUrl")]
         public string ProfilePictureUrl { get; set; }

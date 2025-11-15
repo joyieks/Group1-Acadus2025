@@ -20,25 +20,35 @@ namespace ASI.Basecode.WebApp.Controllers
         private readonly ITeacherService _teacherService;
         private readonly ISupabaseAuthService _supabaseAuthService;
         private readonly IAdminService _adminService;
+        private readonly ICourseService _courseService;
 
-        public AdminController(IStudentService studentService, ITeacherService teacherService, ISupabaseAuthService supabaseAuthService, IAdminService adminService)
+        public AdminController(IStudentService studentService, ITeacherService teacherService, ISupabaseAuthService supabaseAuthService, IAdminService adminService, ICourseService courseService)
         {
             _studentService = studentService;
             _teacherService = teacherService;
             _supabaseAuthService = supabaseAuthService;
             _adminService = adminService;
+            _courseService = courseService;
         }
 
         [HttpGet]
         public async Task<IActionResult> Dashboard()
         {
             var (totalStudents, totalInstructors, totalCourses) = await _adminService.GetDashboardStatisticsAsync();
+            
+            Console.WriteLine($"=== AdminController.Dashboard ===");
+            Console.WriteLine($"Received from service - Students: {totalStudents}, Instructors: {totalInstructors}, Courses: {totalCourses}");
+            
             var viewModel = new AdminDashboardViewModel
             {
                 TotalStudents = totalStudents,
                 TotalInstructors = totalInstructors,
                 TotalCourses = totalCourses
             };
+            
+            Console.WriteLine($"ViewModel created - Students: {viewModel.TotalStudents}, Instructors: {viewModel.TotalInstructors}, Courses: {viewModel.TotalCourses}");
+            Console.WriteLine($"=== End Dashboard ===");
+            
             return View(viewModel);
         }
 
@@ -92,9 +102,21 @@ namespace ASI.Basecode.WebApp.Controllers
         }
 
         [HttpGet]
-        public IActionResult Courses()
+        public async Task<IActionResult> Courses()
         {
-            return View();
+            try
+            {
+                var courses = await _courseService.GetAllCoursesAsync();
+                Console.WriteLine($"=== AdminController.Courses ===");
+                Console.WriteLine($"Retrieved {courses.Count} courses");
+                return View(courses);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error retrieving courses: {ex.Message}");
+                Console.WriteLine($"Stack Trace: {ex.StackTrace}");
+                return View(new List<CourseModel>());
+            }
         }
 
         [HttpGet]
@@ -137,9 +159,126 @@ namespace ASI.Basecode.WebApp.Controllers
         }
 
         [HttpGet]
-        public IActionResult AddCourse()
+        public async Task<IActionResult> AddCourse()
         {
-            return View();
+            try
+            {
+                var model = new CourseCreateViewModel();
+                
+                // Populate instructor dropdown
+                var instructors = await _courseService.GetActiveInstructorsAsync();
+                model.Instructors = instructors
+                    .Select(i => new InstructorOption { UserTypeId = i.UserTypeId, FullName = i.FullName })
+                    .ToList();
+
+                // Populate semester dropdown
+                var semesters = await _courseService.GetAllSemestersAsync();
+                model.Semesters = semesters
+                    .Select(s => new SemesterOption { Id = s.Id, SemesterName = s.SemesterName })
+                    .ToList();
+
+                // Populate level dropdown
+                model.Levels = new List<LevelOption>
+                {
+                    new LevelOption { Value = "Undergraduate", Label = "Undergraduate" },
+                    new LevelOption { Value = "Graduate", Label = "Graduate" },
+                    new LevelOption { Value = "Doctorate", Label = "Doctorate" }
+                };
+
+                Console.WriteLine($"=== AdminController.AddCourse (GET) ===");
+                Console.WriteLine($"Instructors: {model.Instructors.Count}, Semesters: {model.Semesters.Count}, Levels: {model.Levels.Count}");
+
+                return View(model);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error loading AddCourse form: {ex.Message}");
+                TempData["ErrorMessage"] = "Error loading course creation form. Please try again.";
+                return RedirectToAction("Courses");
+            }
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> AddCourse(CourseCreateViewModel model)
+        {
+            try
+            {
+                if (!ModelState.IsValid)
+                {
+                    // Repopulate dropdowns on validation failure
+                    var instructors = await _courseService.GetActiveInstructorsAsync();
+                    model.Instructors = instructors
+                        .Select(i => new InstructorOption { UserTypeId = i.UserTypeId, FullName = i.FullName })
+                        .ToList();
+
+                    var semesters = await _courseService.GetAllSemestersAsync();
+                    model.Semesters = semesters
+                        .Select(s => new SemesterOption { Id = s.Id, SemesterName = s.SemesterName })
+                        .ToList();
+
+                    model.Levels = new List<LevelOption>
+                    {
+                        new LevelOption { Value = "Undergraduate", Label = "Undergraduate" },
+                        new LevelOption { Value = "Graduate", Label = "Graduate" },
+                        new LevelOption { Value = "Doctorate", Label = "Doctorate" }
+                    };
+
+                    return View(model);
+                }
+
+                Console.WriteLine($"=== AdminController.AddCourse (POST) ===");
+                Console.WriteLine($"Creating course: {model.Name} ({model.Code})");
+
+                var (success, message, courseId) = await _courseService.CreateCourseAsync(
+                    code: model.Code,
+                    name: model.Name,
+                    description: model.Description,
+                    credits: model.Credits,
+                    level: model.Level,
+                    semesterId: model.SemesterId,
+                    maxCapacity: model.MaxCapacity,
+                    instructorId: model.InstructorId,
+                    status: model.Status
+                );
+
+                if (success)
+                {
+                    TempData["SuccessMessage"] = $"Course '{model.Name}' has been created successfully!";
+                    return RedirectToAction("Courses");
+                }
+                else
+                {
+                    ModelState.AddModelError(string.Empty, message);
+                    
+                    // Repopulate dropdowns
+                    var instructors = await _courseService.GetActiveInstructorsAsync();
+                    model.Instructors = instructors
+                        .Select(i => new InstructorOption { UserTypeId = i.UserTypeId, FullName = i.FullName })
+                        .ToList();
+
+                    var semesters = await _courseService.GetAllSemestersAsync();
+                    model.Semesters = semesters
+                        .Select(s => new SemesterOption { Id = s.Id, SemesterName = s.SemesterName })
+                        .ToList();
+
+                    model.Levels = new List<LevelOption>
+                    {
+                        new LevelOption { Value = "Undergraduate", Label = "Undergraduate" },
+                        new LevelOption { Value = "Graduate", Label = "Graduate" },
+                        new LevelOption { Value = "Doctorate", Label = "Doctorate" }
+                    };
+
+                    return View(model);
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error creating course: {ex.Message}");
+                Console.WriteLine($"Stack Trace: {ex.StackTrace}");
+                ModelState.AddModelError(string.Empty, $"Error creating course: {ex.Message}");
+                return View(model);
+            }
         }
 
         [HttpGet]

@@ -15,32 +15,35 @@
 
 		<!-- KPI Cards -->
 		<div style="display:grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap:24px; max-width: 900px; margin: 0 auto 24px;">
-			<!-- Students Card -->
-			<div style="background:#ffffff; border-radius:12px; padding:20px 24px; text-align:center; min-height: 120px; display: flex; flex-direction: column; justify-content: center;">
-				<div style="display:flex; align-items:center; justify-content:center; margin-bottom:12px; color:#6b7280;">
-					<span style="margin-right:8px; font-size:18px;">≡</span>
-					<span style="font-size:14px; font-weight:600;">Students</span>
-				</div>
-				<div style="font-size:48px; font-weight:800; color:#065f46;">@Model.TotalStudents</div>
+		<!-- Students Card -->
+		<div style="background:#ffffff; border-radius:12px; padding:20px 24px; text-align:center; min-height: 120px; display: flex; flex-direction: column; justify-content: center;">
+			<div style="display:flex; align-items:center; justify-content:center; margin-bottom:12px; color:#6b7280;">
+				<span style="margin-right:8px; font-size:18px;">≡</span>
+				<span style="font-size:14px; font-weight:600;">Students</span>
 			</div>
+			<div style="font-size:48px; font-weight:800; color:#065f46;">@Model.TotalStudents</div>
+		</div>
 
-			<!-- Instructors Card -->
-			<div style="background:#ffffff; border-radius:12px; padding:20px 24px; text-align:center; min-height: 120px; display: flex; flex-direction: column; justify-content: center;">
-				<div style="display:flex; align-items:center; justify-content:center; margin-bottom:12px; color:#6b7280;">
-					<span style="margin-right:8px; font-size:18px;">≡</span>
-					<span style="font-size:14px; font-weight:600;">Instructors</span>
-				</div>
-				<div style="font-size:48px; font-weight:800; color:#065f46;">@Model.TotalInstructors</div>
+		<!-- Instructors Card -->
+		<div style="background:#ffffff; border-radius:12px; padding:20px 24px; text-align:center; min-height: 120px; display: flex; flex-direction: column; justify-content: center;">
+			<div style="display:flex; align-items:center; justify-content:center; margin-bottom:12px; color:#6b7280;">
+				<span style="margin-right:8px; font-size:18px;">≡</span>
+				<span style="font-size:14px; font-weight:600;">Instructors</span>
 			</div>
+			<div style="font-size:48px; font-weight:800; color:#065f46;">@Model.TotalInstructors</div>
+		</div>
 
-			<!-- Total Courses Card -->
-			<div style="background:#ffffff; border-radius:12px; padding:20px 24px; text-align:center; min-height: 120px; display: flex; flex-direction: column; justify-content: center;">
-				<div style="display:flex; align-items:center; justify-content:center; margin-bottom:12px; color:#6b7280;">
-					<span style="margin-right:8px; font-size:18px;">≡</span>
-					<span style="font-size:14px; font-weight:600;">Total Courses</span>
-				</div>
-				<div style="font-size:48px; font-weight:800; color:#065f46;">@Model.TotalCourses</div>
+            <!-- Total Courses Card (clickable -> Courses page) -->
+            <a href="@Url.Action("Courses", "Admin")" class="no-underline">
+
+		<!-- Total Courses Card -->
+		<div style="background:#ffffff; border-radius:12px; padding:20px 24px; text-align:center; min-height: 120px; display: flex; flex-direction: column; justify-content: center;">
+			<div style="display:flex; align-items:center; justify-content:center; margin-bottom:12px; color:#6b7280;">
+				<span style="margin-right:8px; font-size:18px;">≡</span>
+				<span style="font-size:14px; font-weight:600;">Total Courses</span>
 			</div>
+			<div style="font-size:48px; font-weight:800; color:#065f46;">@Model.TotalCourses</div>
+		</div>
 		</div>
 
 	</div>

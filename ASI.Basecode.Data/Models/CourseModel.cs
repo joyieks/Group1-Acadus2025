@@ -14,13 +14,7 @@ namespace ASI.Basecode.Data.Models
         /// Gets or sets the course ID.
         /// </summary>
         [PrimaryKey("id", false)]
-        public int Id { get; set; }
-
-        /// <summary>
-        /// Gets or sets the course name.
-        /// </summary>
-        [Column("courseName")]
-        public string Name { get; set; }
+        public long Id { get; set; }
 
         /// <summary>
         /// Gets or sets the course code.
@@ -29,39 +23,51 @@ namespace ASI.Basecode.Data.Models
         public string Code { get; set; }
 
         /// <summary>
-        /// Gets or sets the teacher ID for the course.
+        /// Gets or sets the course name.
         /// </summary>
-        [Column("instructor")]
-        public string TeacherId { get; set; }  // int4 in database
-        
+        [Column("courseName")]
+        public string Name { get; set; }
+
         /// <summary>
-        /// Gets or sets the course status.
+        /// Gets or sets the course description.
         /// </summary>
-        [Column("status")]
-        public string Status { get; set; }
+        [Column("courseDesc")]
+        public string Description { get; set; }
+
+        /// <summary>
+        /// Gets or sets the number of credits for the course.
+        /// </summary>
+        [Column("credits")]
+        public long Credits { get; set; }
+
+        /// <summary>
+        /// Gets or sets the course level (Undergraduate, Graduate, Doctorate).
+        /// </summary>
+        [Column("level")]
+        public string Level { get; set; }
+
+        /// <summary>
+        /// Gets or sets the semester ID for the course.
+        /// </summary>
+        [Column("semesterId")]
+        public long SemesterId { get; set; }
 
         /// <summary>
         /// Gets or sets the maximum capacity for the course.
         /// </summary>
         [Column("capacity")]
-        public int MaxCapacity { get; set; }
+        public decimal MaxCapacity { get; set; }
 
         /// <summary>
-        /// Gets or sets the enrolled count for the course.
+        /// Gets or sets the instructor ID for the course.
         /// </summary>
-        [Column("enrolled_count")]
-        public int EnrolledCount { get; set; }
+        [Column("instructor")]
+        public string TeacherId { get; set; }
 
         /// <summary>
-        /// Gets or sets the creation date for the course.
+        /// Gets or sets the course status (Active, Inactive).
         /// </summary>
-        [Column("created_at")]
-        public DateTime CreatedAt { get; set; }
-
-        /// <summary>
-        /// Gets or sets the semester information for the course.
-        /// </summary>
-        [Column("semesterId")]
-        public string SemesterInfo { get; set; }
+        [Column("status")]
+        public string Status { get; set; }
     }
 }

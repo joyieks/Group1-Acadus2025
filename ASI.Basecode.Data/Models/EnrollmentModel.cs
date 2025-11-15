@@ -17,7 +17,7 @@ namespace ASI.Basecode.Data.Models
         public string StudentId { get; set; }  // Changed from Guid to long
 
         [Column("course_id")]
-        public int CourseId { get; set; }
+        public long CourseId { get; set; }
 
         [Column("created_at")]
         public DateTime EnrolledAt { get; set; }

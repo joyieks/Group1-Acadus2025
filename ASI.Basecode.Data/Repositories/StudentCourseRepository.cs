@@ -47,7 +47,7 @@ namespace ASI.Basecode.Data.Repositories
             return enrolledCourses;
         }
 
-        public async Task<List<ActivityModel>> GetActivitiesByCourseIdAsync(int courseId)
+        public async Task<List<ActivityModel>> GetActivitiesByCourseIdAsync(long courseId)
         {
             var res = await _supabaseClient
                 .From<ActivityModel>()
@@ -72,7 +72,7 @@ namespace ASI.Basecode.Data.Repositories
 
 
 
-        public async Task<List<ActivitySubmissionModel>> GetSubmissionsByStudentAndCourseAsync(string studentId, int courseId)
+        public async Task<List<ActivitySubmissionModel>> GetSubmissionsByStudentAndCourseAsync(string studentId, long courseId)
         {
             var activities = await GetActivitiesByCourseIdAsync(courseId);
             var activityIds = activities.Select(a => a.Id).ToList();
@@ -104,7 +104,8 @@ namespace ASI.Basecode.Data.Repositories
                     .Select(s =>
                     {
                         var activity = activities.FirstOrDefault(a => a.Id == s.ActivityId);
-                        if (activity == null || activity.maxScore <= 0) return 0.0;
+                        if (activity == null || activity.maxScore <= 0) 
+                            return 0.0;
 
                         var percentage = (double)s.Score / activity.maxScore * 100;
                         return percentage;

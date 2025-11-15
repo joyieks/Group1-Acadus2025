@@ -17,7 +17,7 @@ namespace ASI.Basecode.Data.Models
         public string Description { get; set; }
 
         [Column("courseId")]
-        public int CourseId { get; set; }
+        public long CourseId { get; set; }
 
         [Column("maxScore")]
         public int maxScore { get; set; }

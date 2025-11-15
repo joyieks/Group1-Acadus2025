@@ -35,28 +35,52 @@ namespace ASI.Basecode.Services.Services
                 var userRolesList = allUserRoles?.Models ?? new List<UserRole>();
                 var usersList = allUsers?.Models ?? new List<SupabaseUserNew>();
 
-                // Count students: user_roles with role_id = 1 AND corresponding user has isActive = true
+                Console.WriteLine($"=== AdminService Debug ===");
+                Console.WriteLine($"Total user_roles records: {userRolesList.Count}");
+                Console.WriteLine($"Total users records: {usersList.Count}");
+
+                // Count ACTIVE students: 
+                // - user_roles.roleId == 1 (student role)
+                // - AND corresponding user (matching userTypeId) has isActive == true
                 var studentCount = userRolesList
                     .Where(ur => ur.RoleId == 1) // Student role
                     .Count(ur => usersList.Any(u => u.UserTypeId == ur.UserId && u.IsActive == true));
 
-                // Count instructors: user_roles with role_id = 2 AND corresponding user has isActive = true
+                Console.WriteLine($"Students (roleId=1, isActive=true) count: {studentCount}");
+                Console.WriteLine($"  Details: {userRolesList.Where(ur => ur.RoleId == 1).Count()} total with roleId=1");
+
+                // Count ACTIVE instructors:
+                // - user_roles.roleId == 2 (instructor role)
+                // - AND corresponding user (matching userTypeId) has isActive == true
                 var instructorCount = userRolesList
                     .Where(ur => ur.RoleId == 2) // Teacher/Instructor role
                     .Count(ur => usersList.Any(u => u.UserTypeId == ur.UserId && u.IsActive == true));
 
-                // Get total courses
+                Console.WriteLine($"Instructors (roleId=2, isActive=true) count: {instructorCount}");
+                Console.WriteLine($"  Details: {userRolesList.Where(ur => ur.RoleId == 2).Count()} total with roleId=2");
+
+                // Get courses with Active status
                 var coursesQuery = await client
                     .From<CourseModel>()
                     .Get();
 
-                var totalCourses = coursesQuery?.Models?.Count() ?? 0;
+                var coursesList = coursesQuery?.Models ?? new List<CourseModel>();
+                
+                // Filter courses where Status == "Active"
+                var totalCourses = coursesList
+                    .Where(c => c.Status == "Active")
+                    .Count();
+
+                Console.WriteLine($"Total active courses: {totalCourses}");
+                Console.WriteLine($"  Details: {coursesList.Count} total courses in database");
+                Console.WriteLine($"=== End Debug ===");
 
                 return (studentCount, instructorCount, totalCourses);
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"Error getting dashboard statistics: {ex.Message}");
+                Console.WriteLine($"Stack Trace: {ex.StackTrace}");
                 return (0, 0, 0);
             }
         }
