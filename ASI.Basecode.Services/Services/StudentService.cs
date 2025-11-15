@@ -341,6 +341,24 @@ var user = await client.From<SupabaseUserNew>()
             }
         }
 
+        public async Task<SupabaseUserNew> GetStudentBySupabaseIdAsync(string supabaseUserId)
+        {
+            try
+            {
+                var client = await GetSupabaseClientAsync();
+                // Query users table by Supabase user ID (userTypeId)
+                var response = await client.From<SupabaseUserNew>()
+                    .Where(x => x.UserTypeId == supabaseUserId)
+                    .Single();
+
+                return response;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Error retrieving student by Supabase ID: {ex.Message}", ex);
+            }
+        }
+
         public async Task<bool> UpdateStudentAsync(StudentViewModel model)
         {
      try

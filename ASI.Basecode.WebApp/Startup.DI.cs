@@ -38,31 +38,11 @@ namespace ASI.Basecode.WebApp
             this._services.AddScoped<ASI.Basecode.Services.Interfaces.ISupabaseAuthService, ASI.Basecode.Services.Services.SupabaseAuthService>();
             this._services.AddScoped<ASI.Basecode.Services.Interfaces.IStudentService, ASI.Basecode.Services.Services.StudentService>();
             this._services.AddScoped<ASI.Basecode.Services.Interfaces.ITeacherService, ASI.Basecode.Services.Services.TeacherService>();
+            this._services.AddScoped<ASI.Basecode.Services.Interfaces.IAdminService, ASI.Basecode.Services.Services.AdminService>();
             
             // Production Services
             this._services.AddScoped<ASI.Basecode.Services.Interfaces.IPasswordGenerator, ASI.Basecode.Services.Services.PasswordGenerator>();
             this._services.AddScoped<ASI.Basecode.Services.Interfaces.IEmailService, ASI.Basecode.Services.Services.EmailService>();
-
-            /*
-             * Temporarily disabled backend service wiring while focusing on frontend only.
-             * Uncomment when backend implementations are ready.
-             *
-             * // Common
-             * this._services.AddScoped<TokenProvider>();
-             * this._services.TryAddSingleton<TokenProviderOptionsFactory>();
-             * this._services.TryAddSingleton<TokenValidationParametersFactory>();
-             * this._services.AddScoped<IUnitOfWork, UnitOfWork>();
-             *
-             * // Services
-             * this._services.TryAddSingleton<TokenValidationParametersFactory>();
-             * this._services.AddScoped<IUserService, UserService>();
-             *
-             * // Repositories
-             * this._services.AddScoped<IUserRepository, UserRepository>();
-             *
-             * // Manager Class
-             * this._services.AddScoped<SignInManager>();
-             */
 
             this._services.AddHttpClient();
         }

@@ -9,6 +9,7 @@ namespace ASI.Basecode.Services.Interfaces
         Task<bool> CreateStudentAsync(StudentViewModel model);
         Task<SupabaseUserNew> GetStudentByIdAsync(int id);  // Changed return type
         Task<SupabaseUserNew> GetStudentByEmailAsync(string email);  // Changed return type
+        Task<SupabaseUserNew> GetStudentBySupabaseIdAsync(string supabaseUserId);
         Task<bool> UpdateStudentAsync(StudentViewModel model);
         Task<bool> DeleteStudentAsync(int id);
     }

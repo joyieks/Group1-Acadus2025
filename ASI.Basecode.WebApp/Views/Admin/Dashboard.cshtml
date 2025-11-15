@@ -1,3 +1,4 @@
+@model ASI.Basecode.WebApp.Models.AdminDashboardViewModel
 @{
     Layout = "~/Views/Shared/_AuthenticatedLayout.cshtml";
     ViewData["Title"] = "Admin Dashboard";
@@ -20,7 +21,7 @@
 					<span style="margin-right:8px; font-size:18px;">≡</span>
 					<span style="font-size:14px; font-weight:600;">Students</span>
 				</div>
-				<div style="font-size:48px; font-weight:800; color:#065f46;">0</div>
+				<div style="font-size:48px; font-weight:800; color:#065f46;">@Model.TotalStudents</div>
 			</div>
 
 			<!-- Instructors Card -->
@@ -29,7 +30,7 @@
 					<span style="margin-right:8px; font-size:18px;">≡</span>
 					<span style="font-size:14px; font-weight:600;">Instructors</span>
 				</div>
-				<div style="font-size:48px; font-weight:800; color:#065f46;">0</div>
+				<div style="font-size:48px; font-weight:800; color:#065f46;">@Model.TotalInstructors</div>
 			</div>
 
 			<!-- Total Courses Card -->
@@ -38,7 +39,7 @@
 					<span style="margin-right:8px; font-size:18px;">≡</span>
 					<span style="font-size:14px; font-weight:600;">Total Courses</span>
 				</div>
-				<div style="font-size:48px; font-weight:800; color:#065f46;">0</div>
+				<div style="font-size:48px; font-weight:800; color:#065f46;">@Model.TotalCourses</div>
 			</div>
 		</div>
 

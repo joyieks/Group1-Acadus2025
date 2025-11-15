@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 
-namespace ASI.Basecode.WebApp.Models
+namespace ASI.Basecode.Data.Models
 {
     public class StudentCourseDetailsViewModel
     {
@@ -14,22 +16,39 @@ namespace ASI.Basecode.WebApp.Models
         public int CompletedTasks { get; set; }
         public int TotalTasks { get; set; }
         public int PendingTasks { get; set; }
-        public List<AppealItem> Appeals { get; set; }
         public List<FeedbackItem> Feedbacks { get; set; }
         public List<ActivityItem> Activities { get; set; } = new();
-        
+
         // Pagination properties
         public int CurrentPage { get; set; } = 1;
         public int TotalPages { get; set; } = 1;
         public string CurrentTab { get; set; } = "grades";
 
+        public double ConvertPercentageToGPA(double percentage)
+        {
+            if (percentage >= 98) return 1.00;
+            if (percentage >= 95) return 1.25;
+            if (percentage >= 92) return 1.50;
+            if (percentage >= 89) return 1.75;
+            if (percentage >= 86) return 2.00;
+            if (percentage >= 83) return 2.25;
+            if (percentage >= 80) return 2.50;
+            if (percentage >= 78) return 2.75;
+            if (percentage >= 75) return 3.00;
+            return 5.00;
+        }
+
         public double GetCourseAverage()
         {
-            var gradedActivities = Activities.Where(a => a.Status == "Graded" && int.TryParse(a.Score, out _)).ToList();
-            if (!gradedActivities.Any()) return 0;
-            var totalScore = gradedActivities.Sum(a => int.Parse(a.Score));
-            return Math.Round((double)totalScore / gradedActivities.Count, 1);
+            var graded = Activities
+                .Where(a => a.Status == "Graded" && double.TryParse(a.Percentage, out _))
+                .Select(a => ConvertPercentageToGPA(double.Parse(a.Percentage)))
+                .ToList();
+
+            if (!graded.Any()) return 0;
+            return Math.Round(graded.Average(), 2);
         }
+
 
         public double GetCompletionPercentage()
         {
@@ -42,26 +61,14 @@ namespace ASI.Basecode.WebApp.Models
             public string Name { get; set; } = string.Empty;
             public string Description { get; set; } = string.Empty;
             public string Score { get; set; } = string.Empty;
+            public string Percentage { get; set; } = string.Empty;
             public DateTime Date { get; set; }
             public string Status { get; set; } = string.Empty;
             public bool CanAppeal { get; set; } = false;
-            
+
             // Additional properties for the new mock data
             public string Title { get; set; } = string.Empty;
             public string DueDate { get; set; } = string.Empty;
-        }
-
-        public class AppealItem
-        {
-            public string ActivityName { get; set; } = string.Empty;
-            public string Reason { get; set; } = string.Empty;
-            public string Status { get; set; } = "Pending";
-            public DateTime DateSubmitted { get; set; }
-            
-            // Additional properties for the new mock data
-            public string Title { get; set; } = string.Empty;
-            public string Date { get; set; } = string.Empty;
-            public string Description { get; set; } = string.Empty;
         }
 
         public class FeedbackItem
@@ -70,7 +77,7 @@ namespace ASI.Basecode.WebApp.Models
             public string Comment { get; set; } = string.Empty;
             public string Instructor { get; set; } = string.Empty;
             public DateTime DateGiven { get; set; }
-            
+
             // Additional properties for the new mock data
             public string Title { get; set; } = string.Empty;
             public string Date { get; set; } = string.Empty;

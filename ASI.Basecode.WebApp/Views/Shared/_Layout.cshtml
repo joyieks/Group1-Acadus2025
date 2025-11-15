@@ -50,10 +50,8 @@
         <div class="text-gray-600 text-sm">© 2025 Acadus || Version 1.0.0</div>
     </footer>
 
-    <script>
+        <script>
         (function() {
-            const notifBtn = document.getElementById('notifBtn');
-            const notifPanel = document.getElementById('notifPanel');
             const userMenuBtn = document.getElementById('userMenuBtn');
             const userAvatarBtn = document.getElementById('userAvatarBtn');
             const userMenu = document.getElementById('userMenu');
@@ -61,84 +59,37 @@
             const mobileMenu = document.getElementById('mobileMenu');
             const mobileMenuCloseBtn = document.getElementById('mobileMenuCloseBtn');
 
-            // ------------------ Notifications ------------------
-            async function loadDropdown() {
-                const controller = '@ViewContext.RouteData.Values["controller"]?.ToString()';
-                const response = await fetch(`/${controller}/NotificationDropdown`, { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
-                const html = await response.text();
-                notifPanel.innerHTML = html;
-                positionNotifPanel();
-
-                const root = notifPanel.querySelector('[data-count]');
-                const count = root ? parseInt(root.getAttribute('data-count') || '0') : 0;
-                document.getElementById('notifDot').style.display = count > 0 ? 'block' : 'none';
-            }
-
-            (async function initNotifDot() {
-                try {
-                    const controller = '@ViewContext.RouteData.Values["controller"]?.ToString()';
-                    const res = await fetch(`/${controller}/NotificationCount`, { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
-                    const data = await res.json();
-                    document.getElementById('notifDot').style.display = (data && data.count > 0) ? 'block' : 'none';
-                } catch (_) {}
-            })();
-
-            function openNotif() {
-                if (notifPanel.parentElement !== document.body) {
-                    document.body.appendChild(notifPanel);
-                }
-                notifPanel.style.position = 'fixed';
-                notifPanel.style.zIndex = '999999';
-                notifPanel.classList.remove('hidden');
-                loadDropdown();
-                positionNotifPanel();
-            }
-
-            function closeNotif() {
-                notifPanel.classList.add('hidden');
-                notifPanel.innerHTML = '';
-            }
-
-            function positionNotifPanel() {
-                const rect = notifBtn.getBoundingClientRect();
-                const top = rect.bottom + 8;
-                const right = (window.innerWidth - rect.right) + 6;
-                notifPanel.style.top = top + 'px';
-                notifPanel.style.right = right + 'px';
-            }
-
-            function toggleNotif(e) {
-                e.preventDefault();
-                e.stopPropagation();
-                if (notifPanel.classList.contains('hidden')) {
-                    openNotif();
-                    userMenu.classList.add('hidden');
-                } else {
-                    closeNotif();
-                }
-            }
-
-            if (notifBtn) {
-                notifBtn.addEventListener('click', toggleNotif);
-            }
-
             // ------------------ User Menu ------------------
             function toggleUserMenu(e) {
+                console.log('toggleUserMenu called', e.target);
                 e.preventDefault();
                 e.stopPropagation();
-                if (userMenu.classList.contains('hidden')) {
+                if (userMenu && userMenu.classList.contains('hidden')) {
                     userMenu.classList.remove('hidden');
-                    closeNotif();
-                } else {
+                    console.log('Menu opened');
+                } else if (userMenu) {
                     userMenu.classList.add('hidden');
+                    console.log('Menu closed');
                 }
             }
 
             if (userMenuBtn) {
-                userMenuBtn.addEventListener('click', toggleUserMenu);
+                userMenuBtn.addEventListener('click', function(e) {
+                    console.log('userMenuBtn clicked!');
+                    toggleUserMenu(e);
+                });
+                console.log('userMenuBtn event listener added');
+            } else {
+                console.log('userMenuBtn not found');
             }
             if (userAvatarBtn) {
-                userAvatarBtn.addEventListener('click', toggleUserMenu);
+                userAvatarBtn.addEventListener('click', function(e) {
+                    console.log('userAvatarBtn clicked!');
+                    toggleUserMenu(e);
+                });
+                console.log('userAvatarBtn event listener added');
+            } else {
+                console.log('userAvatarBtn not found');
             }
 
             // ------------------ Mobile Menu Overlay ------------------
@@ -148,8 +99,9 @@
                     e.preventDefault();
                     e.stopPropagation();
                     mobileMenu.classList.remove('hidden');
-                    closeNotif();
-                    userMenu.classList.add('hidden');
+                    if (userMenu) {
+                        userMenu.classList.add('hidden');
+                    }
                 });
 
                 // Close mobile menu
@@ -170,25 +122,19 @@
             }
 
             // ------------------ Global behavior ------------------
-            // Close notifications or user menu when clicking outside
-            document.addEventListener('click', function() {
-                closeNotif();
-                if (userMenu) {
+            // Close user menu when clicking outside
+            document.addEventListener('click', function(e) {
+                if (userMenu && !userMenu.contains(e.target) && 
+                    (!userMenuBtn || e.target !== userMenuBtn) && 
+                    (!userAvatarBtn || e.target !== userAvatarBtn)) {
                     userMenu.classList.add('hidden');
                 }
             });
 
             // Prevent closing when clicking inside panels
-            if (notifPanel) {
-                notifPanel.addEventListener('click', function(e) { e.stopPropagation(); });
-            }
             if (userMenu) {
                 userMenu.addEventListener('click', function(e) { e.stopPropagation(); });
             }
-
-            // Reposition notifications on resize/scroll
-            window.addEventListener('resize', function() { if (notifPanel && !notifPanel.classList.contains('hidden')) positionNotifPanel(); });
-            window.addEventListener('scroll', function() { if (notifPanel && !notifPanel.classList.contains('hidden')) positionNotifPanel(); }, true);
         })();
     </script>
 

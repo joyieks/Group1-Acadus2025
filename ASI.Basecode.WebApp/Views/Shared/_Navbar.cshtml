@@ -95,40 +95,24 @@
         </svg>
     </button>
 
-    <!-- Right side: User + Notifications (desktop) -->
+    <!-- Right side: User (desktop) -->
     <div class="hidden md:flex items-center gap-4 relative">
-        <!-- Notifications Icon Button -->
-        <button id="notifBtn" type="button" class="relative text-gray-600 hover:text-gray-800 transition-colors">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                      d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002
-                     6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67
-                     6.165 6 8.388 6 11v3.159c0 .538-.214
-                     1.055-.595 1.436L4 17h5m6 0v1a3
-                     3 0 11-6 0 0-1m6 0H9" />
-            </svg>
-            <!-- Dot indicator (shown when there are notifications) -->
-            <span id="notifDot" class="absolute -top-1 -right-1 bg-red-500 w-2 h-2 rounded-full"></span>
-        </button>
-
-        <!-- Dropdown Panel Container (fixed to overlay page content) -->
-        <div id="notifPanel" class="hidden fixed right-6 top-16 z-[100000]"></div>
 
         <!-- User Info -->
         <div class="flex items-center gap-3 relative">
             <!-- First Name Text -->
             @* <span>@Model.UserName</span> *@
-            <button id="userMenuBtn" type="button" class="text-left"> Username </button>
+            <button id="userMenuBtn" type="button" class="text-left text-gray-700 hover:text-gray-900 font-medium cursor-pointer">@User.Identity.Name</button>
             <!-- Avatar Circle -->
             <button id="userAvatarBtn" type="button" class="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center overflow-hidden">
                 <!-- If you have user image -->
                 <!-- <img src="user-avatar.jpg" alt="User" class="w-full h-full object-cover"> -->
                 <!-- Or placeholder with initials -->
-                <span class="text-gray-500 text-sm font-semibold">U</span>
+                <span class="text-gray-500 text-sm font-semibold">@(User.Identity.Name?.Substring(0, 1).ToUpper())</span>
             </button>
 
             <!-- User Menu Dropdown -->
-            <div id="userMenu" class="hidden absolute right-0 top-12 z-[9999] bg-white shadow-lg rounded-xl border border-gray-100 w-48">
+            <div id="userMenu" class="absolute right-0 top-12 z-[9999] bg-white shadow-lg rounded-xl border border-gray-100 w-48">
                 @if (controller == "Admin")
                 {
                     <a asp-controller="Admin" asp-action="EditProfile" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">Profile</a>
@@ -145,7 +129,9 @@
                 {
                     <a href="/Home/Profile" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">Profile</a>
                 }
-                <a href="/Auth/Login" class="block px-4 py-2 text-sm text-red-600 hover:bg-gray-50">Logout</a>
+                <form asp-controller="Auth" asp-action="Logout" method="post" class="inline">
+                    <button type="submit" class="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-50">Logout</button>
+                </form>
             </div>
         </div>
     </div>
@@ -179,7 +165,6 @@
         }
     </div>
     <div class="px-4 pt-2 pb-4 border-t border-gray-100 space-y-1">
-        <a href="/@controller/Notifications" class="block px-3 py-2 rounded-md text-base text-[#337D58] hover:bg-acadus-green/10">Notifications</a>
         @if (controller == "Admin")
         {
             <a asp-controller="Admin" asp-action="Profile" class="block px-3 py-2 rounded-md text-base text-[#337D58] hover:bg-acadus-green/10">Profile</a>
@@ -196,6 +181,8 @@
         {
             <a href="/Home/Profile" class="block px-3 py-2 rounded-md text-base text-[#337D58] hover:bg-acadus-green/10">Profile</a>
         }
-        <a href="/Auth/Login" class="block px-3 py-2 rounded-md text-base text-red-600 hover:bg-red-50">Logout</a>
+        <form asp-controller="Auth" asp-action="Logout" method="post" class="inline">
+            <button type="submit" class="block px-3 py-2 rounded-md text-base text-red-600 hover:bg-red-50">Logout</button>
+        </form>
     </div>
 </div>

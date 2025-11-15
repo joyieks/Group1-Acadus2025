@@ -573,9 +573,9 @@ namespace ASI.Basecode.Services.Services
         }
 
         /// <summary>
-        /// Determines user role based on Supabase user ID by checking the users, user_roles, and roles tables
+        /// Determines user role and name based on Supabase user ID by checking the users, user_roles, and roles tables
         /// </summary>
-        public async Task<string> GetUserRoleAsync(string supabaseUserId)
+        public async Task<(string Role, string Name)> GetUserRoleAndNameAsync(string supabaseUserId)
         {
             try
        {
@@ -606,13 +606,13 @@ namespace ASI.Basecode.Services.Services
        {
                Console.WriteLine($"✗ No user found in users table with userTypeId: {supabaseUserId}");
             Console.WriteLine($"  User needs to be added to the users table first");
-         return "Student"; // Default to Student if not in database
+         return ("Student", "User"); // Default to Student if not in database
       }
    }
          catch (Exception ex)
    {
      Console.WriteLine($"✗ Error querying users table: {ex.Message}");
-  return "Student";
+  return ("Student", "User");
   }
 
          // Step 2: Get the user's role from user_roles table
@@ -641,13 +641,13 @@ namespace ASI.Basecode.Services.Services
    {
       Console.WriteLine($"✗ No role mapping found in user_roles table for userTypeId: {supabaseUserId}");
       Console.WriteLine($"  User needs to be assigned a role in user_roles table");
-       return "Student"; // Default to Student if no role assigned
+       return ("Student", $"{userRecord.FirstName} {userRecord.LastName}"); // Default to Student if no role assigned
 }
      }
         catch (Exception ex)
         {
             Console.WriteLine($"✗ Error querying user_roles table: {ex.Message}");
-            return "Student";
+            return ("Student", $"{userRecord.FirstName} {userRecord.LastName}");
    }
 
          // Step 3: Get the role name from roles table by ID
@@ -667,7 +667,7 @@ namespace ASI.Basecode.Services.Services
   Console.WriteLine($"  - Role ID: {roleRecord.Id}");
             Console.WriteLine($"  - Role Name: {roleRecord.RoleName}");
    Console.WriteLine($"=== ROLE LOOKUP SUCCESS: {roleRecord.RoleName} ===");
-                return roleRecord.RoleName;
+                return (roleRecord.RoleName, $"{userRecord.FirstName} {userRecord.LastName}");
    }
      else
             {
@@ -682,15 +682,24 @@ namespace ASI.Basecode.Services.Services
 
                 // If we got here, something went wrong - default to Student
     Console.WriteLine($"=== ROLE LOOKUP FAILED: Defaulting to Student ===");
-           return "Student";
+           return ("Student", $"{userRecord?.FirstName} {userRecord?.LastName}" ?? "User");
 }
        catch (Exception ex)
        {
   Console.WriteLine($"✗ FATAL ERROR in GetUserRoleAsync: {ex.Message}");
       Console.WriteLine($"Stack Trace: {ex.StackTrace}");
        // Return Student as safe default instead of throwing
-      return "Student";
+      return ("Student", "User");
 }
+        }
+
+        /// <summary>
+        /// Signs in a user with email and password
+        /// </summary>
+        public async Task<Supabase.Gotrue.Session> SignInAsync(string email, string password)
+        {
+            var supabaseClient = await GetSupabaseClientAsync();
+            return await supabaseClient.Auth.SignIn(email, password);
         }
     }
 }

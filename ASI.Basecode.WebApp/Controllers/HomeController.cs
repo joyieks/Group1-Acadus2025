@@ -56,16 +56,6 @@ namespace ASI.Basecode.WebApp.Controllers
             return View();
         }
 
-        [HttpGet]
-        public IActionResult Notifications()
-        {
-            var model = new NotificationsViewModel
-            {
-                Notifications = new List<NotificationsViewModel.NotificationItem>() // no seeded items
-            };
-            return View("~/Views/Shared/Notifications.cshtml", model);
-        }
-
         // Mock data example (for testing)
         public IActionResult Profile()
         {

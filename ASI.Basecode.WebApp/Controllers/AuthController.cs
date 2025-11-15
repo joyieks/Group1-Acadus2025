@@ -5,6 +5,11 @@ using Microsoft.Extensions.Configuration;
 using System.Threading.Tasks;
 using System;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using System.Security.Claims;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace ASI.Basecode.WebApp.Controllers
 {
@@ -24,6 +29,22 @@ namespace ASI.Basecode.WebApp.Controllers
         }
         public IActionResult Login()
         {
+            if (User.Identity.IsAuthenticated)
+            {
+                // Redirect based on role
+                var role = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role)?.Value;
+                switch (role)
+                {
+                    case "Admin":
+                        return RedirectToAction("Dashboard", "Admin");
+                    case "Teacher":
+                        return RedirectToAction("Courses", "Teacher");
+                    case "Student":
+                        return RedirectToAction("Index", "Student");
+                    default:
+                        return RedirectToAction("Index", "Student");
+                }
+            }
             return View(new LoginModel());
         }
 
@@ -40,19 +61,34 @@ namespace ASI.Basecode.WebApp.Controllers
 
             try
             {
-                // Authenticate with Supabase
-                var supabaseClient = await _supabaseAuthService.GetSupabaseClientForAuthAsync();
-                var session = await supabaseClient.Auth.SignIn(normalizedEmail, password);
+                // Authenticate with Supabase via service
+                var session = await _supabaseAuthService.SignInAsync(normalizedEmail, password);
                 
                 if (session?.User != null)
                 {
                     // Check if user is confirmed
                     if (session.User.EmailConfirmedAt.HasValue)
                     {
-                        // Determine user role by checking database tables and admin status
-                        var userRole = await _supabaseAuthService.GetUserRoleAsync(session.User.Id);
+                        // Determine user role and name by checking database tables and admin status
+                        var (userRole, userName) = await _supabaseAuthService.GetUserRoleAndNameAsync(session.User.Id);
                         
-                        Console.WriteLine($"User {session.User.Email} logged in with role: {userRole}");
+                        Console.WriteLine($"User {session.User.Email} logged in with role: {userRole}, name: {userName}");
+
+                        // Create claims for the user
+                        var claims = new List<Claim>
+                        {
+                            new Claim(ClaimTypes.Name, userName),
+                            new Claim(ClaimTypes.Email, session.User.Email ?? string.Empty),
+                            new Claim(ClaimTypes.NameIdentifier, session.User.Id ?? string.Empty),
+                            new Claim(ClaimTypes.Role, userRole)
+                        };
+
+                        var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+                        var claimsPrincipal = new ClaimsPrincipal(claimsIdentity);
+
+                        // Sign in the user
+                        await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, claimsPrincipal);
+
                         // Persist essentials in server-side session for later flows
                         try
                         {
@@ -166,6 +202,25 @@ namespace ASI.Basecode.WebApp.Controllers
         public IActionResult ForgotPassword()
         {
             return RedirectToAction("ForgotPassword", "Account");
+        }
+
+        /// <summary>
+        /// Shows the access denied page
+        /// </summary>
+        [HttpGet]
+        public IActionResult AccessDenied()
+        {
+            return View();
+        }
+
+        /// <summary>
+        /// Logs out the current user
+        /// </summary>
+        [HttpPost]
+        public async Task<IActionResult> Logout()
+        {
+            await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+            return RedirectToAction("Login");
         }
     }
 }

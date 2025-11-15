@@ -84,6 +84,11 @@ namespace ASI.Basecode.Services.Interfaces
         /// <summary>
         /// Determines user role based on Supabase user ID
         /// </summary>
-        Task<string> GetUserRoleAsync(string supabaseUserId);
+        Task<(string Role, string Name)> GetUserRoleAndNameAsync(string supabaseUserId);
+
+        /// <summary>
+        /// Signs in a user with email and password
+        /// </summary>
+        Task<Supabase.Gotrue.Session> SignInAsync(string email, string password);
     }
 }

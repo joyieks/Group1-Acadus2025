@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace ASI.Basecode.WebApp.Models
+namespace ASI.Basecode.Data.Models
 {
     /// <summary>
     /// View model used by the student dashboard to display tasks and user information.

@@ -1,28 +1,45 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ASI.Basecode.Services.Interfaces;
 using ASI.Basecode.Services.ServiceModels;
 using System.Threading.Tasks;
 using ASI.Basecode.WebApp.Models;
 using System.Collections.Generic;
+using System.Security.Claims;
+using ASI.Basecode.Data.Models;
+using System;
+using System.Linq;
 
 
 namespace ASI.Basecode.WebApp.Controllers
 {
+    [Authorize(Roles = "Admin")]
     public class AdminController : Controller
     {
         private readonly IStudentService _studentService;
         private readonly ITeacherService _teacherService;
+        private readonly ISupabaseAuthService _supabaseAuthService;
+        private readonly IAdminService _adminService;
 
-        public AdminController(IStudentService studentService, ITeacherService teacherService)
+        public AdminController(IStudentService studentService, ITeacherService teacherService, ISupabaseAuthService supabaseAuthService, IAdminService adminService)
         {
             _studentService = studentService;
             _teacherService = teacherService;
+            _supabaseAuthService = supabaseAuthService;
+            _adminService = adminService;
         }
 
         [HttpGet]
-        public IActionResult Dashboard()
+        public async Task<IActionResult> Dashboard()
         {
-            return View();
+            var (totalStudents, totalInstructors, totalCourses) = await _adminService.GetDashboardStatisticsAsync();
+            var viewModel = new AdminDashboardViewModel
+            {
+                TotalStudents = totalStudents,
+                TotalInstructors = totalInstructors,
+                TotalCourses = totalCourses
+            };
+            return View(viewModel);
         }
 
         [HttpGet]
@@ -146,26 +163,6 @@ namespace ASI.Basecode.WebApp.Controllers
             return RedirectToAction("Index", "Teacher");
         }
 
-
-        public IActionResult Notifications()
-        {
-            var model = new NotificationsViewModel
-            {
-                Notifications = new List<NotificationsViewModel.NotificationItem>() // no seeded items
-            };
-            return View("~/Views/Shared/Notifications.cshtml", model);
-        }
-
-        [HttpGet]
-        public PartialViewResult NotificationDropdown()
-        {
-            var model = new NotificationsViewModel
-            {
-                Notifications = new List<NotificationsViewModel.NotificationItem>()
-            };
-            return PartialView("_NotificationDropdown", model);
-        }
-
         [HttpGet]
         public IActionResult NotificationCount()
         {
@@ -173,6 +170,28 @@ namespace ASI.Basecode.WebApp.Controllers
             return Json(new { count });
         }
 
+        /// <summary>
+        /// Gets the admin database ID from the Supabase user ID
+        /// </summary>
+        private async Task<string> GetAdminIdFromSupabaseIdAsync(string supabaseUserId)
+        {
+            try
+            {
+                var client = await _supabaseAuthService.GetSupabaseClientForAuthAsync();
+                var userQuery = await client
+                    .From<SupabaseUserNew>()
+                    .Where(x => x.UserTypeId == supabaseUserId)
+                    .Get();
+
+                var userRecord = userQuery?.Models?.FirstOrDefault();
+                return userRecord?.Id.ToString();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error getting admin ID from Supabase ID: {ex.Message}");
+                return null;
+            }
+        }
     }
 }
 

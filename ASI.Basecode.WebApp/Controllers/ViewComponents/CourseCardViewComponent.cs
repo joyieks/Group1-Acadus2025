@@ -13,6 +13,15 @@ public class CourseCardViewComponent : ViewComponent
     /// <returns>The view component result.</returns>
     public IViewComponentResult Invoke(TeacherCourseViewModel course)
     {
-        return View(course);
+        // Map to CourseCardViewModel for the view
+        var cardModel = new CourseCardViewModel
+        {
+            Id = course.Id,
+            CourseCode = course.CourseCode,
+            CourseTitle = course.CourseTitle,
+            SemesterInfo = course.SemesterInfo,
+            CardColor = course.CardColor
+        };
+        return View(cardModel);
     }
 }

@@ -1,0 +1,16 @@
+@{
+    Layout = "~/Views/Shared/_LandingLayout.cshtml";
+    ViewData["Title"] = "Access Denied";
+}
+
+<div class="min-h-screen bg-white flex flex-col items-center justify-center px-4">
+    <div class="text-center">
+        <h1 class="text-4xl md:text-5xl font-bold text-black mb-4 font-poppins">
+            Access Denied
+        </h1>
+        <p class="text-lg text-black font-geologica mb-8">
+            You do not have permission to access this page.
+        </p>
+        <a href="/Auth/Logout" class="inline-block bg-gradient-to-r from-darker-shade to-mid-color text-white font-poppins font-semibold text-lg px-8 py-3 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 text-center no-underline cursor-pointer">Logout</a>
+    </div>
+</div>
