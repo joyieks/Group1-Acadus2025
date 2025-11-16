@@ -7,11 +7,11 @@ using System.Threading.Tasks;
 using ASI.Basecode.WebApp.Models;
 using System.Collections.Generic;
 using System.Linq;
-using System;
-
+using Microsoft.AspNetCore.Authorization;
 
 namespace ASI.Basecode.WebApp.Controllers
 {
+    [Authorize(Roles = "Teacher")]  // ? CRITICAL: Require authentication and Teacher role
     public class TeacherController : Controller
     {
         private readonly ITeacherService _teacherService;

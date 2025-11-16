@@ -5,6 +5,10 @@ using Microsoft.Extensions.Configuration;
 using System.Threading.Tasks;
 using System;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using System.Security.Claims;
+using System.Collections.Generic;
 
 namespace ASI.Basecode.WebApp.Controllers
 {
@@ -28,6 +32,7 @@ namespace ASI.Basecode.WebApp.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Login(LoginModel model)
         {
             if (!ModelState.IsValid)
@@ -53,11 +58,38 @@ namespace ASI.Basecode.WebApp.Controllers
                         var userRole = await _supabaseAuthService.GetUserRoleAsync(session.User.Id);
                         
                         Console.WriteLine($"User {session.User.Email} logged in with role: {userRole}");
+
+                        // Create claims for the user
+                        var claims = new List<Claim>
+                        {
+                            new Claim(ClaimTypes.NameIdentifier, session.User.Id),
+                            new Claim(ClaimTypes.Email, session.User.Email),
+                            new Claim(ClaimTypes.Name, $"{session.User.UserMetadata.GetValueOrDefault("first_name", "")} {session.User.UserMetadata.GetValueOrDefault("last_name", "")}"),
+                            new Claim(ClaimTypes.Role, userRole),  // ? CRITICAL: Set the role claim
+                            new Claim("SupabaseUserId", session.User.Id)
+                        };
+
+                        var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+                        var authProperties = new AuthenticationProperties
+                        {
+                            IsPersistent = model.RememberMe,  // Remember me functionality
+                            ExpiresUtc = DateTimeOffset.UtcNow.AddHours(8),
+                            AllowRefresh = true
+                        };
+
+                        // Sign in the user with cookie authentication
+                        await HttpContext.SignInAsync(
+                            CookieAuthenticationDefaults.AuthenticationScheme,
+                            new ClaimsPrincipal(claimsIdentity),
+                            authProperties
+                        );
+
                         // Persist essentials in server-side session for later flows
                         try
                         {
                             HttpContext.Session.SetString("UserEmail", session.User.Email ?? string.Empty);
                             HttpContext.Session.SetString("SupabaseUserId", session.User.Id ?? string.Empty);
+                            HttpContext.Session.SetString("UserRole", userRole);
                         }
                         catch { }
                         
@@ -166,6 +198,42 @@ namespace ASI.Basecode.WebApp.Controllers
         public IActionResult ForgotPassword()
         {
             return RedirectToAction("ForgotPassword", "Account");
+        }
+
+        /// <summary>
+        /// Logs out the current user
+        /// </summary>
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Logout()
+        {
+            try
+            {
+                // Sign out from cookie authentication
+                await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+                
+                // Clear session
+                HttpContext.Session.Clear();
+        
+                Console.WriteLine("User logged out successfully");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error during logout: {ex.Message}");
+            }
+            
+            return RedirectToAction("Login");
+        }
+
+        /// <summary>
+        /// Access denied page
+        /// </summary>
+        [HttpGet]
+        public IActionResult AccessDenied()
+        {
+            ViewBag.Message = "You do not have permission to access this resource.";
+
+            return View();
         }
     }
 }

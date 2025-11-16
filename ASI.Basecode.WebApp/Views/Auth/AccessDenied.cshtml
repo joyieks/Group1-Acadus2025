@@ -1,0 +1,49 @@
+@{
+    ViewData["Title"] = "Access Denied";
+    Layout = "~/Views/Shared/_MinimalLayout.cshtml";
+}
+
+<div class="container">
+    <div class="row justify-content-center align-items-center" style="min-height: 100vh;">
+        <div class="col-md-6 text-center">
+            <div class="card shadow-lg">
+   <div class="card-body p-5">
+       <div class="mb-4">
+   <i class="fas fa-lock" style="font-size: 80px; color: #dc3545;"></i>
+       </div>
+   <h1 class="display-4 text-danger">Access Denied</h1>
+            <p class="lead text-muted mt-3">
+        @ViewBag.Message ?? "You do not have permission to access this resource."
+           </p>
+       <p class="text-muted">
+   If you believe this is an error, please contact your administrator.
+        </p>
+         <div class="mt-4">
+  <a href="@Url.Action("Index", "Home")" class="btn btn-primary btn-lg">
+      <i class="fas fa-home"></i> Go to Home
+                 </a>
+       <a href="@Url.Action("Login", "Auth")" class="btn btn-outline-secondary btn-lg">
+          <i class="fas fa-sign-in-alt"></i> Login Again
+     </a>
+      </div>
+ </div>
+       </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    body {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+    .card {
+        border-radius: 15px;
+        border: none;
+    }
+    .btn-lg {
+    padding: 12px 30px;
+  font-size: 16px;
+    border-radius: 25px;
+     margin: 0 10px;
+    }
+</style>

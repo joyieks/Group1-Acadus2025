@@ -4,10 +4,11 @@ using ASI.Basecode.Services.ServiceModels;
 using System.Threading.Tasks;
 using ASI.Basecode.WebApp.Models;
 using System.Collections.Generic;
-
+using Microsoft.AspNetCore.Authorization;
 
 namespace ASI.Basecode.WebApp.Controllers
 {
+    [Authorize(Roles = "Admin")]  // ? CRITICAL: Require authentication and Admin role
     public class AdminController : Controller
     {
         private readonly IStudentService _studentService;

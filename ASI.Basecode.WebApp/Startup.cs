@@ -64,11 +64,43 @@ namespace ASI.Basecode.WebApp
             services.AddMemoryCache();
             services.AddControllersWithViews();
             services.AddRazorPages().AddRazorRuntimeCompilation();
-            
+
             //Session
             services.AddSession(options =>
             {
                 options.Cookie.Name = Const.Issuer;
+                options.IdleTimeout = TimeSpan.FromMinutes(30);
+                options.Cookie.HttpOnly = true;
+                options.Cookie.IsEssential = true;
+            });
+
+            // Add Authentication with Cookie Scheme
+            services.AddAuthentication(options =>
+            {
+                options.DefaultAuthenticateScheme = Microsoft.AspNetCore.Authentication.Cookies.CookieAuthenticationDefaults.AuthenticationScheme;
+                options.DefaultChallengeScheme = Microsoft.AspNetCore.Authentication.Cookies.CookieAuthenticationDefaults.AuthenticationScheme;
+                options.DefaultSignInScheme = Microsoft.AspNetCore.Authentication.Cookies.CookieAuthenticationDefaults.AuthenticationScheme;
+            })
+            .AddCookie(options =>
+            {
+                options.LoginPath = "/Auth/Login";
+                options.LogoutPath = "/Auth/Logout";
+                options.AccessDeniedPath = "/Auth/AccessDenied";
+                options.ExpireTimeSpan = TimeSpan.FromHours(8);
+                options.SlidingExpiration = true;
+                options.Cookie.HttpOnly = true;
+                options.Cookie.SecurePolicy = Microsoft.AspNetCore.Http.CookieSecurePolicy.SameAsRequest;
+                options.Cookie.SameSite = Microsoft.AspNetCore.Http.SameSiteMode.Lax;
+            });
+
+            // Add Authorization with Role-based policies
+            services.AddAuthorization(options =>
+            {
+                options.AddPolicy("AdminOnly", policy => policy.RequireRole("Admin"));
+                options.AddPolicy("TeacherOnly", policy => policy.RequireRole("Teacher"));
+                options.AddPolicy("StudentOnly", policy => policy.RequireRole("Student"));
+                options.AddPolicy("TeacherOrAdmin", policy => policy.RequireRole("Teacher", "Admin"));
+                options.AddPolicy("StudentOrTeacher", policy => policy.RequireRole("Student", "Teacher"));
             });
 
             // DI Services AutoMapper(Add Profile)
@@ -115,6 +147,10 @@ namespace ASI.Basecode.WebApp
 
             this._app.UseSession();
             this._app.UseRouting();
+
+            // CRITICAL: Add Authentication and Authorization middleware
+            this._app.UseAuthentication();  // ← Must be before UseAuthorization
+            this._app.UseAuthorization();   // ← Must be after UseAuthentication
         }
     }
 }
