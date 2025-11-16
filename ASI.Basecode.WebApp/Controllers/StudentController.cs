@@ -35,7 +35,7 @@ namespace ASI.Basecode.WebApp.Controllers
             var supabaseUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (string.IsNullOrWhiteSpace(supabaseUserId))
                 return Unauthorized();
-
+            
             // Get student ID from the user record using Supabase ID
             var studentId = await GetStudentIdFromSupabaseIdAsync(supabaseUserId);
             if (string.IsNullOrWhiteSpace(studentId))
@@ -71,9 +71,9 @@ namespace ASI.Basecode.WebApp.Controllers
             var courseViewModels = enrolledCourses.Select(c => new CourseCardViewModel
             {
                 Id = c.Id,
-                CourseCode = c.Code,
-                CourseTitle = c.Name,
-                SemesterInfo = $"Level: {c.Level}",
+                CourseCode = c.Code ?? "N/A",
+                CourseTitle = c.Name ?? "Untitled Course",
+                SemesterInfo = c.SemesterId.ToString(),
                 CardColor = GetRandomCardColor()
             }).ToArray();
 
@@ -299,7 +299,7 @@ namespace ASI.Basecode.WebApp.Controllers
             try
             {
                 var student = await _studentService.GetStudentBySupabaseIdAsync(supabaseUserId);
-                return student?.Id.ToString();
+                return student?.UserTypeId.ToString();
             }
             catch (Exception ex)
             {

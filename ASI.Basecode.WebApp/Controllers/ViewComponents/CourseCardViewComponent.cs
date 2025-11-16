@@ -11,17 +11,8 @@ public class CourseCardViewComponent : ViewComponent
     /// </summary>
     /// <param name="course">The course view model.</param>
     /// <returns>The view component result.</returns>
-    public IViewComponentResult Invoke(TeacherCourseViewModel course)
+    public IViewComponentResult Invoke(CourseCardViewModel course)
     {
-        // Map to CourseCardViewModel for the view
-        var cardModel = new CourseCardViewModel
-        {
-            Id = course.Id,
-            CourseCode = course.CourseCode,
-            CourseTitle = course.CourseTitle,
-            SemesterInfo = course.SemesterInfo,
-            CardColor = course.CardColor
-        };
-        return View(cardModel);
+        return View(course);
     }
 }

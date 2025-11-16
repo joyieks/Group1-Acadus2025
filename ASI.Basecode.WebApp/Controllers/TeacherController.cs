@@ -168,7 +168,7 @@ using System.Security.Claims;
 
             // Optionally, fetch activities for this course
             var activitiesResponse = await client.From<ActivityModel>()
-                .Filter("course_id", Supabase.Postgrest.Constants.Operator.Equals, (int)id)
+                .Filter("courseId", Supabase.Postgrest.Constants.Operator.Equals, (int)id)
                 .Get();
             var activities = activitiesResponse.Models;
 
@@ -526,7 +526,7 @@ using System.Security.Claims;
                 if (courseId.HasValue)
                 {
                     var activitiesResponse = await client.From<ActivityModel>()
-                        .Filter("course_id", Supabase.Postgrest.Constants.Operator.Equals, courseId.Value)
+                        .Filter("courseId", Supabase.Postgrest.Constants.Operator.Equals, courseId.Value)
                         .Get();
                     var activityIds = activitiesResponse.Models.Select(a => a.Id).ToList();
                     grades = grades.Where(g => activityIds.Contains(g.ActivityId)).ToList();
@@ -608,7 +608,7 @@ using System.Security.Claims;
                 var client = AsiBasecodeDBContext.SupabaseClient;
                 // Get all activities for the course
                 var activitiesResponse = await client.From<ActivityModel>()
-                    .Filter("course_id", Supabase.Postgrest.Constants.Operator.Equals, courseId)
+                    .Filter("courseId", Supabase.Postgrest.Constants.Operator.Equals, courseId)
                     .Get();
                 var activityIds = activitiesResponse.Models.Select(a => a.Id).ToList();
                 if (!activityIds.Any())
