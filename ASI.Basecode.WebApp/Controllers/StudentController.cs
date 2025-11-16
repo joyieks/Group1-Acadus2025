@@ -1,374 +1,311 @@
+﻿﻿using ASI.Basecode.Data.Models;
+using ASI.Basecode.Services.Interfaces;
 using ASI.Basecode.WebApp.Models;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
-using static ASI.Basecode.WebApp.Models.StudentCourseDetailsViewModel;
-using static ASI.Basecode.WebApp.Models.StudentDashboardViewModel;
+using System.Text.Json;
+using System.Threading.Tasks;
+using System.Security.Claims;
 
 namespace ASI.Basecode.WebApp.Controllers
 {
+    [Authorize(Roles = "Student")]
     public class StudentController : Controller
     {
+        private readonly ISupabaseAuthService _supabaseAuthService;
+        private readonly IStudentCourseService _studentCourseService;
+        private readonly IStudentService _studentService;
 
-        //Dashboard (Recent Tasks & Recently Graded Tasks)
+        public StudentController(ISupabaseAuthService supabaseAuthService, IStudentCourseService studentCourseService, IStudentService studentService)
+        {
+            _supabaseAuthService = supabaseAuthService;
+            _studentCourseService = studentCourseService;
+            _studentService = studentService;
+        }
+
         [HttpGet]
-        public IActionResult Index()
+        public async Task<IActionResult> Index()
         {
-            // You would typically create this data in a controller action or a service layer.
-            var viewModel = new StudentDashboardViewModel
-            {
-                UserName = "Alex Johnson", // Set the student's name
-
-                // Populate the list of tasks that have already been graded
-                RecentlyGradedTasks = new List<StudentDashboardViewModel.TaskItem>
-    {
-        new StudentDashboardViewModel.TaskItem
-        {
-            Title = "Chapter 1 Quiz - Introduction to C#",
-            UserAction = "Submitted",
-            Score = "95/100", // Has a score
-            DueDate = new DateTime(2025, 11, 10), // Past due date
-            Priority = "Normal",
-            StudentId = 101,
-            CourseId = 50
-        },
-        new StudentDashboardViewModel.TaskItem
-        {
-            Title = "Lab Report: Mitosis",
-            UserAction = "Submitted",
-            Score = "A- (88/100)", // Score can be a string
-            DueDate = new DateTime(2025, 11, 5),
-            Priority = "High",
-            StudentId = 101,
-            CourseId = 52
-        }
-    },
-
-                // Populate the list of tasks that are awaiting a grade
-                ToBeGradedTasks = new List<StudentDashboardViewModel.TaskItem>
-    {
-        new StudentDashboardViewModel.TaskItem
-        {
-            Title = "Final Essay: The Great Gatsby",
-            UserAction = "Submitted",
-            Score = null, // No score yet
-            DueDate = new DateTime(2025, 11, 14), // Recently past due
-            Priority = "High",
-            StudentId = 101,
-            CourseId = 51
-        },
-        new StudentDashboardViewModel.TaskItem
-        {
-            Title = "Peer Review: Group Project",
-            UserAction = "Submitted",
-            Score = "Pending", // Can also use a string status
-            DueDate = new DateTime(2025, 11, 12),
-            Priority = "Normal",
-            StudentId = 101,
-            CourseId = 50
-        }
-    }
-            };
-
-            return View(viewModel);
-        }
-        
-        //Courses (COurses enrolled by the students)
-        [HttpGet]
-        public IActionResult Courses()
-        {
-            var courses = new List<TeacherCourseViewModel>
-            {
-                new TeacherCourseViewModel
-                {
-                    Id = 1,
-                    CourseCode = "IT101",
-                    CourseTitle = "Introduction to Information Technology",
-                    SemesterInfo = "1st Semester 2025",
-                    CardColor = "#E8F9E8"
-                },
-                new TeacherCourseViewModel
-                {
-                    Id = 2,
-                    CourseCode = "PROG201",
-                    CourseTitle = "Object-Oriented Programming in Java",
-                    SemesterInfo = "1st Semester 2025",
-                    CardColor = "#D1FAE5"
-                },
-                new TeacherCourseViewModel
-                {
-                    Id = 3,
-                    CourseCode = "ELEC102",
-                    CourseTitle = "Digital Photography and Media Editing",
-                    SemesterInfo = "1st Semester 2025",
-                    CardColor = "#A7F3D0"
-                },
-                new TeacherCourseViewModel
-                {
-                    Id = 4,
-                    CourseCode = "NET302",
-                    CourseTitle = "Computer Networks and Security",
-                    SemesterInfo = "2nd Semester 2025",
-                    CardColor = "#6EE7B7"
-                }
-            };
-
-            return View(courses.ToArray());
-        }
-
-        //Details about the course selected
-        public IActionResult CourseDetails(string courseId, string tab = "grades", int page = 1)
-        {
-            // Get course details based on courseId
-            var courseData = GetCourseDataById(courseId);
+            // Get the Supabase user ID from claims
+            var supabaseUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrWhiteSpace(supabaseUserId))
+                return Unauthorized();
             
+            // Get student ID from the user record using Supabase ID
+            var studentId = await GetStudentIdFromSupabaseIdAsync(supabaseUserId);
+            if (string.IsNullOrWhiteSpace(studentId))
+                return Unauthorized();
+
+            var dashboard = await _studentCourseService.GetStudentDashboardAsync(studentId);
+            return View(dashboard);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> Courses()
+        {
+            // Get the Supabase user ID from claims
+            var supabaseUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrWhiteSpace(supabaseUserId))
+                return Unauthorized();
+
+            // Get student ID from the user record using Supabase ID
+            var studentId = await GetStudentIdFromSupabaseIdAsync(supabaseUserId);
+            if (string.IsNullOrWhiteSpace(studentId))
+                return Unauthorized();
+
+            // Fetch courses
+            List<CourseModel> enrolledCourses = await _studentCourseService.GetCoursesByStudentAsync(studentId);
+
+            if (enrolledCourses == null || !enrolledCourses.Any())
+            {
+                ViewData["Message"] = "No enrolled courses found.";
+                return View(Array.Empty<CourseCardViewModel>());
+            }
+
+            // Map CourseModel → CourseCardViewModel
+            var courseViewModels = enrolledCourses.Select(c => new CourseCardViewModel
+            {
+                Id = c.Id,
+                CourseCode = c.Code ?? "N/A",
+                CourseTitle = c.Name ?? "Untitled Course",
+                SemesterInfo = c.SemesterId.ToString(),
+                CardColor = GetRandomCardColor()
+            }).ToArray();
+
+            return View(courseViewModels);
+        }
+
+
+
+        private string GetRandomCardColor()
+        {
+            // simple random pastel green variants
+            var colors = new[] { "#E8F9E8", "#D1FAE5", "#A7F3D0", "#6EE7B7" };
+            var random = new Random();
+            return colors[random.Next(colors.Length)];
+        }
+
+        public async Task<IActionResult> CourseDetails(string courseId, string tab = "grades", int page = 1)
+        {
+            // Get the Supabase user ID from claims
+            var supabaseUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrWhiteSpace(supabaseUserId))
+                return Unauthorized();
+
+            // Get student ID from the user record using Supabase ID
+            var studentId = await GetStudentIdFromSupabaseIdAsync(supabaseUserId);
+            if (string.IsNullOrWhiteSpace(studentId))
+                return Unauthorized();
+
+            var data = await _studentCourseService.GetCourseDetailsAsync(studentId, courseId);
+            Debug.WriteLine("StudentId from Identity = " + studentId);
+            var json = System.Text.Json.JsonSerializer.Serialize(data, new JsonSerializerOptions
+            {
+                WriteIndented = true
+            });
+
+            System.Diagnostics.Debug.WriteLine("=== COURSE DETAILS DATA ===");
+            System.Diagnostics.Debug.WriteLine(json);
+
+
             const int pageSize = 10;
-            
-            // Get the appropriate data based on tab
-            var allActivities = courseData.Activities;
-            var allFeedbacks = courseData.Feedbacks;
-            
-            // Calculate pagination
-            var totalItems = tab switch
+
+            var list = tab switch
             {
-                "feedback" => allFeedbacks.Count,
-                _ => allActivities.Count
-            };
-            
-            var totalPages = (int)Math.Ceiling((double)totalItems / pageSize);
-            var currentPage = Math.Max(1, Math.Min(page, totalPages));
-            var skip = (currentPage - 1) * pageSize;
-            
-            // Get paginated data
-            var paginatedActivities = allActivities.Skip(skip).Take(pageSize).ToList();
-            var paginatedFeedbacks = allFeedbacks.Skip(skip).Take(pageSize).ToList();
-            
-            var viewModel = new StudentCourseDetailsViewModel
-            {
-                CourseId = courseId ?? "default",
-                CourseTitle = courseData.CourseTitle,
-                OverallGPA = courseData.OverallGPA,
-                CompletedTasks = courseData.CompletedTasks,
-                TotalTasks = courseData.TotalTasks,
-                PendingTasks = courseData.PendingTasks,
-                Activities = paginatedActivities,
-                Feedbacks = paginatedFeedbacks,
-                CurrentPage = currentPage,
-                TotalPages = totalPages,
-                CurrentTab = tab
+                "feedback" => data.Feedbacks.Cast<object>().ToList(),
+                _ => data.Activities.Cast<object>().ToList(),
             };
 
-            return View(viewModel);
+            var totalItems = list.Count;
+            var totalPages = (int)Math.Ceiling((double)totalItems / pageSize);
+            var skip = (page - 1) * pageSize;
+
+            var paginated = list.Skip(skip).Take(pageSize).ToList();
+
+            data.CurrentPage = page;
+            data.TotalPages = totalPages;
+
+            if (tab == "feedback")
+                data.Feedbacks = paginated.Cast<StudentCourseDetailsViewModel.FeedbackItem>().ToList();
+            else
+                data.Activities = paginated.Cast<StudentCourseDetailsViewModel.ActivityItem>().ToList();
+
+            return View(data);
         }
 
-        //Mock Data for Courses
-        private (string CourseTitle, double OverallGPA, int CompletedTasks, int TotalTasks, int PendingTasks,
-                List<StudentCourseDetailsViewModel.ActivityItem> Activities,
-                List<StudentCourseDetailsViewModel.FeedbackItem> Feedbacks) GetCourseDataById(string courseId)
+        private string GetCourseTitleById(string courseId)
         {
             return courseId switch
             {
-                "1" => ( // IT101 - Introduction to Information Technology
-                    CourseTitle: "Introduction to Information Technology",
-                    OverallGPA: 3.2,
-                    CompletedTasks: 8,
-                    TotalTasks: 12,
-                    PendingTasks: 4,
-                    Activities: new List<StudentCourseDetailsViewModel.ActivityItem>
-                    {
-                //testing pagination
-                new() { Title = "Database Design Assignment", DueDate = "2025-10-15", Status = "Completed", Score = "85", MaxScore = "100" },
-                new() { Title = "System Analysis Quiz", DueDate = "2025-10-20", Status = "Completed", Score = "88", MaxScore = "100" },
-                new() { Title = "Network Security Project", DueDate = "2025-11-01", Status = "Pending", Score = "0", MaxScore = "150" },
-                new() { Title = "Final Exam", DueDate = "2025-12-15", Status = "Pending", Score = "0", MaxScore = "200" },
-                new() { Title = "Java Basics Lab", DueDate = "2025-10-10", Status = "Completed", Score = "92", MaxScore = "100" },
-                new() { Title = "OOP Principles Assignment", DueDate = "2025-10-25", Status = "Completed", Score = "89", MaxScore = "100" },
-                new() { Title = "Data Structures Project", DueDate = "2025-11-10", Status = "In Progress", Score = "0", MaxScore = "150" },
-                new() { Title = "Final Programming Exam", DueDate = "2025-12-20", Status = "Pending", Score = "0", MaxScore = "200" },
-                new() { Title = "Java Basics Lab", DueDate = "2025-10-10", Status = "Completed", Score = "92", MaxScore = "100" },
-                new() { Title = "OOP Principles Assignment", DueDate = "2025-10-25", Status = "Completed", Score = "89", MaxScore = "100" },
-                new() { Title = "Data Structures Project", DueDate = "2025-11-10", Status = "In Progress", Score = "0", MaxScore = "150" },
-                new() { Title = "Final Programming Exam", DueDate = "2025-12-20", Status = "Pending", Score = "0", MaxScore = "200" },
-                new() { Title = "Java Basics Lab", DueDate = "2025-10-10", Status = "Completed", Score = "92", MaxScore = "100" },
-                new() { Title = "OOP Principles Assignment", DueDate = "2025-10-25", Status = "Completed", Score = "89", MaxScore = "100" },
-                new() { Title = "Data Structures Project", DueDate = "2025-11-10", Status = "In Progress", Score = "0", MaxScore = "150" },
-                new() { Title = "Final Programming Exam", DueDate = "2025-12-20", Status = "Pending", Score = "0", MaxScore = "200" },
-                new() { Title = "Java Basics Lab", DueDate = "2025-10-10", Status = "Completed", Score = "92", MaxScore = "100" },
-                new() { Title = "OOP Principles Assignment", DueDate = "2025-10-25", Status = "Completed", Score = "89", MaxScore = "100" },
-                new() { Title = "Data Structures Project", DueDate = "2025-11-10", Status = "In Progress", Score = "0", MaxScore = "150" },
-                new() { Title = "Final Programming Exam", DueDate = "2025-12-20", Status = "Pending", Score = "0", MaxScore = "200" },
-                new() { Title = "Java Basics Lab", DueDate = "2025-10-10", Status = "Completed", Score = "92", MaxScore = "100" },
-                new() { Title = "OOP Principles Assignment", DueDate = "2025-10-25", Status = "Completed", Score = "89", MaxScore = "100" },
-                new() { Title = "Data Structures Project", DueDate = "2025-11-10", Status = "In Progress", Score = "0", MaxScore = "150" },
-                new() { Title = "Final Programming Exam", DueDate = "2025-12-20", Status = "Pending", Score = "0", MaxScore = "200" },
-                new() { Title = "Java Basics Lab", DueDate = "2025-10-10", Status = "Completed", Score = "92", MaxScore = "100" },
-                new() { Title = "OOP Principles Assignment", DueDate = "2025-10-25", Status = "Completed", Score = "89", MaxScore = "100" },
-                new() { Title = "Data Structures Project", DueDate = "2025-11-10", Status = "In Progress", Score = "0", MaxScore = "150" },
-                new() { Title = "Final Programming Exam", DueDate = "2025-12-20", Status = "Pending", Score = "0", MaxScore = "200" },
-                new() { Title = "Java Basics Lab", DueDate = "2025-10-10", Status = "Completed", Score = "92", MaxScore = "100" },
-                new() { Title = "OOP Principles Assignment", DueDate = "2025-10-25", Status = "Completed", Score = "89", MaxScore = "100" },
-                new() { Title = "Data Structures Project", DueDate = "2025-11-10", Status = "In Progress", Score = "0", MaxScore = "150" },
-                new() { Title = "Final Programming Exam", DueDate = "2025-12-20", Status = "Pending", Score = "0", MaxScore = "200" }
-                    },
-                    Feedbacks: new List<StudentCourseDetailsViewModel.FeedbackItem>
-                    {
-                new() { Title = "Assignment 1 Feedback", Date = "2025-09-10", Content = "Excellent work on database design. Consider improving query optimization." }
-                    }
-                ),
-                "2" => ( // PROG201 - Object-Oriented Programming in Java
-                    CourseTitle: "Object-Oriented Programming in Java",
-                    OverallGPA: 3.5,
-                    CompletedTasks: 10,
-                    TotalTasks: 15,
-                    PendingTasks: 5,
-                    Activities: new List<StudentCourseDetailsViewModel.ActivityItem>
-                    {
-                new() { Title = "Java Basics Lab", DueDate = "2025-10-10", Status = "Completed", Score = "92", MaxScore = "100" },
-                new() { Title = "OOP Principles Assignment", DueDate = "2025-10-25", Status = "Completed", Score = "89", MaxScore = "100" },
-                new() { Title = "Data Structures Project", DueDate = "2025-11-10", Status = "In Progress", Score = "0", MaxScore = "150" },
-                new() { Title = "Final Programming Exam", DueDate = "2025-12-20", Status = "Pending", Score = "0", MaxScore = "200" }
-                    },
-                    Feedbacks: new List<StudentCourseDetailsViewModel.FeedbackItem>
-                    {
-                new() { Title = "Lab 3 Feedback", Date = "2025-09-20", Content = "Good understanding of inheritance. Work on exception handling." }
-                    }
-                ),
-                "3" => ( // ELEC102 - Digital Photography and Media Editing
-                    CourseTitle: "Digital Photography and Media Editing",
-                    OverallGPA: 3.8,
-                    CompletedTasks: 6,
-                    TotalTasks: 8,
-                    PendingTasks: 2,
-                    Activities: new List<StudentCourseDetailsViewModel.ActivityItem>
-                    {
-                new() { Title = "Photography Portfolio", DueDate = "2025-10-30", Status = "Completed", Score = "96", MaxScore = "100" },
-                new() { Title = "Photo Editing Project", DueDate = "2025-11-15", Status = "In Progress", Score = "0", MaxScore = "120" },
-                new() { Title = "Final Creative Project", DueDate = "2025-12-10", Status = "Pending", Score = "0", MaxScore = "180" }
-                    },
-                    Feedbacks: new List<StudentCourseDetailsViewModel.FeedbackItem>
-                    {
-                new() { Title = "Portfolio Review", Date = "2025-10-05", Content = "Outstanding creative work! Excellent use of lighting and composition." }
-                    }
-                ),
-                "4" => ( // NET302 - Computer Networks and Security
-                    CourseTitle: "Computer Networks and Security",
-                    OverallGPA: 0.0, // Future semester course
-                    CompletedTasks: 0,
-                    TotalTasks: 10,
-                    PendingTasks: 10,
-                    Activities: new List<StudentCourseDetailsViewModel.ActivityItem>
-                    {
-                new() { Title = "Network Topology Lab", DueDate = "2026-02-15", Status = "Not Started", Score = "0", MaxScore = "100" },
-                new() { Title = "Security Protocols Assignment", DueDate = "2026-03-01", Status = "Not Started", Score = "0", MaxScore = "150" },
-                new() { Title = "Final Network Project", DueDate = "2026-05-30", Status = "Not Started", Score = "0", MaxScore = "200" }
-                    },
-                    Feedbacks: new List<StudentCourseDetailsViewModel.FeedbackItem>()
-                ),
-                _ => (
-                    CourseTitle: "Unknown Course",
-                    OverallGPA: 0.0,
-                    CompletedTasks: 0,
-                    TotalTasks: 0,
-                    PendingTasks: 0,
-                    Activities: new List<StudentCourseDetailsViewModel.ActivityItem>(),
-                    Feedbacks: new List<StudentCourseDetailsViewModel.FeedbackItem>()
-                ),
-
+                "cs101" => "Introduction to Computer Science",
+                "math201" => "Discrete Mathematics",
+                "eng102" => "Technical Writing",
+                "php41" => "Free Elective - PHP",
+                _ => "Course Title"
             };
         }
 
 
-        // Reports (Overall Grades of student), this includes the mock data
-        public IActionResult Reports()
+        // -------------------- Reports Controller --------------------
+        public async Task<IActionResult> Reports()
         {
+            // Get the Supabase user ID from claims
+            var supabaseUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrWhiteSpace(supabaseUserId))
+                return Unauthorized();
+
+            // Get student ID from the user record using Supabase ID
+            var studentId = await GetStudentIdFromSupabaseIdAsync(supabaseUserId);
+            if (string.IsNullOrWhiteSpace(studentId))
+                return Unauthorized();
+
+            var reports = await _studentCourseService.GetStudentReportsAsync(studentId);
+
             var viewModel = new StudentReportViewModel
             {
-                Reports = new List<StudentReportViewModel.ReportItem>
-        {
-            new StudentReportViewModel.ReportItem
-            {
-                CourseCode = "IT 331",
-                CourseTitle = "Database Systems",
-                MidtermGrade = 89.5,
-                FinalGrade = 91.0
-            },
-            new StudentReportViewModel.ReportItem
-            {
-                CourseCode = "IT 332",
-                CourseTitle = "Systems Analysis and Design",
-                MidtermGrade = 85.0,
-                FinalGrade = 88.5
-            },
-            new StudentReportViewModel.ReportItem
-            {
-                CourseCode = "IT 333",
-                CourseTitle = "Web Development",
-                MidtermGrade = 92.0,
-                FinalGrade = 95.0
-            }
-        }
+                Reports = reports
             };
 
             return View(viewModel);
         }
 
-        // Mock data example (for testing)
-        public IActionResult Profile()
+        [HttpGet]
+        public async Task<IActionResult> Profile()
         {
-            var model = new ASI.Basecode.WebApp.Models.StudentProfileViewModel
+            var supabaseUserId = HttpContext.Session.GetString("SupabaseUserId");
+            if (string.IsNullOrWhiteSpace(supabaseUserId))
             {
-                // ===== Basic Profile Information =====
-                ProfileImageUrl = "/images/sample-profile.jpg",
-                FullName = "Juan Dela Cruz",
-
-
-                // ===== Personal Info =====
-                StudentId = "123",
-                Status = "Active",
-                FirstName = "Juan",
-                MiddleName = "Santos",
-                LastName = "Dela Cruz",
-                Suffix = "",
-                DateOfBirth = "May 3, 2002",
-                Gender = "Male",
-                Course = "Bachelor of Science in Information Technology",
-                YearLevel = "4",
-                Department = "College of Computer Studies",
-                EmailAddress = "juan.delacruz@example.com",
-                PhoneNumber = "09171234567",
-
-                // ===== Address Information =====
-                HouseNumber = "123",
-                Street = "Maple Street",
-                Subdivision = "Sunnyvale Subdivision",
-                Barangay = "Barangay Mabini",
-                City = "Quezon City",
-                Province = "Metro Manila",
-                ZipCode = "1100",
-
-                // ===== Emergency Contact Information =====
-                EmergencyFirstName = "Maria",
-                EmergencyMiddleName = "Reyes",
-                EmergencyLastName = "Dela Cruz",
-                EmergencySuffix = "",
-                EmergencyContactNumber = "09181234567",
-                EmergencyRelationship = "Mother",
-
-                // ===== Security Info =====
-                PasswordLastUpdated = DateTime.Now.AddMonths(-2)
-            };
-
-            if (TempData["UploadedProfileUrl"] is string uploadedUrl && !string.IsNullOrWhiteSpace(uploadedUrl))
-            {
-                model.ProfileImageUrl = uploadedUrl;
+                ViewBag.NoDataMessage = "Session expired. Please log in again.";
+                return View(new StudentProfileViewModel());
             }
 
-            // If no profile data exists
+            var model = new StudentProfileViewModel();
+            try
+            {
+                var client = await _supabaseAuthService.GetSupabaseClientForAuthAsync();
+
+                // Load user info (all personal data is in users table)
+                var user = await client.From<SupabaseUserNew>()
+                    .Where(x => x.UserTypeId == supabaseUserId)
+                    .Single();
+
+                if (user != null)
+                {
+                    model.FirstName = user.FirstName;
+                    model.MiddleName = user.MiddleName;
+                    model.LastName = user.LastName;
+                    model.FullName = string.Join(" ", new[] { user.FirstName, user.MiddleName, user.LastName }.Where(s => !string.IsNullOrWhiteSpace(s)));
+                    model.EmailAddress = user.Email;
+                    
+                    // Get studentProfile for academic info
+                    var studentProfile = await client.From<Student>()
+                      .Where(x => x.StudentId == supabaseUserId)
+                    .Single();
+                    
+                  model.Department = studentProfile?.DepartmentId?.ToString() ?? "N/A";
+                  model.Course = studentProfile?.ProgramId?.ToString() ?? "N/A";  // Fixed: use ProgramId
+  model.YearLevel = studentProfile?.YearLevel?.ToString() ?? "N/A";
+    model.Status = user.IsActive ?? false ? "Active" : "Inactive";
+                }
+
+               // Address (primary)
+             if (user != null)
+               {
+             // Get studentProfile ID first
+              var studentProfile = await client.From<Student>()
+.Where(x => x.StudentId == supabaseUserId)
+            .Single();
+     
+    var studentAddress = await client.From<StudentAddress>()
+            .Where(sa => sa.StudentId == studentProfile.Id && sa.IsPrimary == true)  // Fixed: use studentProfile.Id (int)
+            .Single();
+
+    if (studentAddress != null)
+     {
+        var address = await client.From<Address>()
+ .Where(a => a.Id == studentAddress.AddressId)
+       .Single();
+              if (address != null)
+  {
+       model.HouseNumber = address.HouseNumber;
+      model.Street = address.StreetName;
+   model.Subdivision = address.Subdivision;
+          model.Barangay = address.Barangay;
+     model.City = address.City;
+      model.Province = address.Province;
+        model.ZipCode = address.ZipCode;
+           }
+          }
+             }
+
+              // Emergency contact (primary)
+          if (user != null)
+     {
+    var studentProfile = await client.From<Student>()
+.Where(x => x.StudentId == supabaseUserId)
+         .Single();
+   
+ var emergency = await client.From<StudentEmergencyContact>()
+ .Where(ec => ec.StudentId == studentProfile.Id && ec.IsPrimary == true)  // Fixed: use studentProfile.Id (int)
+        .Single();
+           if (emergency != null)
+    {
+  var contact = await client.From<Contact>()
+ .Where(c => c.Id == emergency.ContactId)
+    .Single();
+ if (contact != null)
+      {
+        model.EmergencyFirstName = contact.FirstName;
+           model.EmergencyMiddleName = contact.MiddleName;
+       model.EmergencyLastName = contact.LastName;
+   model.EmergencySuffix = contact.Suffix;
+  model.EmergencyContactNumber = contact.ContactNumber;
+         model.EmergencyRelationship = emergency.Relationship;
+        }
+           }
+      }
+
+    // Profile image from Auth metadata (set by upload)
+                model.ProfileImageUrl = await _supabaseAuthService.GetUserProfileImageUrlAsync(supabaseUserId);
+
+                // If recent upload exists in this session, prefer it
+                if (TempData["UploadedProfileUrl"] is string uploadedUrl && !string.IsNullOrWhiteSpace(uploadedUrl))
+                {
+                    model.ProfileImageUrl = uploadedUrl;
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error loading student profile: {ex.Message}");
+                ViewBag.NoDataMessage = "Unable to load profile data at the moment.";
+            }
+
             if (!model.HasData)
-                ViewBag.NoDataMessage = "No profile data available. Please complete your profile information.";
+                ViewBag.NoDataMessage = "No profile data available.";
 
             return View(model);
+        }
+
+        /// <summary>
+        /// Gets the student database ID from the Supabase user ID
+        /// </summary>
+        private async Task<string> GetStudentIdFromSupabaseIdAsync(string supabaseUserId)
+        {
+            try
+            {
+                var student = await _studentService.GetStudentBySupabaseIdAsync(supabaseUserId);
+                return student?.UserTypeId.ToString();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error getting student ID from Supabase ID: {ex.Message}");
+                return null;
+            }
         }
     }
 }

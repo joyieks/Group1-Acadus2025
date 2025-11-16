@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace ASI.Basecode.WebApp
 {
@@ -12,8 +13,8 @@ namespace ASI.Basecode.WebApp
         /// </summary>
         private void ConfigureAuthorization()
         {
-            // Skip authentication/authorization wiring entirely for UI work
-            this._services.AddMvc();
+            // Authentication is already configured in Startup.cs
+            // This method is kept for backward compatibility but all auth setup is in Startup.cs
         }
     }
 }

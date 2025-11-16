@@ -1,21 +1,10 @@
-﻿@model ASI.Basecode.WebApp.Models.TeacherCourseViewModel[]
+﻿@model ASI.Basecode.WebApp.Models.CourseCardViewModel[]
+
 @{
     ViewData["Title"] = "Course Overview - Acadus";
 }
 
 <script src="https://cdn.tailwindcss.com"></script>
-<script>
-    tailwind.config = {
-        theme: {
-            extend: {
-                colors: {
-                    'acadus-green': '#2d5a27',
-                    'acadus-light-green': '#4a7c59'
-                }
-            }
-        }
-    }
-</script>
 
 <main class="max-w-7xl mx-auto px-4 md:px-8 pt-4 pb-12">
     <section class="text-center mb-12">
@@ -31,11 +20,17 @@
     }
     else
     {
-        <!-- Courses Grid -->
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px;">
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
             @foreach (var course in Model)
             {
-                @await Component.InvokeAsync("CourseCard", course)
+                @try
+                {
+                    @await Component.InvokeAsync("CourseCard", course)
+                }
+                catch (Exception ex)
+                {
+                    <div class="text-red-500">Error rendering course card: @ex.Message</div>
+                }
             }
         </div>
     }

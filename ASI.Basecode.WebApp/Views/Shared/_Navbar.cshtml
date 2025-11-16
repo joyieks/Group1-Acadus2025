@@ -96,17 +96,22 @@
 
     <!-- Right side: User (desktop) -->
     <div class="hidden md:flex items-center gap-4 relative">
-        <div class="flex items-center gap-3 relative">
-            <!-- Name button (toggle) -->
-            <button id="userMenuBtn" type="button" data-user-toggle="true" class="text-left"> Username </button>
 
-            <!-- Avatar Circle (toggle) -->
-            <button id="userAvatarBtn" type="button" data-user-toggle="true" class="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center overflow-hidden">
-                <span class="text-gray-500 text-sm font-semibold">U</span>
+        <!-- User Info -->
+        <div class="flex items-center gap-3 relative">
+            <!-- First Name Text -->
+            @* <span>@Model.UserName</span> *@
+            <button id="userMenuBtn" type="button" class="text-left text-gray-700 hover:text-gray-900 font-medium cursor-pointer">@User.Identity.Name</button>
+            <!-- Avatar Circle -->
+            <button id="userAvatarBtn" type="button" class="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center overflow-hidden">
+                <!-- If you have user image -->
+                <!-- <img src="user-avatar.jpg" alt="User" class="w-full h-full object-cover"> -->
+                <!-- Or placeholder with initials -->
+                <span class="text-gray-500 text-sm font-semibold">@(User.Identity.Name?.Substring(0, 1).ToUpper())</span>
             </button>
 
-            <!-- User Menu Dropdown (template) -->
-            <div id="userMenu" data-user-menu-template="true" class="hidden absolute right-0 top-12 z-[9999] bg-white shadow-lg rounded-xl border border-gray-100 w-48">
+            <!-- User Menu Dropdown -->
+            <div id="userMenu" class="absolute right-0 top-12 z-[9999] bg-white shadow-lg rounded-xl border border-gray-100 w-48">
                 @if (controller == "Admin")
                 {
                     <a asp-controller="Admin" asp-action="EditProfile" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">Profile</a>
@@ -123,9 +128,60 @@
                 {
                     <a href="/Home/Profile" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">Profile</a>
                 }
-                <a href="/Auth/Login" class="block px-4 py-2 text-sm text-red-600 hover:bg-gray-50">Logout</a>
+                <form asp-controller="Auth" asp-action="Logout" method="post" class="inline">
+                    <button type="submit" class="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-50">Logout</button>
+                </form>
             </div>
         </div>
     </div>
 </header>
 
+<!-- Mobile Menu (collapsed) -->
+<div id="mobileMenu" class="md:hidden fixed inset-0 z-50 hidden bg-white bg-opacity-95 backdrop-blur-sm flex flex-col p-6">
+    <button id="mobileMenuCloseBtn" class="self-end mb-4 text-acadus-green hover:text-acadus-green/80">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+    </button>
+
+    <div class="px-4 pt-2 pb-3 space-y-1">
+        @if (controller == "Student")
+        {
+            <a asp-controller="Student" asp-action="Courses" class="block px-3 py-2 rounded-md text-base @(action == "Courses" ? "bg-acadus-green text-white font-semibold" : "text-[#337D58] hover:bg-acadus-green/10")">Courses</a>
+            <a asp-controller="Student" asp-action="Index" class="block px-3 py-2 rounded-md text-base @(action == "Index" ? "bg-acadus-green text-white font-semibold" : "text-[#337D58] hover:bg-acadus-green/10")">Dashboard</a>
+            <a asp-controller="Student" asp-action="Reports" class="block px-3 py-2 rounded-md text-base @(action == "Reports" ? "bg-acadus-green text-white font-semibold" : "text-[#337D58] hover:bg-acadus-green/10")">Reports</a>
+        }
+        else if (controller == "Teacher")
+        {
+            <a asp-controller="Teacher" asp-action="Courses" class="block px-3 py-2 rounded-md text-base @(action == "Courses" ? "bg-acadus-green text-white font-semibold" : "text-[#337D58] hover:bg-acadus-green/10")">Courses</a>
+            <a asp-controller="Teacher" asp-action="Index" class="block px-3 py-2 rounded-md text-base @(action == "Index" ? "bg-acadus-green text-white font-semibold" : "text-[#337D58] hover:bg-acadus-green/10")">Dashboard</a>
+        }
+        else if (controller == "Admin")
+        {
+            <a asp-controller="Admin" asp-action="Courses" class="block px-3 py-2 rounded-md text-base @(action == "Courses" ? "bg-acadus-green text-white font-semibold" : "text-[#337D58] hover:bg-acadus-green/10")">Courses</a>
+            <a asp-controller="Admin" asp-action="Dashboard" class="block px-3 py-2 rounded-md text-base @(action == "Dashboard" ? "bg-acadus-green text-white font-semibold" : "text-[#337D58] hover:bg-acadus-green/10")">Dashboard</a>
+            <a asp-controller="Admin" asp-action="Users" class="block px-3 py-2 rounded-md text-base @(action == "Users" || action == "AddStudent" || action == "AddTeacher" ? "bg-acadus-green text-white font-semibold" : "text-[#337D58] hover:bg-acadus-green/10")">Users</a>
+        }
+    </div>
+    <div class="px-4 pt-2 pb-4 border-t border-gray-100 space-y-1">
+        @if (controller == "Admin")
+        {
+            <a asp-controller="Admin" asp-action="Profile" class="block px-3 py-2 rounded-md text-base text-[#337D58] hover:bg-acadus-green/10">Profile</a>
+        }
+        else if (controller == "Teacher")
+        {
+            <a asp-controller="Teacher" asp-action="Profile" class="block px-3 py-2 rounded-md text-base text-[#337D58] hover:bg-acadus-green/10">Profile</a>
+        }
+        else if (controller == "Student")
+        {
+            <a asp-controller="Home" asp-action="Profile" class="block px-3 py-2 rounded-md text-base text-[#337D58] hover:bg-acadus-green/10">Profile</a>
+        }
+        else
+        {
+            <a href="/Home/Profile" class="block px-3 py-2 rounded-md text-base text-[#337D58] hover:bg-acadus-green/10">Profile</a>
+        }
+        <form asp-controller="Auth" asp-action="Logout" method="post" class="inline">
+            <button type="submit" class="block px-3 py-2 rounded-md text-base text-red-600 hover:bg-red-50">Logout</button>
+        </form>
+    </div>
+</div>

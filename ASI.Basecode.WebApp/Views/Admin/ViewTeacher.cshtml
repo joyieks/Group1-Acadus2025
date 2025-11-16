@@ -1,0 +1,291 @@
+@{
+    Layout = "~/Views/Shared/_AuthenticatedLayout.cshtml";
+    ViewData["Title"] = "View Teacher";
+}
+
+<!-- Hero Section -->
+<section class="hero-section" style="background:#E8F9E8; display:flex; align-items:center; justify-content:center; text-align:center; position:relative; padding: 40px 0;">
+    <a href="/Admin/Users" style="position:absolute; top:20px; left:20px; background:#ffffff; color:#059669; border:1px solid #d1d5db; border-radius:8px; padding:8px 16px; font-weight:600; text-decoration:none; transition:background 0.3s; display:flex; align-items:center; gap:8px;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M19 12H5"></path>
+            <path d="M12 19l-7-7 7-7"></path>
+        </svg>
+        Back to Users
+    </a>
+    <div style="max-width: 1200px; margin: 0 auto; padding: 0 16px;">
+        <p style="margin:0 0 4px 0; color:#4b5563; font-size:20px;">User Management</p>
+        <h1 style="font-size:48px; font-weight:800; margin:0 0 4px 0; color:#111827;">View Teacher</h1>
+        <p style="margin:0 0 16px 0; color:#4b5563; font-size:18px;">View detailed teacher information and course assignments.</p>
+        <p style="margin:0 0 0 0; color:#6b7280; font-size:14px;">Access comprehensive instructor profiles, contact details, and handled courses.</p>
+    </div>
+</section>
+
+<!-- Main Content Section -->
+<section style="background:#ffffff; padding: 40px 0;">
+    <div style="max-width: 1200px; margin: 0 auto; padding: 0 16px;">
+        <!-- Action Buttons -->
+        <div style="display:flex; justify-content:flex-end; gap:12px; margin-bottom:24px;">
+            <a href="@Url.Action("EditUser", "Admin", new { id = "456789" })" style="background:#059669; color:#ffffff; border:none; border-radius:6px; padding:12px 20px; font-weight:600; text-decoration:none;">Edit Teacher</a>
+            <button onclick="showReactivateModal()" id="reactivateBtn" style="background:#059669; color:#ffffff; border:none; border-radius:6px; padding:12px 20px; font-weight:600; cursor:pointer; display:none;">Reactivate</button>
+            <button onclick="showDeactivateModal()" id="deactivateBtn" style="background:#dc2626; color:#ffffff; border:none; border-radius:6px; padding:12px 20px; font-weight:600; cursor:pointer;">Deactivate</button>
+        </div>
+
+        <div style="display:grid; grid-template-columns: 3fr 5fr; gap:24px;">
+
+            <!-- Left Column: Teacher Information -->
+            <div>
+                <div style="background:#f9fafb; border:1px solid #e5e7eb; border-radius:8px; padding:24px;">
+                    <h3 style="margin:0 0 20px 0; font-weight:700; font-size:18px; color:#111827;">Teacher Information</h3>
+
+                    <!-- Teacher Name (Full Width) -->
+                    <div style="margin-bottom:20px;">
+                        <div style="font-size:24px; font-weight:800; color:#111827; margin-bottom:4px;">Dr. Sarah Johnson</div>
+                        <div class="teacher-status" style="color:#6b7280; font-size:14px;">Teacher • Active</div>
+                    </div>
+
+                    <!-- Profile Picture -->
+                    <div style="display:flex; align-items:center; gap:16px; margin-bottom:24px;">
+                        <div style="width:64px; height:64px; border-radius:9999px; overflow:hidden; border:2px solid #d1fae5; background:#e5e7eb; display:grid; place-items:center; color:#065f46; font-weight:800; font-size:20px;">
+                            <img src="/img/acaduslogo.png" alt="Profile picture" style="width:100%; height:100%; object-fit:cover;" />
+                        </div>
+                        <div>
+                            <div style="font-weight:600; color:#111827;">ID: 456789</div>
+                            <div style="color:#6b7280; font-size:14px;">CCS Department</div>
+                        </div>
+                    </div>
+
+                    <!-- Personal Information -->
+                    <div style="margin-bottom:20px;">
+                        <h4 style="font-size:16px; font-weight:700; color:#111827; margin:0 0 12px 0; padding-bottom:8px; border-bottom:1px solid #e5e7eb;">Personal Information</h4>
+                        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
+                            <div>
+                                <span style="font-size:12px; font-weight:600; color:#6b7280; text-transform:uppercase; letter-spacing:0.5px;">First Name</span>
+                                <div style="font-size:14px; color:#111827; padding:6px 0;">Sarah</div>
+                            </div>
+                            <div>
+                                <span style="font-size:12px; font-weight:600; color:#6b7280; text-transform:uppercase; letter-spacing:0.5px;">Last Name</span>
+                                <div style="font-size:14px; color:#111827; padding:6px 0;">Johnson</div>
+                            </div>
+                            <div>
+                                <span style="font-size:12px; font-weight:600; color:#6b7280; text-transform:uppercase; letter-spacing:0.5px;">Middle Name</span>
+                                <div style="font-size:14px; color:#111827; padding:6px 0;">Marie</div>
+                            </div>
+                            <div>
+                                <span style="font-size:12px; font-weight:600; color:#6b7280; text-transform:uppercase; letter-spacing:0.5px;">Contact</span>
+                                <div style="font-size:14px; color:#111827; padding:6px 0;">+63 912 345 6787</div>
+                            </div>
+                            <div style="grid-column:1/-1;">
+                                <span style="font-size:12px; font-weight:600; color:#6b7280; text-transform:uppercase; letter-spacing:0.5px;">Email</span>
+                                <div style="font-size:14px; color:#111827; padding:6px 0;">sarah.johnson@example.com</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Professional Information -->
+                    <div style="margin-bottom:20px;">
+                        <h4 style="font-size:16px; font-weight:700; color:#111827; margin:0 0 12px 0; padding-bottom:8px; border-bottom:1px solid #e5e7eb;">Professional Information</h4>
+                        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
+                            <div>
+                                <span style="font-size:12px; font-weight:600; color:#6b7280; text-transform:uppercase; letter-spacing:0.5px;">Department</span>
+                                <div style="font-size:14px; color:#111827; padding:6px 0;">Computer Science</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Address Information -->
+                    <div>
+                        <h4 style="font-size:16px; font-weight:700; color:#111827; margin:0 0 12px 0; padding-bottom:8px; border-bottom:1px solid #e5e7eb;">Address Information</h4>
+                        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
+                            <div>
+                                <span style="font-size:12px; font-weight:600; color:#6b7280; text-transform:uppercase; letter-spacing:0.5px;">House/Apt</span>
+                                <div style="font-size:14px; color:#111827; padding:6px 0;">456</div>
+                            </div>
+                            <div>
+                                <span style="font-size:12px; font-weight:600; color:#6b7280; text-transform:uppercase; letter-spacing:0.5px;">Street</span>
+                                <div style="font-size:14px; color:#111827; padding:6px 0;">Oak Avenue</div>
+                            </div>
+                            <div>
+                                <span style="font-size:12px; font-weight:600; color:#6b7280; text-transform:uppercase; letter-spacing:0.5px;">Barangay</span>
+                                <div style="font-size:14px; color:#111827; padding:6px 0;">Barangay 2</div>
+                            </div>
+                            <div>
+                                <span style="font-size:12px; font-weight:600; color:#6b7280; text-transform:uppercase; letter-spacing:0.5px;">City</span>
+                                <div style="font-size:14px; color:#111827; padding:6px 0;">Quezon City</div>
+                            </div>
+                            <div style="grid-column:1/-1;">
+                                <span style="font-size:12px; font-weight:600; color:#6b7280; text-transform:uppercase; letter-spacing:0.5px;">Province & Zip</span>
+                                <div style="font-size:14px; color:#111827; padding:6px 0;">Metro Manila, 1100</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column: Handled Courses -->
+            <div>
+                <div style="background:#f9fafb; border:1px solid #e5e7eb; border-radius:8px; padding:24px;">
+                    <h3 style="margin:0 0 20px 0; font-weight:700; font-size:18px; color:#111827;">Handled Courses</h3>
+
+                    <!-- Teaching Statistics -->
+                    <div style="background:#ffffff; border:1px solid #e5e7eb; border-radius:8px; padding:20px; margin-bottom:24px; text-align:center;">
+                        <div style="font-size:14px; color:#6b7280; margin-bottom:8px;">Total Courses This Semester</div>
+                        <div style="font-size:48px; font-weight:800; color:#059669; margin-bottom:4px;">5</div>
+                        <div style="font-size:14px; color:#6b7280;">Active Teaching Load</div>
+                    </div>
+
+                    <!-- Handled Courses Table -->
+                    <div style="margin-bottom:24px;">
+                        <h4 style="font-size:16px; font-weight:700; color:#111827; margin:0 0 16px 0;">Current Semester Courses</h4>
+                        <div style="border-radius:8px; overflow:hidden; border:1px solid #e5e7eb;">
+                            <table style="width:100%; border-collapse:collapse;">
+                                <thead style="background:#059669;">
+                                    <tr>
+                                        <th style="padding:12px 16px; text-align:left; font-weight:700; color:#fff;">Course Code</th>
+                                        <th style="padding:12px 16px; text-align:left; font-weight:700; color:#fff;">Course Name</th>
+                                        <th style="padding:12px 16px; text-align:left; font-weight:700; color:#fff;">Schedule</th>
+                                        <th style="padding:12px 16px; text-align:left; font-weight:700; color:#fff;">Enrolled</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr style="border-bottom:1px solid #e5e7eb;">
+                                        <td style="padding:16px; color:#111827; font-weight:500;">CS101</td>
+                                        <td style="padding:16px; color:#111827; font-weight:500;">Introduction to Programming</td>
+                                        <td style="padding:16px; color:#111827;">MWF 9:00-10:30 AM</td>
+                                        <td style="padding:16px;">
+                                            <span style="background:#d1fae5; color:#065f46; padding:4px 8px; border-radius:4px; font-size:14px; font-weight:600;">35/40</span>
+                                        </td>
+                                    </tr>
+                                    <tr style="background:#f9fafb; border-bottom:1px solid #e5e7eb;">
+                                        <td style="padding:16px; color:#111827; font-weight:500;">CS102</td>
+                                        <td style="padding:16px; color:#111827; font-weight:500;">Data Structures</td>
+                                        <td style="padding:16px; color:#111827;">TTH 1:00-2:30 PM</td>
+                                        <td style="padding:16px;">
+                                            <span style="background:#d1fae5; color:#065f46; padding:4px 8px; border-radius:4px; font-size:14px; font-weight:600;">28/35</span>
+                                        </td>
+                                    </tr>
+                                    <tr style="border-bottom:1px solid #e5e7eb;">
+                                        <td style="padding:16px; color:#111827; font-weight:500;">CS201</td>
+                                        <td style="padding:16px; color:#111827; font-weight:500;">Algorithms</td>
+                                        <td style="padding:16px; color:#111827;">MWF 2:00-3:30 PM</td>
+                                        <td style="padding:16px;">
+                                            <span style="background:#fef3c7; color:#92400e; padding:4px 8px; border-radius:4px; font-size:14px; font-weight:600;">22/30</span>
+                                        </td>
+                                    </tr>
+                                    <tr style="background:#f9fafb; border-bottom:1px solid #e5e7eb;">
+                                        <td style="padding:16px; color:#111827; font-weight:500;">CS301</td>
+                                        <td style="padding:16px; color:#111827; font-weight:500;">Software Engineering</td>
+                                        <td style="padding:16px; color:#111827;">TTH 9:00-10:30 AM</td>
+                                        <td style="padding:16px;">
+                                            <span style="background:#d1fae5; color:#065f46; padding:4px 8px; border-radius:4px; font-size:14px; font-weight:600;">25/30</span>
+                                        </td>
+                                    </tr>
+                                    <tr style="background:#f9fafb;">
+                                        <td style="padding:16px; color:#111827; font-weight:500;">CS401</td>
+                                        <td style="padding:16px; color:#111827; font-weight:500;">Advanced Programming</td>
+                                        <td style="padding:16px; color:#111827;">MWF 10:00-11:30 AM</td>
+                                        <td style="padding:16px;">
+                                            <span style="background:#fbbf24; color:#92400e; padding:4px 8px; border-radius:4px; font-size:14px; font-weight:600;">18/25</span>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Deactivate Modal -->
+<div id="deactivateModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:1000; align-items:center; justify-content:center;">
+    <div style="background:#ffffff; border-radius:12px; padding:32px; max-width:400px; width:90%; margin:20px; box-shadow:0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04);">
+        <div style="text-align:center; margin-bottom:24px;">
+            <div style="width:64px; height:64px; border-radius:9999px; background:#fef2f2; display:flex; align-items:center; justify-content:center; margin:0 auto 16px auto;">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+                    <line x1="12" y1="9" x2="12" y2="13"></line>
+                    <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                </svg>
+            </div>
+            <h3 style="font-size:18px; font-weight:700; color:#111827; margin:0 0 8px 0;">Deactivate Teacher</h3>
+            <p style="color:#6b7280; font-size:14px; margin:0;">Are you sure you want to deactivate Dr. Sarah Johnson? This action will prevent them from accessing the system.</p>
+        </div>
+        <div style="display:flex; gap:12px;">
+            <button onclick="hideDeactivateModal()" style="flex:1; background:#f3f4f6; color:#374151; border:1px solid #d1d5db; border-radius:6px; padding:12px; font-weight:600; cursor:pointer;">Cancel</button>
+            <button onclick="confirmDeactivate()" style="flex:1; background:#dc2626; color:#ffffff; border:none; border-radius:6px; padding:12px; font-weight:600; cursor:pointer;">Deactivate</button>
+        </div>
+    </div>
+</div>
+
+<!-- Reactivate Modal -->
+<div id="reactivateModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:1000; align-items:center; justify-content:center;">
+    <div style="background:#ffffff; border-radius:12px; padding:32px; max-width:400px; width:90%; margin:20px; box-shadow:0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04);">
+        <div style="text-align:center; margin-bottom:24px;">
+            <div style="width:64px; height:64px; border-radius:9999px; background:#d1fae5; display:flex; align-items:center; justify-content:center; margin:0 auto 16px auto;">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="20,6 9,17 4,12"></polyline>
+                </svg>
+            </div>
+            <h3 style="font-size:18px; font-weight:700; color:#111827; margin:0 0 8px 0;">Reactivate Teacher</h3>
+            <p style="color:#6b7280; font-size:14px; margin:0;">Are you sure you want to reactivate Dr. Sarah Johnson? This will restore their access to the system.</p>
+        </div>
+        <div style="display:flex; gap:12px;">
+            <button onclick="hideReactivateModal()" style="flex:1; background:#f3f4f6; color:#374151; border:1px solid #d1d5db; border-radius:6px; padding:12px; font-weight:600; cursor:pointer;">Cancel</button>
+            <button onclick="confirmReactivate()" style="flex:1; background:#059669; color:#ffffff; border:none; border-radius:6px; padding:12px; font-weight:600; cursor:pointer;">Reactivate</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    function showDeactivateModal() {
+        document.getElementById('deactivateModal').style.display = 'flex';
+    }
+
+    function hideDeactivateModal() {
+        document.getElementById('deactivateModal').style.display = 'none';
+    }
+
+    function confirmDeactivate() {
+        // TODO: Implement deactivate logic
+        alert('Teacher deactivated successfully');
+        hideDeactivateModal();
+        // Update UI to show inactive status
+        document.querySelector('.teacher-status').textContent = 'Teacher • Inactive';
+        document.querySelector('.teacher-status').style.color = '#4b5563';
+        document.getElementById('deactivateBtn').style.display = 'none';
+        document.getElementById('reactivateBtn').style.display = 'inline-block';
+    }
+
+    function showReactivateModal() {
+        document.getElementById('reactivateModal').style.display = 'flex';
+    }
+
+    function hideReactivateModal() {
+        document.getElementById('reactivateModal').style.display = 'none';
+    }
+
+    function confirmReactivate() {
+        // TODO: Implement reactivate logic
+        alert('Teacher reactivated successfully');
+        hideReactivateModal();
+        // Update UI to show active status
+        document.querySelector('.teacher-status').textContent = 'Teacher • Active';
+        document.querySelector('.teacher-status').style.color = '#065f46';
+        document.getElementById('reactivateBtn').style.display = 'none';
+        document.getElementById('deactivateBtn').style.display = 'inline-block';
+    }
+
+    // Close modals when clicking outside
+    window.onclick = function(event) {
+        const deactivateModal = document.getElementById('deactivateModal');
+        const reactivateModal = document.getElementById('reactivateModal');
+        
+        if (event.target === deactivateModal) {
+            hideDeactivateModal();
+        }
+        if (event.target === reactivateModal) {
+            hideReactivateModal();
+        }
+    }
+</script>

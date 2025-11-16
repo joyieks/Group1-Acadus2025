@@ -1,3 +1,6 @@
+@using ASI.Basecode.WebApp.Models
+@model UsersTableViewModel
+
 @{
     Layout = "~/Views/Shared/_AuthenticatedLayout.cshtml";
     ViewData["Title"] = "Users";
@@ -19,7 +22,9 @@
 					<span style="margin-right:8px;">≡</span>
 					<span style="font-size:14px;">Students</span>
 				</div>
-				<div style="font-size:36px; font-weight:800; color:#065f46;">0</div>
+				<div style="font-size:36px; font-weight:800; color:#065f46;">
+					@(Model != null ? Model.TotalStudents : 0)
+				</div>
 			</div>
 
 			<div style="background:#ffffff; border-radius:12px; padding:15px 24px; text-align:center; min-width: 200px; min-height: 120px; display: flex; flex-direction: column; justify-content: center;">
@@ -27,7 +32,9 @@
 					<span style="margin-right:8px;">≡</span>
 					<span style="font-size:14px;">Instructors</span>
 				</div>
-				<div style="font-size:36px; font-weight:800; color:#065f46;">0</div>
+				<div style="font-size:36px; font-weight:800; color:#065f46;">
+					@(Model != null ? Model.TotalInstructors : 0)
+				</div>
 			</div>
 		</div>
 	</div>
@@ -40,19 +47,35 @@
 		
 		<!-- Search bar and Add button -->
 		<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px; gap:16px;">
-			<div style="display:flex; flex:1; max-width:600px; gap:12px;">
-				<input type="text" placeholder="Search for a user ID or name" style="flex:1; padding:10px 16px; border:1px solid #d1d5db; border-radius:8px; font-size:14px; background:#f3f4f6;">
-				<button style="background:#059669; color:#fff; border:none; border-radius:8px; padding:10px 24px; font-weight:600; cursor:pointer;">Search</button>
-			</div>
-			<a id="addStudentBtn" asp-controller="Admin" asp-action="AddStudent" style="display:none; background:#059669; color:#fff; border:none; border-radius:8px; padding:10px 24px; font-weight:600; cursor:pointer; text-decoration:none;">Add Student</a>
-			<a id="addTeacherBtn" asp-controller="Admin" asp-action="AddTeacher" style="display:none; background:#059669; color:#fff; border:none; border-radius:8px; padding:10px 24px; font-weight:600; cursor:pointer; text-decoration:none;">Add Teacher</a>
+			<form method="get" asp-action="Users" style="display:flex; flex:1; max-width:600px; gap:12px;">
+				<input type="hidden" name="tab" value="@Model?.ActiveTab" />
+				<input type="text" name="search" placeholder="Search by name or email" 
+					   value="@Model?.SearchTerm"
+					   style="flex:1; padding:10px 16px; border:1px solid #d1d5db; border-radius:8px; font-size:14px; background:#ffffff;">
+				<button type="submit" style="background:#059669; color:#fff; border:none; border-radius:8px; padding:10px 24px; font-weight:600; cursor:pointer;">Search</button>
+				@if (!string.IsNullOrWhiteSpace(Model?.SearchTerm))
+				{
+					<a asp-action="Users" asp-route-tab="@Model.ActiveTab" style="background:#6b7280; color:#fff; border:none; border-radius:8px; padding:10px 24px; font-weight:600; cursor:pointer; text-decoration:none;">Clear</a>
+				}
+			</form>
+			<a id="addStudentBtn" asp-controller="Admin" asp-action="AddStudent" style="background:#059669; color:#fff; border:none; border-radius:8px; padding:10px 24px; font-weight:600; cursor:pointer; text-decoration:none;">Add Student</a>
+			<a id="addTeacherBtn" asp-controller="Admin" asp-action="AddTeacher" style="background:#059669; color:#fff; border:none; border-radius:8px; padding:10px 24px; font-weight:600; cursor:pointer; text-decoration:none;">Add Teacher</a>
 		</div>
 
 		<!-- Tabs -->
 		<div style="display:flex; gap:0; background:#059669; padding:0; border-radius:8px 8px 0 0; overflow:hidden;">
-			<button class="tab-btn active" style="background:#059669; color:#fff; border:none; padding:12px 24px; font-weight:600; cursor:pointer; border-radius:0; position:relative; border-bottom:3px solid #84FFC2; transition:all 0.3s ease;">All users</button>
-			<button class="tab-btn" style="background:#059669; color:rgba(255,255,255,0.7); border:none; padding:12px 24px; font-weight:600; cursor:pointer; border-radius:0; position:relative; border-bottom:3px solid transparent; transition:all 0.3s ease;">Students</button>
-			<button class="tab-btn" style="background:#059669; color:rgba(255,255,255,0.7); border:none; padding:12px 24px; font-weight:600; cursor:pointer; border-radius:0; position:relative; border-bottom:3px solid transparent; transition:all 0.3s ease;">Teachers</button>
+			<a asp-action="Users" asp-route-tab="all" asp-route-search="@Model?.SearchTerm"
+			   style="background:#059669; color:#fff; border:none; padding:12px 24px; font-weight:600; cursor:pointer; border-radius:0; position:relative; border-bottom:@(Model?.ActiveTab == "all" ? "3px solid #84FFC2" : "3px solid transparent"); transition:all 0.3s ease; text-decoration:none;">
+				All users
+			</a>
+			<a asp-action="Users" asp-route-tab="students" asp-route-search="@Model?.SearchTerm"
+			   style="background:#059669; color:@(Model?.ActiveTab == "students" ? "#fff" : "rgba(255,255,255,0.7)"); border:none; padding:12px 24px; font-weight:600; cursor:pointer; border-radius:0; position:relative; border-bottom:@(Model?.ActiveTab == "students" ? "3px solid #84FFC2" : "3px solid transparent"); transition:all 0.3s ease; text-decoration:none;">
+				Students (@(Model?.Students.Count ?? 0))
+			</a>
+			<a asp-action="Users" asp-route-tab="instructors" asp-route-search="@Model?.SearchTerm"
+			   style="background:#059669; color:@(Model?.ActiveTab == "instructors" ? "#fff" : "rgba(255,255,255,0.7)"); border:none; padding:12px 24px; font-weight:600; cursor:pointer; border-radius:0; position:relative; border-bottom:@(Model?.ActiveTab == "instructors" ? "3px solid #84FFC2" : "3px solid transparent"); transition:all 0.3s ease; text-decoration:none;">
+				Instructors (@(Model?.Instructors.Count ?? 0))
+			</a>
 		</div>
 
 		<!-- Table -->
@@ -69,119 +92,58 @@
 					</tr>
 				</thead>
 				<tbody>
-					<!-- Row 1 -->
-					<tr style="border-bottom:1px solid #e5e7eb;">
-						<td style="padding:16px; color:#111827;">123213</td>
-						<td style="padding:16px; color:#111827;">Johnny Appleseed</td>
-						<td style="padding:16px; color:#111827;">Student</td>
-						<td style="padding:16px; color:#111827;">CCS</td>
-						<td style="padding:16px;">
-							<span style="background:#d1fae5; color:#065f46; padding:6px 14px; border-radius:16px; font-size:13px; font-weight:600;">Active</span>
-						</td>
-						<td style="padding:16px; position:relative;">
-							<button class="action-menu-btn" style="background:transparent; border:none; font-size:24px; font-weight:800; cursor:pointer; padding:4px 8px; line-height:1;">⋮</button>
-							<div class="action-menu" style="display:none; position:absolute; right:40px; top:50%; transform:translateY(-50%); background:#fff; border:1px solid #e5e7eb; border-radius:8px; box-shadow:0 4px 12px rgba(0,0,0,0.15); min-width:130px; z-index:10;">
-                                <button style="display:block; width:100%; padding:10px 16px; border:none; background:transparent; text-align:left; cursor:pointer; color:#111827; font-size:14px;" onclick="navigateToView(this)">View</button>
-								<a href="@Url.Action("EditUser", "Admin", new { id = "123213" })" style="display:block; width:100%; padding:10px 16px; border:none; background:transparent; text-align:left; cursor:pointer; color:#111827; font-size:14px; text-decoration:none;" onmouseover="this.style.background='#f3f4f6'" onmouseout="this.style.background='transparent'">Edit</a>
-								<button style="display:block; width:100%; padding:10px 16px; border:none; background:transparent; text-align:left; cursor:pointer; color:#dc2626; font-size:14px;">Deactivate</button>
-							</div>
-						</td>
-					</tr>
-
-					<!-- Row 2 -->
-					<tr style="border-bottom:1px solid #e5e7eb;">
-						<td style="padding:16px; color:#111827;">123123</td>
-						<td style="padding:16px; color:#111827;">Ballerina Capuccina</td>
-						<td style="padding:16px; color:#111827;">Student</td>
-						<td style="padding:16px; color:#111827;">CON</td>
-						<td style="padding:16px;">
-							<span style="background:#d1fae5; color:#065f46; padding:6px 14px; border-radius:16px; font-size:13px; font-weight:600;">Active</span>
-						</td>
-						<td style="padding:16px; position:relative;">
-							<button class="action-menu-btn" style="background:transparent; border:none; font-size:24px; font-weight:800; cursor:pointer; padding:4px 8px; line-height:1;">⋮</button>
-							<div class="action-menu" style="display:none; position:absolute; right:40px; top:50%; transform:translateY(-50%); background:#fff; border:1px solid #e5e7eb; border-radius:8px; box-shadow:0 4px 12px rgba(0,0,0,0.15); min-width:130px; z-index:10;">
-                                <button style="display:block; width:100%; padding:10px 16px; border:none; background:transparent; text-align:left; cursor:pointer; color:#111827; font-size:14px;" onclick="navigateToView(this)">View</button>
-								<a href="@Url.Action("EditUser", "Admin", new { id = "123213" })" style="display:block; width:100%; padding:10px 16px; border:none; background:transparent; text-align:left; cursor:pointer; color:#111827; font-size:14px; text-decoration:none;" onmouseover="this.style.background='#f3f4f6'" onmouseout="this.style.background='transparent'">Edit</a>
-								<button style="display:block; width:100%; padding:10px 16px; border:none; background:transparent; text-align:left; cursor:pointer; color:#dc2626; font-size:14px;">Deactivate</button>
-							</div>
-						</td>
-					</tr>
-
-					<!-- Row 3 -->
-					<tr style="border-bottom:1px solid #e5e7eb;">
-						<td style="padding:16px; color:#111827;">123123</td>
-						<td style="padding:16px; color:#111827;">Tungtung Tung Sahur</td>
-						<td style="padding:16px; color:#111827;">Teacher</td>
-						<td style="padding:16px; color:#111827;">Registrar</td>
-						<td style="padding:16px;">
-							<span style="background:#e5e7eb; color:#4b5563; padding:6px 14px; border-radius:16px; font-size:13px; font-weight:600;">Inactive</span>
-						</td>
-						<td style="padding:16px; position:relative;">
-							<button class="action-menu-btn" style="background:transparent; border:none; font-size:24px; font-weight:800; cursor:pointer; padding:4px 8px; line-height:1;">⋮</button>
-							<div class="action-menu" style="display:none; position:absolute; right:40px; top:50%; transform:translateY(-50%); background:#fff; border:1px solid #e5e7eb; border-radius:8px; box-shadow:0 4px 12px rgba(0,0,0,0.15); min-width:130px; z-index:10;">
-                                <button style="display:block; width:100%; padding:10px 16px; border:none; background:transparent; text-align:left; cursor:pointer; color:#111827; font-size:14px;" onclick="navigateToView(this)">View</button>
-								<a href="@Url.Action("EditUser", "Admin", new { id = "123213" })" style="display:block; width:100%; padding:10px 16px; border:none; background:transparent; text-align:left; cursor:pointer; color:#111827; font-size:14px; text-decoration:none;" onmouseover="this.style.background='#f3f4f6'" onmouseout="this.style.background='transparent'">Edit</a>
-								<button style="display:block; width:100%; padding:10px 16px; border:none; background:transparent; text-align:left; cursor:pointer; color:#dc2626; font-size:14px;">Deactivate</button>
-							</div>
-						</td>
-					</tr>
-
-					<!-- Row 4 -->
-					<tr style="border-bottom:1px solid #e5e7eb;">
-						<td style="padding:16px; color:#111827;">123213</td>
-						<td style="padding:16px; color:#111827;">Johnny Appleseed</td>
-						<td style="padding:16px; color:#111827;">Student</td>
-						<td style="padding:16px; color:#111827;">CCS</td>
-						<td style="padding:16px;">
-							<span style="background:#d1fae5; color:#065f46; padding:6px 14px; border-radius:16px; font-size:13px; font-weight:600;">Active</span>
-						</td>
-						<td style="padding:16px; position:relative;">
-							<button class="action-menu-btn" style="background:transparent; border:none; font-size:24px; font-weight:800; cursor:pointer; padding:4px 8px; line-height:1;">⋮</button>
-							<div class="action-menu" style="display:none; position:absolute; right:40px; top:50%; transform:translateY(-50%); background:#fff; border:1px solid #e5e7eb; border-radius:8px; box-shadow:0 4px 12px rgba(0,0,0,0.15); min-width:130px; z-index:10;">
-                                <button style="display:block; width:100%; padding:10px 16px; border:none; background:transparent; text-align:left; cursor:pointer; color:#111827; font-size:14px;" onclick="navigateToView(this)">View</button>
-								<a href="@Url.Action("EditUser", "Admin", new { id = "123213" })" style="display:block; width:100%; padding:10px 16px; border:none; background:transparent; text-align:left; cursor:pointer; color:#111827; font-size:14px; text-decoration:none;" onmouseover="this.style.background='#f3f4f6'" onmouseout="this.style.background='transparent'">Edit</a>
-								<button style="display:block; width:100%; padding:10px 16px; border:none; background:transparent; text-align:left; cursor:pointer; color:#dc2626; font-size:14px;">Deactivate</button>
-							</div>
-						</td>
-					</tr>
-
-					<!-- Row 5 -->
-					<tr style="border-bottom:1px solid #e5e7eb;">
-						<td style="padding:16px; color:#111827;">123123</td>
-						<td style="padding:16px; color:#111827;">Ballerina Capuccina</td>
-						<td style="padding:16px; color:#111827;">Student</td>
-						<td style="padding:16px; color:#111827;">CON</td>
-						<td style="padding:16px;">
-							<span style="background:#d1fae5; color:#065f46; padding:6px 14px; border-radius:16px; font-size:13px; font-weight:600;">Active</span>
-						</td>
-						<td style="padding:16px; position:relative;">
-							<button class="action-menu-btn" style="background:transparent; border:none; font-size:24px; font-weight:800; cursor:pointer; padding:4px 8px; line-height:1;">⋮</button>
-							<div class="action-menu" style="display:none; position:absolute; right:40px; top:50%; transform:translateY(-50%); background:#fff; border:1px solid #e5e7eb; border-radius:8px; box-shadow:0 4px 12px rgba(0,0,0,0.15); min-width:130px; z-index:10;">
-                                <button style="display:block; width:100%; padding:10px 16px; border:none; background:transparent; text-align:left; cursor:pointer; color:#111827; font-size:14px;" onclick="navigateToView(this)">View</button>
-								<a href="@Url.Action("EditUser", "Admin", new { id = "123213" })" style="display:block; width:100%; padding:10px 16px; border:none; background:transparent; text-align:left; cursor:pointer; color:#111827; font-size:14px; text-decoration:none;" onmouseover="this.style.background='#f3f4f6'" onmouseout="this.style.background='transparent'">Edit</a>
-								<button style="display:block; width:100%; padding:10px 16px; border:none; background:transparent; text-align:left; cursor:pointer; color:#dc2626; font-size:14px;">Deactivate</button>
-							</div>
-						</td>
-					</tr>
-
-					<!-- Row 6 -->
-					<tr style="border-bottom:1px solid #e5e7eb;">
-						<td style="padding:16px; color:#111827;">123123</td>
-						<td style="padding:16px; color:#111827;">Tungtung Tung Sahur</td>
-						<td style="padding:16px; color:#111827;">Teacher</td>
-						<td style="padding:16px; color:#111827;">Registrar</td>
-						<td style="padding:16px;">
-							<span style="background:#e5e7eb; color:#4b5563; padding:6px 14px; border-radius:16px; font-size:13px; font-weight:600;">Inactive</span>
-						</td>
-						<td style="padding:16px; position:relative;">
-							<button class="action-menu-btn" style="background:transparent; border:none; font-size:24px; font-weight:800; cursor:pointer; padding:4px 8px; line-height:1;">⋮</button>
-							<div class="action-menu" style="display:none; position:absolute; right:40px; top:50%; transform:translateY(-50%); background:#fff; border:1px solid #e5e7eb; border-radius:8px; box-shadow:0 4px 12px rgba(0,0,0,0.15); min-width:130px; z-index:10;">
-                                <button style="display:block; width:100%; padding:10px 16px; border:none; background:transparent; text-align:left; cursor:pointer; color:#111827; font-size:14px;" onclick="navigateToView(this)">View</button>
-								<a href="@Url.Action("EditUser", "Admin", new { id = "123213" })" style="display:block; width:100%; padding:10px 16px; border:none; background:transparent; text-align:left; cursor:pointer; color:#111827; font-size:14px; text-decoration:none;" onmouseover="this.style.background='#f3f4f6'" onmouseout="this.style.background='transparent'">Edit</a>
-								<button style="display:block; width:100%; padding:10px 16px; border:none; background:transparent; text-align:left; cursor:pointer; color:#dc2626; font-size:14px;">Deactivate</button>
-							</div>
-						</td>
-					</tr>
+					@if (Model?.DisplayedUsersWithRoles != null && Model.DisplayedUsersWithRoles.Count > 0)
+					{
+						@foreach (var entry in Model.DisplayedUsersWithRoles)
+						{
+							<tr style="border-bottom:1px solid #e5e7eb;" data-user-id="@entry.User.Id">
+								<td style="padding:16px; color:#111827;">@entry.User.Id</td>
+								<td style="padding:16px; color:#111827;">@UsersTableViewModel.GetFullName(entry.User)</td>
+								<td style="padding:16px; color:#111827;">@entry.GetRoleNames()</td>
+								<td style="padding:16px; color:#111827;">-</td>
+								<td style="padding:16px;">
+									@if (entry.User.IsActive == true)
+									{
+										<span style="background:#d1fae5; color:#065f46; padding:6px 14px; border-radius:16px; font-size:13px; font-weight:600;">Active</span>
+									}
+									else
+									{
+										<span style="background:#e5e7eb; color:#4b5563; padding:6px 14px; border-radius:16px; font-size:13px; font-weight:600;">Inactive</span>
+									}
+								</td>
+								<td style="padding:16px; position:relative;">
+									<button class="action-menu-btn" style="background:transparent; border:none; font-size:24px; font-weight:800; cursor:pointer; padding:4px 8px; line-height:1;">⋮</button>
+									<div class="action-menu" style="display:none; position:absolute; right:40px; top:50%; transform:translateY(-50%); background:#fff; border:1px solid #e5e7eb; border-radius:8px; box-shadow:0 4px 12px rgba(0,0,0,0.15); min-width:130px; z-index:10;">
+										<button style="display:block; width:100%; padding:10px 16px; border:none; background:transparent; text-align:left; cursor:pointer; color:#111827; font-size:14px;" onclick="navigateToView(this)">View</button>
+										<button style="display:block; width:100%; padding:10px 16px; border:none; background:transparent; text-align:left; cursor:pointer; color:#111827; font-size:14px;" onclick="navigateToEdit(this)">Edit</button>
+										@if (entry.User.IsActive == true)
+										{
+											<button class="deactivate-action" style="display:block; width:100%; padding:10px 16px; border:none; background:transparent; text-align:left; cursor:pointer; color:#dc2626; font-size:14px;" onclick="showDeactivateModal(this)">Deactivate</button>
+										}
+										else
+										{
+											<button class="reactivate-action" style="display:block; width:100%; padding:10px 16px; border:none; background:transparent; text-align:left; cursor:pointer; color:#059669; font-size:14px;" onclick="showReactivateModal(this)">Reactivate</button>
+										}
+									</div>
+								</td>
+							</tr>
+						}
+					}
+					else
+					{
+						<tr style="border-bottom:1px solid #e5e7eb;">
+							<td colspan="6" style="padding:32px; text-align:center; color:#6b7280;">
+								@if (Model?.SearchTerm != null)
+								{
+									<p style="margin:0;">No users found matching "@Model.SearchTerm"</p>
+								}
+								else
+								{
+									<p style="margin:0;">No users available</p>
+								}
+							</td>
+						</tr>
+					}
 				</tbody>
 			</table>
 		</div>
@@ -189,15 +151,149 @@
 	</div>
 </section>
 
+<!-- Deactivate Modal -->
+<div id="deactivateModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:1000; align-items:center; justify-content:center;">
+    <div style="background:#ffffff; border-radius:12px; padding:32px; max-width:400px; width:90%; margin:20px; box-shadow:0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04);">
+        <div style="text-align:center; margin-bottom:24px;">
+            <div style="width:64px; height:64px; border-radius:9999px; background:#fef2f2; display:flex; align-items:center; justify-content:center; margin:0 auto 16px auto;">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+                    <line x1="12" y1="9" x2="12" y2="13"></line>
+                    <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                </svg>
+            </div>
+            <h3 style="font-size:18px; font-weight:700; color:#111827; margin:0 0 8px 0;">Deactivate User</h3>
+            <p style="color:#6b7280; font-size:14px; margin:0;" id="deactivateModalText">Are you sure you want to deactivate this user? This action will prevent them from accessing the system.</p>
+        </div>
+        <div style="display:flex; gap:12px;">
+            <button onclick="hideDeactivateModal()" style="flex:1; background:#f3f4f6; color:#374151; border:1px solid #d1d5db; border-radius:6px; padding:12px; font-weight:600; cursor:pointer;">Cancel</button>
+            <button onclick="confirmDeactivate()" style="flex:1; background:#dc2626; color:#ffffff; border:none; border-radius:6px; padding:12px; font-weight:600; cursor:pointer;">Deactivate</button>
+        </div>
+    </div>
+</div>
+
+<!-- Reactivate Modal -->
+<div id="reactivateModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:1000; align-items:center; justify-content:center;">
+    <div style="background:#ffffff; border-radius:12px; padding:32px; max-width:400px; width:90%; margin:20px; box-shadow:0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04);">
+        <div style="text-align:center; margin-bottom:24px;">
+            <div style="width:64px; height:64px; border-radius:9999px; background:#d1fae5; display:flex; align-items:center; justify-content:center; margin:0 auto 16px auto;">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="20,6 9,17 4,12"></polyline>
+                </svg>
+            </div>
+            <h3 style="font-size:18px; font-weight:700; color:#111827; margin:0 0 8px 0;">Reactivate User</h3>
+            <p style="color:#6b7280; font-size:14px; margin:0;" id="reactivateModalText">Are you sure you want to reactivate this user? This will restore their access to the system.</p>
+        </div>
+        <div style="display:flex; gap:12px;">
+            <button onclick="hideReactivateModal()" style="flex:1; background:#f3f4f6; color:#374151; border:1px solid #d1d5db; border-radius:6px; padding:12px; font-weight:600; cursor:pointer;">Cancel</button>
+            <button onclick="confirmReactivate()" style="flex:1; background:#059669; color:#ffffff; border:none; border-radius:6px; padding:12px; font-weight:600; cursor:pointer;">Reactivate</button>
+        </div>
+    </div>
+</div>
+
 <script>
 	function navigateToView(button) {
-		// Find the row and extract the ID number from the first cell
+		// Find the row and extract the ID number from the first cell and role from the third cell
 		const row = button.closest('tr');
 		const idCell = row?.cells?.[0];
+		const roleCell = row?.cells?.[2];
 		const id = idCell ? idCell.textContent.trim() : '';
-		// Navigate using MVC route
-		window.location.href = '@Url.Action("ViewUser", "Admin")' + (id ? ('?id=' + encodeURIComponent(id)) : '');
+		const role = roleCell ? roleCell.textContent.trim() : '';
+		
+		// Navigate to appropriate view based on role
+		if (role === 'Teacher') {
+			window.location.href = '@Url.Action("ViewTeacher", "Admin")' + (id ? ('?id=' + encodeURIComponent(id)) : '');
+		} else {
+			window.location.href = '@Url.Action("ViewUser", "Admin")' + (id ? ('?id=' + encodeURIComponent(id)) : '');
+		}
 	}
+	
+	function navigateToEdit(button) {
+		// Find the row and extract the user ID from the data attribute
+		const row = button.closest('tr');
+		const userId = row ? row.getAttribute('data-user-id') : '';
+		
+		// Navigate to EditUser action
+		window.location.href = '@Url.Action("EditUser", "Admin")' + (userId ? ('?id=' + encodeURIComponent(userId)) : '');
+	}
+	
+	// Global variable to store the current row being acted upon
+	let currentActionRow = null;
+	
+	function showDeactivateModal(button) {
+		currentActionRow = button.closest('tr');
+		const nameCell = currentActionRow.cells[1]; // Name column
+		const roleCell = currentActionRow.cells[2]; // Role column
+		const name = nameCell ? nameCell.textContent.trim() : 'this user';
+		const role = roleCell ? roleCell.textContent.trim().toLowerCase() : 'user';
+		
+		document.getElementById('deactivateModalText').textContent = `Are you sure you want to deactivate ${name}? This action will prevent them from accessing the system.`;
+		document.getElementById('deactivateModal').style.display = 'flex';
+	}
+	
+	function hideDeactivateModal() {
+		document.getElementById('deactivateModal').style.display = 'none';
+		currentActionRow = null;
+	}
+	
+	function confirmDeactivate() {
+		if (currentActionRow) {
+			const statusCell = currentActionRow.cells[4]; // Status column
+			const statusSpan = statusCell.querySelector('span');
+			const deactivateBtn = currentActionRow.querySelector('.deactivate-action');
+			const reactivateBtn = currentActionRow.querySelector('.reactivate-action');
+			
+			// Update status to inactive
+			statusSpan.textContent = 'Inactive';
+			statusSpan.style.background = '#e5e7eb';
+			statusSpan.style.color = '#4b5563';
+			
+			// Toggle action buttons
+			deactivateBtn.style.display = 'none';
+			reactivateBtn.style.display = 'block';
+			
+			// TODO: Implement actual deactivation logic (API call)
+			alert('User deactivated successfully');
+		}
+		hideDeactivateModal();
+	}
+	
+	function showReactivateModal(button) {
+		currentActionRow = button.closest('tr');
+		const nameCell = currentActionRow.cells[1]; // Name column
+		const name = nameCell ? nameCell.textContent.trim() : 'this user';
+		
+		document.getElementById('reactivateModalText').textContent = `Are you sure you want to reactivate ${name}? This will restore their access to the system.`;
+		document.getElementById('reactivateModal').style.display = 'flex';
+	}
+	
+	function hideReactivateModal() {
+		document.getElementById('reactivateModal').style.display = 'none';
+		currentActionRow = null;
+	}
+	
+	function confirmReactivate() {
+		if (currentActionRow) {
+			const statusCell = currentActionRow.cells[4]; // Status column
+			const statusSpan = statusCell.querySelector('span');
+			const deactivateBtn = currentActionRow.querySelector('.deactivate-action');
+			const reactivateBtn = currentActionRow.querySelector('.reactivate-action');
+			
+			// Update status to active
+			statusSpan.textContent = 'Active';
+			statusSpan.style.background = '#d1fae5';
+			statusSpan.style.color = '#065f46';
+			
+			// Toggle action buttons
+			reactivateBtn.style.display = 'none';
+			deactivateBtn.style.display = 'block';
+			
+			// TODO: Implement actual reactivation logic (API call)
+			alert('User reactivated successfully');
+		}
+		hideReactivateModal();
+	}
+	
 	// Toggle action menu dropdowns
 	document.addEventListener('DOMContentLoaded', function() {
 		const actionBtns = document.querySelectorAll('.action-menu-btn');
@@ -279,5 +375,19 @@
 			});
 		});
 	});
+
+
+// Close modals when clicking outside
+window.onclick = function(event) {
+	const deactivateModal = document.getElementById('deactivateModal');
+	const reactivateModal = document.getElementById('reactivateModal');
+	
+	if (event.target === deactivateModal) {
+		hideDeactivateModal();
+	}
+	if (event.target === reactivateModal) {
+		hideReactivateModal();
+	}
+}
 </script>
 

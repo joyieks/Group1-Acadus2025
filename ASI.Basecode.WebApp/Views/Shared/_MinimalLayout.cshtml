@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Acadus</title>
+    <link href="~/css/site.css" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'acadus-green': '#337D58',
+                        'white-fill': '#F0FFF9',
+                        'lighter-shade': '#6CA9BA',
+                        'mid-color': '#77F77F',
+                        'darker-shade': '#337D58',
+                    },
+                    fontFamily: {
+                        'poppins': ['Poppins', 'sans-serif'],
+                        'geologica': ['Geologica', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+</head>
+<body class="min-h-screen flex flex-col bg-gray-50">
+    <!-- Simple Header with Logo Only -->
+    <header class="bg-white/90 backdrop-blur-sm border-b border-black/10 px-4 md:px-8 py-4 sticky top-0 z-10">
+        <!-- Logo -->
+        <div class="flex items-center gap-2 text-xl font-semibold text-acadus-green">
+            <img src="~/img/acaduslogo.png" alt="Acadus Logo" class="h-12" />
+            <div class="text-[#295239] font-bold text-2xl">
+                Acadus
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Body -->
+    <main class="flex-grow container mx-auto px-4 md:px-8 py-8">
+        @RenderBody()
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-[#F0FFF9] mt-16 p-8 border-t border-black/10 flex flex-col md:flex-row justify-between items-center gap-4 px-4 md:px-8">
+        <div class="flex items-center gap-2 text-xl font-semibold text-acadus-green">
+            <img src="~/img/acaduslogo.png" alt="Acadus Logo" class="h-12" />
+            <div class="text-[#295239] font-bold text-3xl">
+                Acadus
+            </div>
+        </div>
+        <a href="#top" class="text-gray-600 font-bold hover:text-gray-800 transition-colors">Back to top</a>
+        <div class="text-gray-600 text-sm">© 2025 Acadus || Version 1.0.0</div>
+    </footer>
+
+    @RenderSection("Scripts", required: false)
+</body>
+</html>

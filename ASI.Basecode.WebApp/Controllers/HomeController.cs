@@ -5,21 +5,28 @@ using Microsoft.AspNetCore.Http;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using ASI.Basecode.Services.Interfaces;
 
 namespace ASI.Basecode.WebApp.Controllers
 {
     public class HomeController : Controller
     {
+        private readonly ISupabaseAuthService _supabaseAuthService;
+
+        public HomeController(ISupabaseAuthService supabaseAuthService)
+        {
+            _supabaseAuthService = supabaseAuthService;
+        }
         [HttpGet]
         [AllowAnonymous]
         public IActionResult Index()
         {
             if (User.Identity.IsAuthenticated)
             {
-                // Check user role and redirect to appropriate dashboard
+                // Check user role from claims and redirect to appropriate dashboard
                 if (User.IsInRole("Admin"))
                 {
-                    return RedirectToAction("Index", "Admin");
+                    return RedirectToAction("Dashboard", "Admin");
                 }
                 else if (User.IsInRole("Teacher"))
                 {
@@ -31,14 +38,14 @@ namespace ASI.Basecode.WebApp.Controllers
                 }
                 else
                 {
-                    // Default to Student if role not recognized
-                    return RedirectToAction("Index", "Student");
+                    // Default to login if role not recognized
+                    return RedirectToAction("Login", "Auth");
                 }
             }
             else
             {
-                // Not authenticated, redirect to landing page
-                return RedirectToAction("Index", "Auth");
+                // Not authenticated, redirect to login page
+                return RedirectToAction("Login", "Auth");
             }
         }
 
@@ -47,16 +54,6 @@ namespace ASI.Basecode.WebApp.Controllers
         public IActionResult Privacy()
         {
             return View();
-        }
-
-        [HttpGet]
-        public IActionResult Notifications()
-        {
-            var model = new NotificationsViewModel
-            {
-                Notifications = new List<NotificationsViewModel.NotificationItem>() // no seeded items
-            };
-            return View("~/Views/Shared/Notifications.cshtml", model);
         }
 
         // Mock data example (for testing)
@@ -120,7 +117,7 @@ namespace ASI.Basecode.WebApp.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult UploadProfilePhoto(IFormFile profilePhoto, string? returnUrl)
+        public async System.Threading.Tasks.Task<IActionResult> UploadProfilePhoto(IFormFile profilePhoto, string? returnUrl)
         {
             if (profilePhoto == null || profilePhoto.Length == 0)
             {
@@ -136,28 +133,41 @@ namespace ASI.Basecode.WebApp.Controllers
                 return Redirect(Url.IsLocalUrl(returnUrl) ? returnUrl! : Url.Action("Profile", "Home")!);
             }
 
-            const long maxSizeBytes = 5 * 1024 * 1024; // 5 MB
+            const long maxSizeBytes = 500 * 1024; // 500 KB
             if (profilePhoto.Length > maxSizeBytes)
             {
-                TempData["UploadError"] = "Image too large. Maximum size is 5 MB.";
+                TempData["UploadError"] = "Image too large. Maximum size is 500 KB.";
                 return Redirect(Url.IsLocalUrl(returnUrl) ? returnUrl! : Url.Action("Profile", "Home")!);
             }
 
-            var uploadsRoot = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "profile");
-            if (!Directory.Exists(uploadsRoot))
+            var supabaseUserId = HttpContext.Session.GetString("SupabaseUserId");
+            if (string.IsNullOrWhiteSpace(supabaseUserId))
             {
-                Directory.CreateDirectory(uploadsRoot);
+                TempData["UploadError"] = "Your session has expired. Please log in again.";
+                return Redirect(Url.IsLocalUrl(returnUrl) ? returnUrl! : Url.Action("Profile", "Home")!);
             }
 
-            var fileName = $"{Guid.NewGuid()}{extension}";
-            var filePath = Path.Combine(uploadsRoot, fileName);
-            using (var stream = new FileStream(filePath, FileMode.Create))
+            try
             {
-                profilePhoto.CopyTo(stream);
-            }
+                using (var stream = profilePhoto.OpenReadStream())
+                {
+                    var objectPath = await _supabaseAuthService.UploadProfileImageAsync(
+                        supabaseUserId,
+                        profilePhoto.FileName,
+                        stream,
+                        profilePhoto.ContentType ?? "image/jpeg");
 
-            var publicUrl = $"/uploads/profile/{fileName}";
-            TempData["UploadedProfileUrl"] = publicUrl;
+                    // Generate a display URL (signed for private buckets)
+                    var displayUrl = await _supabaseAuthService.GetProfileImageUrlAsync(objectPath, 3600);
+
+                    await _supabaseAuthService.SetUserProfileImageUrlAsync(supabaseUserId, displayUrl, objectPath);
+                    TempData["UploadedProfileUrl"] = displayUrl;
+                }
+            }
+            catch (Exception ex)
+            {
+                TempData["UploadError"] = $"Failed to upload image: {ex.Message}";
+            }
 
             return Redirect(Url.IsLocalUrl(returnUrl) ? returnUrl! : Url.Action("Profile", "Home")!);
         }

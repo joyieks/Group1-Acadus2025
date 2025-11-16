@@ -1,0 +1,38 @@
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewData["Title"] = "Request Password Reset";
+}
+
+<div style="max-width: 400px; margin: 50px auto; padding: 20px;">
+    <h2 style="text-align: center; margin-bottom: 30px;">Reset Your Password</h2>
+    
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div style="background: #d4edda; color: #155724; padding: 12px; border-radius: 5px; margin-bottom: 20px;">
+            @TempData["SuccessMessage"]
+        </div>
+    }
+    
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div style="background: #f8d7da; color: #721c24; padding: 12px; border-radius: 5px; margin-bottom: 20px;">
+            @TempData["ErrorMessage"]
+        </div>
+    }
+    
+    <form method="post" asp-action="RequestReset">
+        <div style="margin-bottom: 20px;">
+            <label for="email" style="display: block; margin-bottom: 5px; font-weight: bold;">Email Address:</label>
+            <input type="email" id="email" name="email" required 
+                   style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box;">
+        </div>
+        
+        <button type="submit" style="width: 100%; background: #007bff; color: white; padding: 12px; border: none; border-radius: 5px; cursor: pointer; font-size: 16px;">
+            Send Reset Instructions
+        </button>
+    </form>
+    
+    <div style="text-align: center; margin-top: 20px;">
+        <a href="/Auth/Login" style="color: #007bff; text-decoration: none;">← Back to Login</a>
+    </div>
+</div>

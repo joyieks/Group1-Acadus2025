@@ -8,6 +8,26 @@
 @section Styles {
     <style>
         .container { max-width: 100% !important; padding-left: 0 !important; padding-right: 0 !important; }
+        .image-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+        }
+        .background-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            position: absolute;
+        }
+        .green-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #337D58;
+            opacity: 0.7;
+        }
     </style>
 }
 
@@ -42,7 +62,7 @@
                     </div>
                 </div>
                 <div class="text-right">
-                    <a href="/Auth/EmailVerification" class="text-darker-shade hover:text-mid-color transition-colors duration-300 font-geologica underline">Forgot password?</a>
+       <a href="/Account/ForgotPassword" class="text-darker-shade hover:text-mid-color transition-colors duration-300 font-geologica underline">Forgot password?</a>
                 </div>
                 <div class="flex justify-center">
                     <button type="submit" class="bg-gradient-to-r from-darker-shade to-mid-color text-white font-bold py-3 px-16 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 font-poppins">Login</button>
@@ -50,7 +70,12 @@
             </form>
         </div>
     </div>
-    <div class="w-1/2 bg-darker-shade"></div>
+    <div class="w-1/2 bg-darker-shade flex items-center justify-center">
+        <div class="image-container">
+            <img src="~/img/StudentStudying.jpg" alt="Student studying" class="background-image" />
+            <div class="green-overlay"></div>
+        </div>
+    </div>
     </div>
 
 @section Scripts {

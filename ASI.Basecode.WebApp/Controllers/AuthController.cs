@@ -1,21 +1,56 @@
 using Microsoft.AspNetCore.Mvc;
 using Acadus___Alliance_Project_2025.Models;
+using ASI.Basecode.Services.Interfaces;
+using Microsoft.Extensions.Configuration;
+using System.Threading.Tasks;
+using System;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using System.Security.Claims;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace ASI.Basecode.WebApp.Controllers
 {
     public class AuthController : Controller
     {
+        private readonly ISupabaseAuthService _supabaseAuthService;
+        private readonly IConfiguration _configuration;
+
+        public AuthController(ISupabaseAuthService supabaseAuthService, IConfiguration configuration)
+        {
+            _supabaseAuthService = supabaseAuthService;
+            _configuration = configuration;
+        }
         public IActionResult Index()
         {
             return View();
         }
         public IActionResult Login()
         {
+            if (User.Identity.IsAuthenticated)
+            {
+                // Redirect based on role
+                var role = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role)?.Value;
+                switch (role)
+                {
+                    case "Admin":
+                        return RedirectToAction("Dashboard", "Admin");
+                    case "Teacher":
+                        return RedirectToAction("Courses", "Teacher");
+                    case "Student":
+                        return RedirectToAction("Index", "Student");
+                    default:
+                        return RedirectToAction("Index", "Student");
+                }
+            }
             return View(new LoginModel());
         }
 
         [HttpPost]
-        public IActionResult Login(LoginModel model)
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Login(LoginModel model)
         {
             if (!ModelState.IsValid)
             {
@@ -25,20 +60,87 @@ namespace ASI.Basecode.WebApp.Controllers
             var normalizedEmail = model.Email.Trim().ToLowerInvariant();
             var password = model.Password;
 
-            // Hardcoded users → simple role routing
-            if (normalizedEmail == "student@gmail.com" && password == "student123")
+            try
             {
-                return RedirectToAction("Index", "Student");
+                // Authenticate with Supabase via service
+                var session = await _supabaseAuthService.SignInAsync(normalizedEmail, password);
+                
+                if (session?.User != null)
+                {
+                    // Check if user is confirmed
+                    if (session.User.EmailConfirmedAt.HasValue)
+                    {
+                        // Determine user role and name by checking database tables and admin status
+                        var (userRole, userName) = await _supabaseAuthService.GetUserRoleAndNameAsync(session.User.Id);
+                        
+
+                        Console.WriteLine($"User {session.User.Email} logged in with role: {userRole}, name: {userName}");
+
+
+
+                        // Create claims for the user
+                        var claims = new List<Claim>
+                        {
+
+                            new Claim(ClaimTypes.NameIdentifier, session.User.Id),
+                            new Claim(ClaimTypes.Email, session.User.Email),
+                            new Claim(ClaimTypes.Name, $"{session.User.UserMetadata.GetValueOrDefault("first_name", "")} {session.User.UserMetadata.GetValueOrDefault("last_name", "")}"),
+                            new Claim(ClaimTypes.Role, userRole),  // ? CRITICAL: Set the role claim
+                            new Claim("SupabaseUserId", session.User.Id)
+                        };
+
+                        var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+                        var authProperties = new AuthenticationProperties
+                        {
+                            IsPersistent = model.RememberMe,  // Remember me functionality
+                            ExpiresUtc = DateTimeOffset.UtcNow.AddHours(8),
+                            AllowRefresh = true
+                        };
+
+                        // Sign in the user with cookie authentication
+                        await HttpContext.SignInAsync(
+                            CookieAuthenticationDefaults.AuthenticationScheme,
+                            new ClaimsPrincipal(claimsIdentity),
+                            authProperties
+                        );
+
+                        // Persist essentials in server-side session for later flows
+                        try
+                        {
+                            HttpContext.Session.SetString("UserEmail", session.User.Email ?? string.Empty);
+                            HttpContext.Session.SetString("SupabaseUserId", session.User.Id ?? string.Empty);
+                            HttpContext.Session.SetString("UserRole", userRole);
+                        }
+                        catch { }
+                        
+                        // Redirect based on user role
+                        switch (userRole)
+                        {
+                            case "Admin":
+                                return RedirectToAction("Dashboard", "Admin");
+                            case "Teacher":
+                                return RedirectToAction("Index", "Teacher");
+                            case "Student":
+                                return RedirectToAction("Index", "Student");
+                            default:
+                                // Default to Student if role not recognized
+                                return RedirectToAction("Index", "Student");
+                        }
+                    }
+                    else
+                    {
+                        ModelState.AddModelError(string.Empty, "Please confirm your email before logging in.");
+                        return View(model);
+                    }
+                }
             }
-            if (normalizedEmail == "teacher@gmail.com" && password == "teacher123")
+            catch (System.Exception ex)
             {
-                return RedirectToAction("Index", "Teacher");
-            }
-            if (normalizedEmail == "admin@gmail.com" && password == "admin123")
-            {
-                return RedirectToAction("Dashboard", "Admin");
+                // Log the error for debugging
+                Console.WriteLine($"Supabase Auth Error: {ex.Message}");
             }
 
+            // If authentication failed, show error message
             ModelState.AddModelError(string.Empty, "Invalid email or password.");
             return View(model);
         }
@@ -97,6 +199,61 @@ namespace ASI.Basecode.WebApp.Controllers
 
             // Redirect to success or login
             return RedirectToAction("Login");
+        }
+
+        /// <summary>
+        /// Handles password setup from Supabase email link
+        /// </summary>
+        [HttpGet]
+        public IActionResult SetPassword()
+        {
+            // Redirect to AccountController's SetPassword action
+            return RedirectToAction("SetPassword", "Account");
+        }
+
+        /// <summary>
+        /// Shows the forgot password page
+        /// </summary>
+        [HttpGet]
+        public IActionResult ForgotPassword()
+        {
+            return RedirectToAction("ForgotPassword", "Account");
+        }
+
+        /// <summary>
+        /// Logs out the current user
+        /// </summary>
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Logout()
+        {
+            try
+            {
+                // Sign out from cookie authentication
+                await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+                
+                // Clear session
+                HttpContext.Session.Clear();
+        
+                Console.WriteLine("User logged out successfully");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error during logout: {ex.Message}");
+            }
+            
+            return RedirectToAction("Login");
+        }
+
+        /// <summary>
+        /// Access denied page
+        /// </summary>
+        [HttpGet]
+        public IActionResult AccessDenied()
+        {
+            ViewBag.Message = "You do not have permission to access this resource.";
+
+            return View();
         }
     }
 }

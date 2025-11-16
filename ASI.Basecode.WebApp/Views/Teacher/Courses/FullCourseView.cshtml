@@ -105,7 +105,7 @@
                 @await Component.InvokeAsync("TopStudents")
             </div>
             <div>
-                @await Component.InvokeAsync("QuickActions")
+                @await Component.InvokeAsync("QuickActions", Model.Id)
             </div>
         </div>
     </div>
