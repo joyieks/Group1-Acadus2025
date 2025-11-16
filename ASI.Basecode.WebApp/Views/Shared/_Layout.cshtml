@@ -60,6 +60,34 @@
             const mobileMenuCloseBtn = document.getElementById('mobileMenuCloseBtn');
 
             // ------------------ User Menu ------------------
+            function positionUserMenu() {
+                if (!userMenu) return;
+                const ref = userAvatarBtn || userMenuBtn;
+                if (!ref) return;
+                const rect = ref.getBoundingClientRect();
+                const top = rect.bottom + 8;
+                const right = (window.innerWidth - rect.right) + 6;
+                userMenu.style.top = top + 'px';
+                userMenu.style.right = right + 'px';
+            }
+
+            function openUserMenu() {
+                if (!userMenu) return;
+                if (userMenu.parentElement !== document.body) {
+                    document.body.appendChild(userMenu);
+                }
+                userMenu.style.position = 'fixed';
+                userMenu.style.zIndex = '999999';
+                userMenu.classList.remove('hidden');
+                positionUserMenu();
+                if (notifPanel) closeNotif();
+            }
+
+            function closeUserMenu() {
+                if (!userMenu) return;
+                userMenu.classList.add('hidden');
+            }
+
             function toggleUserMenu(e) {
                 console.log('toggleUserMenu called', e.target);
                 e.preventDefault();
@@ -94,7 +122,6 @@
 
             // ------------------ Mobile Menu Overlay ------------------
             if (mobileMenuBtn && mobileMenu && mobileMenuCloseBtn) {
-                // Open mobile menu
                 mobileMenuBtn.addEventListener('click', function(e) {
                     e.preventDefault();
                     e.stopPropagation();
@@ -104,18 +131,15 @@
                     }
                 });
 
-                // Close mobile menu
                 mobileMenuCloseBtn.addEventListener('click', function(e) {
                     e.preventDefault();
                     mobileMenu.classList.add('hidden');
                 });
 
-                // Click outside closes menu
                 document.addEventListener('click', function() {
                     mobileMenu.classList.add('hidden');
                 });
 
-                // Prevent closing when clicking inside
                 mobileMenu.addEventListener('click', function(e) {
                     e.stopPropagation();
                 });

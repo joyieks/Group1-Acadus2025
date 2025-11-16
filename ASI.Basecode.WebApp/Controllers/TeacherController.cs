@@ -6,11 +6,16 @@ using Microsoft.Extensions.Configuration;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using System.Linq;
-using Microsoft.AspNetCore.Authorization;
-
-namespace ASI.Basecode.WebApp.Controllers
+using ASI.Basecode.WebApp.Models;
+using System;
+using ASI.Basecode.Services.Interfaces;
+using System.Security.Claims;
+ namespace ASI.Basecode.WebApp.Controllers
 {
-    [Authorize(Roles = "Teacher")]  // ? CRITICAL: Require authentication and Teacher role
+    /// <summary>
+    /// Controller for teacher-related actions and dashboard statistics.
+    /// </summary>
+    [Authorize(Roles = "Teacher")]
     public class TeacherController : Controller
     {
         private readonly IConfiguration _configuration;
@@ -31,7 +36,7 @@ namespace ASI.Basecode.WebApp.Controllers
         /// </summary>
         /// <returns>The dashboard view.</returns>
         [HttpGet]
-        public async Task<IActionResult> Index()
+        public IActionResult Index()
         {
             // TODO: Implement actual dashboard logic
             var model = new TeacherDashboardViewModel

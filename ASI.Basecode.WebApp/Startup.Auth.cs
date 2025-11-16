@@ -13,27 +13,8 @@ namespace ASI.Basecode.WebApp
         /// </summary>
         private void ConfigureAuthorization()
         {
-            // Configure Cookie Authentication
-            this._services.AddAuthentication(options =>
-            {
-                options.DefaultAuthenticateScheme = CookieAuthenticationDefaults.AuthenticationScheme;
-                options.DefaultChallengeScheme = CookieAuthenticationDefaults.AuthenticationScheme;
-            })
-            .AddCookie(options =>
-            {
-                options.LoginPath = "/Auth/Login";
-                options.AccessDeniedPath = "/Auth/AccessDenied";
-            });
-
-            // Configure Authorization Policies
-            this._services.AddAuthorization(options =>
-            {
-                options.AddPolicy("AdminOnly", policy => policy.RequireRole("Admin"));
-                options.AddPolicy("TeacherOnly", policy => policy.RequireRole("Teacher"));
-                options.AddPolicy("StudentOnly", policy => policy.RequireRole("Student"));
-            });
-
-            this._services.AddMvc();
+            // Authentication is already configured in Startup.cs
+            // This method is kept for backward compatibility but all auth setup is in Startup.cs
         }
     }
 }

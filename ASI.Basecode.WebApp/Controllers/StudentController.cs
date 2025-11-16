@@ -1,4 +1,4 @@
-﻿using ASI.Basecode.Data.Models;
+﻿﻿using ASI.Basecode.Data.Models;
 using ASI.Basecode.Services.Interfaces;
 using ASI.Basecode.WebApp.Models;
 using Microsoft.AspNetCore.Authorization;
@@ -10,12 +10,11 @@ using System.Diagnostics;
 using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
-
+using System.Security.Claims;
 
 namespace ASI.Basecode.WebApp.Controllers
 {
-    [Authorize(Roles = "Student")]  // ? CRITICAL: Require authentication and Student role
-
+    [Authorize(Roles = "Student")]
     public class StudentController : Controller
     {
         private readonly ISupabaseAuthService _supabaseAuthService;
@@ -27,19 +26,6 @@ namespace ASI.Basecode.WebApp.Controllers
             _supabaseAuthService = supabaseAuthService;
             _studentCourseService = studentCourseService;
             _studentService = studentService;
-
-        }
-        
-        [HttpGet]
-        public IActionResult Index()
-        {
-            var viewModel = new StudentDashboardViewModel();
-
-            
-            viewModel.RecentlyGradedTasks = new List<TaskItem>();
-            viewModel.ToBeGradedTasks = new List<TaskItem>();
-
-            return View(viewModel);
         }
 
         [HttpGet]
@@ -152,17 +138,7 @@ namespace ASI.Basecode.WebApp.Controllers
             return View(data);
         }
 
-
         private string GetCourseTitleById(string courseId)
-
-        private (string CourseTitle, double OverallGPA, int CompletedTasks, int TotalTasks, int PendingTasks, 
-                List<StudentCourseDetailsViewModel.ActivityItem> Activities,
-                List<StudentCourseDetailsViewModel.AppealItem> Appeals,
-                List<StudentCourseDetailsViewModel.FeedbackItem> Feedbacks) GetCourseDataById(string courseId)
-      
-
-        private string GetCourseTitleById(string? courseId)
-
         {
             return courseId switch
             {

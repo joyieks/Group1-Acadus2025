@@ -60,6 +60,7 @@ namespace ASI.Basecode.Data.Models
             public string Term { get; set; } = string.Empty;
             public string Name { get; set; } = string.Empty;
             public string Description { get; set; } = string.Empty;
+            public string MaxScore { get; set; } = string.Empty;
             public string Score { get; set; } = string.Empty;
             public string Percentage { get; set; } = string.Empty;
             public DateTime Date { get; set; }

@@ -16,8 +16,10 @@ using System.IO;
 // Set up SSL bypass for development BEFORE creating the builder
 if (Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == "Development")
 {
+#pragma warning disable SYSLIB0014
     System.Net.ServicePointManager.ServerCertificateValidationCallback = (sender, certificate, chain, sslPolicyErrors) => true;
     System.Net.ServicePointManager.SecurityProtocol = System.Net.SecurityProtocolType.Tls12 | System.Net.SecurityProtocolType.Tls11 | System.Net.SecurityProtocolType.Tls;
+#pragma warning restore SYSLIB0014
     Console.WriteLine("Global SSL certificate validation bypassed for development");
 }
 
