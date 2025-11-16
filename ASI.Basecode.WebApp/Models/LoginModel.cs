@@ -14,6 +14,11 @@ namespace Acadus___Alliance_Project_2025.Models
         /// User's plain-text password entered on the login form.
         /// </summary>
         public string Password { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Remember me flag for persistent login
+        /// </summary>
+        public bool RememberMe { get; set; } = false;
     }
 }
 

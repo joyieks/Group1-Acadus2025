@@ -6,16 +6,11 @@ using Microsoft.Extensions.Configuration;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using System.Linq;
-using ASI.Basecode.WebApp.Models;
-using System;
-using ASI.Basecode.Services.Interfaces;
-using System.Security.Claims;
- namespace ASI.Basecode.WebApp.Controllers
+using Microsoft.AspNetCore.Authorization;
+
+namespace ASI.Basecode.WebApp.Controllers
 {
-    /// <summary>
-    /// Controller for teacher-related actions and dashboard statistics.
-    /// </summary>
-    [Authorize(Roles = "Teacher")]
+    [Authorize(Roles = "Teacher")]  // ? CRITICAL: Require authentication and Teacher role
     public class TeacherController : Controller
     {
         private readonly IConfiguration _configuration;

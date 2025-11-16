@@ -23,10 +23,10 @@ namespace ASI.Basecode.WebApp.Controllers
         {
             if (User.Identity.IsAuthenticated)
             {
-                // Check user role and redirect to appropriate dashboard
+                // Check user role from claims and redirect to appropriate dashboard
                 if (User.IsInRole("Admin"))
                 {
-                    return RedirectToAction("Index", "Admin");
+                    return RedirectToAction("Dashboard", "Admin");
                 }
                 else if (User.IsInRole("Teacher"))
                 {
@@ -38,14 +38,14 @@ namespace ASI.Basecode.WebApp.Controllers
                 }
                 else
                 {
-                    // Default to Student if role not recognized
-                    return RedirectToAction("Index", "Student");
+                    // Default to login if role not recognized
+                    return RedirectToAction("Login", "Auth");
                 }
             }
             else
             {
-                // Not authenticated, redirect to landing page
-                return RedirectToAction("Index", "Auth");
+                // Not authenticated, redirect to login page
+                return RedirectToAction("Login", "Auth");
             }
         }
 
