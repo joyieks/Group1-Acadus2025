@@ -49,6 +49,7 @@ namespace ASI.Basecode.WebApp.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Login(LoginModel model)
         {
             if (!ModelState.IsValid)
@@ -72,28 +73,43 @@ namespace ASI.Basecode.WebApp.Controllers
                         // Determine user role and name by checking database tables and admin status
                         var (userRole, userName) = await _supabaseAuthService.GetUserRoleAndNameAsync(session.User.Id);
                         
+
                         Console.WriteLine($"User {session.User.Email} logged in with role: {userRole}, name: {userName}");
+
+
 
                         // Create claims for the user
                         var claims = new List<Claim>
                         {
-                            new Claim(ClaimTypes.Name, userName),
-                            new Claim(ClaimTypes.Email, session.User.Email ?? string.Empty),
-                            new Claim(ClaimTypes.NameIdentifier, session.User.Id ?? string.Empty),
-                            new Claim(ClaimTypes.Role, userRole)
+
+                            new Claim(ClaimTypes.NameIdentifier, session.User.Id),
+                            new Claim(ClaimTypes.Email, session.User.Email),
+                            new Claim(ClaimTypes.Name, $"{session.User.UserMetadata.GetValueOrDefault("first_name", "")} {session.User.UserMetadata.GetValueOrDefault("last_name", "")}"),
+                            new Claim(ClaimTypes.Role, userRole),  // ? CRITICAL: Set the role claim
+                            new Claim("SupabaseUserId", session.User.Id)
                         };
 
                         var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
-                        var claimsPrincipal = new ClaimsPrincipal(claimsIdentity);
+                        var authProperties = new AuthenticationProperties
+                        {
+                            IsPersistent = model.RememberMe,  // Remember me functionality
+                            ExpiresUtc = DateTimeOffset.UtcNow.AddHours(8),
+                            AllowRefresh = true
+                        };
 
-                        // Sign in the user
-                        await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, claimsPrincipal);
+                        // Sign in the user with cookie authentication
+                        await HttpContext.SignInAsync(
+                            CookieAuthenticationDefaults.AuthenticationScheme,
+                            new ClaimsPrincipal(claimsIdentity),
+                            authProperties
+                        );
 
                         // Persist essentials in server-side session for later flows
                         try
                         {
                             HttpContext.Session.SetString("UserEmail", session.User.Email ?? string.Empty);
                             HttpContext.Session.SetString("SupabaseUserId", session.User.Id ?? string.Empty);
+                            HttpContext.Session.SetString("UserRole", userRole);
                         }
                         catch { }
                         
@@ -205,22 +221,39 @@ namespace ASI.Basecode.WebApp.Controllers
         }
 
         /// <summary>
-        /// Shows the access denied page
+        /// Logs out the current user
+        /// </summary>
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Logout()
+        {
+            try
+            {
+                // Sign out from cookie authentication
+                await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+                
+                // Clear session
+                HttpContext.Session.Clear();
+        
+                Console.WriteLine("User logged out successfully");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error during logout: {ex.Message}");
+            }
+            
+            return RedirectToAction("Login");
+        }
+
+        /// <summary>
+        /// Access denied page
         /// </summary>
         [HttpGet]
         public IActionResult AccessDenied()
         {
-            return View();
-        }
+            ViewBag.Message = "You do not have permission to access this resource.";
 
-        /// <summary>
-        /// Logs out the current user
-        /// </summary>
-        [HttpPost]
-        public async Task<IActionResult> Logout()
-        {
-            await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
-            return RedirectToAction("Login");
+            return View();
         }
     }
 }

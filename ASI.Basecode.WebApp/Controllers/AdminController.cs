@@ -11,9 +11,12 @@ using System;
 using System.Linq;
 
 
+using Microsoft.AspNetCore.Authorization;
+
 namespace ASI.Basecode.WebApp.Controllers
 {
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = "Admin")]  // ? CRITICAL: Require authentication and Admin role
+
     public class AdminController : Controller
     {
         private readonly IStudentService _studentService;

@@ -5,7 +5,6 @@ using Microsoft.Extensions.Configuration;
 using Supabase;
 using Supabase.Gotrue;
 using System;
-using System.Net.Http;
 using System.Threading.Tasks;
 using System.Linq;
 
@@ -17,47 +16,10 @@ namespace ASI.Basecode.Services.Services
         private Supabase.Client _supabaseClient;
         private Supabase.Gotrue.Client _gotrueClient;
         private AdminClient _adminClient;
-        private static HttpClient _httpClient;
-        private static readonly object _lock = new object();
 
         public SupabaseAuthService(IConfiguration configuration)
         {
             _configuration = configuration;
-        }
-
-        private HttpClient GetHttpClient()
-        {
-            if (_httpClient == null)
-            {
-                lock (_lock)
-                {
-                    if (_httpClient == null)
-                    {
-                        var isDevelopment = _configuration.GetValue<bool>("Development:IgnoreSSLErrors", true);
-
-                        if (isDevelopment)
-                        {
-                            var handler = new HttpClientHandler
-                            {
-                                ServerCertificateCustomValidationCallback = (message, cert, chain, errors) => true
-                            };
-                            _httpClient = new HttpClient(handler)
-                            {
-                                Timeout = TimeSpan.FromSeconds(30)
-                            };
-                            Console.WriteLine("✓ Custom HttpClient created with SSL validation bypassed and 30s timeout");
-                        }
-                        else
-                        {
-                            _httpClient = new HttpClient
-                            {
-                                Timeout = TimeSpan.FromSeconds(30)
-                            };
-                        }
-                    }
-                }
-            }
-            return _httpClient;
         }
 
         private Supabase.Gotrue.Client GetGotrueClient()
@@ -520,12 +482,32 @@ namespace ASI.Basecode.Services.Services
             }
         }
 
+        /// <summary>
+        /// Deletes a user from Supabase Auth and database
+        /// </summary>
+        /// <remarks>
+        /// WARNING: This method is not fully implemented.
+        /// Currently returns true without actually deleting the user.
+        /// TODO: Implement actual deletion from auth.users and public.users
+        /// </remarks>
+        [System.Obsolete("This method is not fully implemented. It does not actually delete users yet.", false)]
         public async Task<bool> DeleteUserAsync(string supabaseUserId)
         {
             try
             {
-                var client = await GetSupabaseClientAsync();
-                return true;
+                Console.WriteLine($"⚠️ WARNING: DeleteUserAsync called for {supabaseUserId} but NOT IMPLEMENTED");
+                Console.WriteLine($"  User deletion requires implementation of:");
+                Console.WriteLine($"  1. Delete from auth.users via AdminClient.DeleteUser()");
+                Console.WriteLine($"  2. Delete from public.users table");
+                Console.WriteLine($"  3. Handle cascading deletes for related records");
+                
+                // TODO: Implement actual deletion
+                // var adminClient = GetAdminClient();
+                  // await adminClient.DeleteUser(supabaseUserId);
+               // var client = await GetSupabaseClientAsync();
+                // await client.From<SupabaseUserNew>().Where(x => x.UserTypeId == supabaseUserId).Delete();
+                    
+                   return false;  // Return false to indicate not implemented
             }
             catch (Exception ex)
             {
@@ -557,12 +539,21 @@ namespace ASI.Basecode.Services.Services
         }
 
         /// <summary>
-        /// Verifies password reset token and allows password update
+        /// Verifies password reset token
         /// </summary>
+        /// <remarks>
+        /// NOTE: This method always returns true because Supabase handles 
+        /// token verification internally via the ResetPasswordForEmail flow.
+        /// Custom token verification is not needed for the current implementation.
+        /// </remarks>
+        [System.Obsolete("Token verification is handled internally by Supabase. This method is not needed.", false)]
         public Task<bool> VerifyPasswordResetTokenAsync(string token)
         {
             try
             {
+                Console.WriteLine($"ℹ️ INFO: VerifyPasswordResetTokenAsync called");
+                Console.WriteLine($"  Supabase handles token verification internally via ResetPasswordForEmail");
+                Console.WriteLine($"  This method is not needed for current password reset flow");
                 return Task.FromResult(true);
             }
             catch (Exception ex)
