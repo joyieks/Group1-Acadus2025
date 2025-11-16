@@ -1,4 +1,4 @@
-@model ASI.Basecode.WebApp.Models.TeacherCourseViewModel[]
+@model ASI.Basecode.WebApp.Models.CourseCardViewModel[]
 @{
     Layout = "~/Views/Shared/_AuthenticatedLayout.cshtml";
     ViewData["Title"] = "Courses";
@@ -17,17 +17,9 @@
     <div class="container" style="max-width: 1200px; margin: 0 auto; padding: 0 16px;">
         <!-- Courses Grid -->
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px;">
-            @foreach (var course in Model ?? new TeacherCourseViewModel[0])
+            @foreach (var course in Model)
             {
-                var cardModel = new CourseCardViewModel
-                {
-                    Id = course.Id,
-                    CourseCode = course.CourseCode,
-                    CourseTitle = course.CourseTitle,
-                    SemesterInfo = course.SemesterInfo,
-                    CardColor = course.CardColor
-                };
-                @await Component.InvokeAsync("CourseCard", cardModel)
+                @await Component.InvokeAsync("CourseCard", course)
             }
         </div>
     </div>

@@ -88,61 +88,51 @@ using System.Security.Claims;
         /// </summary>
         /// <returns>The courses view.</returns>
         [HttpGet]
-        public IActionResult Courses()
+        public async Task<IActionResult> Courses()
         {
-            var courses = new List<TeacherCourseViewModel>
-            {
-                new TeacherCourseViewModel
-                {
-                    Id = 1,
-                    CourseCode = "91299 - ELPHP41",
-                    CourseTitle = "FREE ELECTIVE - PHP",
-                    SemesterInfo = "1st Semester 2025 - 2026",
-                    CardColor = "#E8F9E8"
-                },
-                new TeacherCourseViewModel
-                {
-                    Id = 2,
-                    CourseCode = "91300 - CS101",
-                    CourseTitle = "INTRODUCTION TO COMPUTER SCIENCE",
-                    SemesterInfo = "1st Semester 2025 - 2026",
-                    CardColor = "#D1FAE5"
-                },
-                new TeacherCourseViewModel
-                {
-                    Id = 3,
-                    CourseCode = "91301 - MATH201",
-                    CourseTitle = "DISCRETE MATHEMATICS",
-                    SemesterInfo = "1st Semester 2025 - 2026",
-                    CardColor = "#A7F3D0"
-                },
-                new TeacherCourseViewModel
-                {
-                    Id = 4,
-                    CourseCode = "91302 - ENG102",
-                    CourseTitle = "TECHNICAL WRITING",
-                    SemesterInfo = "1st Semester 2025 - 2026",
-                    CardColor = "#6EE7B7"
-                },
-                new TeacherCourseViewModel
-                {
-                    Id = 5,
-                    CourseCode = "91303 - DATA301",
-                    CourseTitle = "DATA STRUCTURES",
-                    SemesterInfo = "2nd Semester 2025 - 2026",
-                    CardColor = "#34D399"
-                },
-                new TeacherCourseViewModel
-                {
-                    Id = 6,
-                    CourseCode = "91304 - WEBDEV401",
-                    CourseTitle = "WEB DEVELOPMENT",
-                    SemesterInfo = "2nd Semester 2025 - 2026",
-                    CardColor = "#10B981"
-                }
-            };
+            // Get the Supabase user ID from claims
+            var supabaseUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrWhiteSpace(supabaseUserId))
+                return Unauthorized();
 
-            return View("Courses/Index", courses.ToArray());
+            try
+            {
+                // Initialize Supabase client
+                await AsiBasecodeDBContext.InitializeSupabaseAsync(_configuration);
+                var client = AsiBasecodeDBContext.SupabaseClient;
+
+                // Get all courses where TeacherId matches the current user
+                var coursesResponse = await client
+                    .From<CourseModel>()
+                    .Where(c => c.TeacherId == supabaseUserId)
+                    .Get();
+
+                var teacherCourses = coursesResponse?.Models ?? new List<CourseModel>();
+
+                if (!teacherCourses.Any())
+                {
+                    ViewData["Message"] = "No courses assigned yet.";
+                    return View("Courses/Index", Array.Empty<CourseCardViewModel>());
+                }
+
+                // Map CourseModel → CourseCardViewModel
+                var courseViewModels = teacherCourses.Select(c => new CourseCardViewModel
+                {
+                    Id = c.Id,
+                    CourseCode = c.Code ?? "N/A",
+                    CourseTitle = c.Name ?? "Untitled Course",
+                    SemesterInfo = c.SemesterId.ToString(),
+                    CardColor = GetRandomCardColor()
+                }).ToArray();
+
+                return View("Courses/Index", courseViewModels);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error loading teacher courses: {ex.Message}");
+                ViewData["Message"] = "Error loading courses.";
+                return View("Courses/Index", Array.Empty<CourseCardViewModel>());
+            }
         }
 
         /// <summary>
@@ -771,6 +761,14 @@ using System.Security.Claims;
                 Console.WriteLine($"Error getting teacher ID from Supabase ID: {ex.Message}");
                 return null;
             }
+        }
+
+        private string GetRandomCardColor()
+        {
+            // Simple random pastel green variants
+            var colors = new[] { "#E8F9E8", "#D1FAE5", "#A7F3D0", "#6EE7B7" };
+            var random = new Random();
+            return colors[random.Next(colors.Length)];
         }
     }
 }
