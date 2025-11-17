@@ -42,17 +42,33 @@
 <!-- White Section for Students -->
 <section id="students-section" style="background:#ffffff; padding: 40px 0;">
     <div class="container" style="max-width: 1200px; margin: 0 auto; padding: 0 16px;">
-        <h2 style="margin:0 0 24px 0; font-weight:800; font-size:24px; color:#111827;">Student List</h2>
-        <!-- Search bar -->
-        <div style="display:flex; justify-content:flex-start; align-items:center; margin-bottom:24px; gap:12px;">
-            <input type="text" placeholder="Search for a student ID or name" style="flex:1; max-width:400px; padding:10px 16px; border:1px solid #d1d5db; border-radius:8px; font-size:14px; background:#f3f4f6;">
-            <button style="background:#059669; color:#fff; border:none; border-radius:8px; padding:10px 24px; font-weight:600; cursor:pointer;">Search</button>
+        <h2 style="margin:0 0 32px 0; font-weight:800; font-size:24px; color:#111827;">Student List</h2>
+        
+        <!-- Search bar, Filter, and Add Student button on same row -->
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px; gap:12px;">
+            <div style="display:flex; align-items:center; gap:12px;">
+                <input type="text" id="studentSearchInput" placeholder="Search for a student ID or name" style="width:300px; padding:10px 16px; border:1px solid #d1d5db; border-radius:8px; font-size:14px; background:#f3f4f6;">
+                <select id="statusFilter" style="padding:10px 16px; border:1px solid #d1d5db; border-radius:8px; font-size:14px; background:#ffffff; cursor:pointer; min-width:150px;">
+                    <option value="">All Status</option>
+                    <option value="Active">Active</option>
+                    <option value="Inactive">Inactive</option>
+                </select>
+                <button id="studentSearchBtn" style="background:#059669; color:#fff; border:none; border-radius:8px; padding:10px 24px; font-weight:600; cursor:pointer;">Search</button>
+            </div>
+            <button id="addStudentBtn" style="background:#059669; color:#fff; border:none; border-radius:8px; padding:10px 24px; font-weight:600; cursor:pointer; display:flex; align-items:center; gap:8px;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M12 5v14M5 12h14"></path>
+                </svg>
+                Add Student
+            </button>
         </div>
-        @await Component.InvokeAsync("StudentTable")
+        
+        @await Component.InvokeAsync("StudentTable", new { courseId = Model.Id })
     </div>
 </section>
 
 @section Scripts {
+    @Html.AntiForgeryToken()
     <style>
         /* Pagination button styles similar to RecentActivity */
         .dataTables_paginate .paginate_button {
@@ -76,16 +92,38 @@
             opacity: 0.5 !important;
             cursor: not-allowed !important;
         }
+        /* Remove button hover effect */
+        .remove-student-btn:hover {
+            background: #b91c1c !important;
+        }
     </style>
     <script>
+        const courseId = @Model.Id;
+        
         $(document).ready(function() {
-            $('#studentTable').DataTable({
+            // Initialize DataTables only if the table exists and has correct structure
+            var table = $('#studentTable');
+            if (table.length && table.find('thead th').length === 5) {
+                // Destroy existing DataTable instance if it exists
+                if ($.fn.DataTable.isDataTable('#studentTable')) {
+                    $('#studentTable').DataTable().destroy();
+                }
+                
+            var dataTable = $('#studentTable').DataTable({
                 "pageLength": 10,
                 "lengthChange": false,
                 "searching": false,
                 "ordering": true,
                 "info": true,
                 "paging": true,
+                    "autoWidth": false,
+                    "columns": [
+                        null, // ID Number
+                        null, // Last Name
+                        null, // First Name
+                        null, // Status
+                        { "orderable": false }  // Actions (not sortable)
+                    ],
                 "language": {
                     "paginate": {
                         "previous": "Prev",
@@ -93,9 +131,410 @@
                     }
                 }
             });
+
+            // Search and filter functionality
+            var customSearchFunction = function(settings, data, dataIndex) {
+                var searchTerm = $('#studentSearchInput').val().toLowerCase();
+                var statusFilter = $('#statusFilter').val();
+
+                // Get row data
+                var idNumber = data[0].toLowerCase();
+                var lastName = data[1].toLowerCase();
+                var firstName = data[2].toLowerCase();
+                var status = data[3].trim();
+
+                // Apply search filter
+                var matchesSearch = searchTerm === '' || 
+                    idNumber.includes(searchTerm) || 
+                    lastName.includes(searchTerm) || 
+                    firstName.includes(searchTerm);
+
+                // Apply status filter
+                var matchesStatus = statusFilter === '' || status === statusFilter;
+
+                return matchesSearch && matchesStatus;
+            };
+
+            // Add the custom search function
+            $.fn.dataTable.ext.search.push(customSearchFunction);
+
+            // Function to reapply filters
+            function applyFilters() {
+                dataTable.draw();
+            }
+
+            // Search input event
+            $('#studentSearchInput').on('keyup', function() {
+                applyFilters();
+            });
+
+            // Status filter change event
+            $('#statusFilter').on('change', function() {
+                applyFilters();
+            });
+
+            // Search button click event
+            $('#studentSearchBtn').on('click', function() {
+                applyFilters();
+            });
+            }
+
+            // Add Student Modal
+            $('#addStudentBtn').on('click', function() {
+                loadAvailableStudents();
+                $('#addStudentModal').css('display', 'flex');
+            });
+
+            $('.modal-close, .modal-backdrop').on('click', function() {
+                $('#addStudentModal').css('display', 'none');
+            });
+
+            // Search in modal
+            $('#modalStudentSearch').on('input', function() {
+                const searchTerm = $(this).val().toLowerCase();
+                $('#availableStudentsList tr').each(function() {
+                    const idNumber = $(this).find('td:eq(0)').text().toLowerCase();
+                    const firstName = $(this).find('td:eq(1)').text().toLowerCase();
+                    const lastName = $(this).find('td:eq(2)').text().toLowerCase();
+                    if (idNumber.includes(searchTerm) || firstName.includes(searchTerm) || lastName.includes(searchTerm)) {
+                        $(this).show();
+                    } else {
+                        $(this).hide();
+                    }
+                });
+            });
+
+            // Confirm enrollment
+            $(document).on('click', '.enroll-student-btn', function() {
+                const studentId = $(this).data('student-id');
+                const idNumber = $(this).data('id-number');
+                const firstName = $(this).data('first-name');
+                const lastName = $(this).data('last-name');
+
+                // Show custom confirmation modal
+                showEnrollmentConfirmation(studentId, firstName, lastName, idNumber);
+            });
+
+            // Confirm enrollment from custom modal
+            $(document).on('click', '#confirmEnrollBtn', function() {
+                const studentId = $(this).data('student-id');
+                $('#enrollmentConfirmModal').css('display', 'none');
+                enrollStudent(studentId);
+            });
+
+            // Cancel enrollment from custom modal
+            $(document).on('click', '#cancelEnrollBtn, .enrollment-modal-backdrop', function() {
+                $('#enrollmentConfirmModal').css('display', 'none');
+            });
+
+            // Remove Student button click
+            $(document).on('click', '.remove-student-btn', function() {
+                const studentId = $(this).data('student-id');
+                const idNumber = $(this).data('id-number');
+                const firstName = $(this).data('first-name');
+                const lastName = $(this).data('last-name');
+
+                // Show custom removal confirmation modal
+                showRemoveConfirmation(studentId, firstName, lastName, idNumber);
+            });
+
+            // Confirm removal from custom modal
+            $(document).on('click', '#confirmRemoveBtn', function() {
+                const studentId = $(this).data('student-id');
+                $('#removeConfirmModal').css('display', 'none');
+                removeStudent(studentId);
+            });
+
+            // Cancel removal from custom modal
+            $(document).on('click', '#cancelRemoveBtn, .remove-modal-backdrop', function() {
+                $('#removeConfirmModal').css('display', 'none');
+            });
         });
+
+        async function loadAvailableStudents() {
+            try {
+                $('#availableStudentsList').html('<tr><td colspan="4" style="text-align:center; padding:32px; color:#6b7280;">Loading students...</td></tr>');
+                
+                const response = await fetch(`/Teacher/GetAvailableStudents?courseId=${courseId}`);
+                const data = await response.json();
+
+                // Log debug info
+                if (data.debug) {
+                    console.log('GetAvailableStudents Debug Info:', data.debug);
+                }
+
+                if (data.success && data.students && data.students.length > 0) {
+                    let html = '';
+                    data.students.forEach(student => {
+                        html += `
+                            <tr style="border-bottom:1px solid #e5e7eb;">
+                                <td style="padding:12px; color:#111827;">${student.idNumber}</td>
+                                <td style="padding:12px; color:#111827;">${student.firstName}</td>
+                                <td style="padding:12px; color:#111827;">${student.lastName}</td>
+                                <td style="padding:12px;">
+                                    <button class="enroll-student-btn" 
+                                            data-student-id="${student.studentId}"
+                                            data-id-number="${student.idNumber}"
+                                            data-first-name="${student.firstName}"
+                                            data-last-name="${student.lastName}"
+                                            style="background:#059669; color:#fff; border:none; border-radius:6px; padding:6px 16px; font-weight:600; cursor:pointer; font-size:13px;">
+                                        Select
+                                    </button>
+                                </td>
+                            </tr>
+                        `;
+                    });
+                    $('#availableStudentsList').html(html);
+                } else {
+                    let message = 'No available students found.';
+                    if (data.debug) {
+                        if (data.debug.totalStudents === 0) {
+                            message = 'No students found in database. Please create students first using the Admin panel.';
+                        } else if (data.debug.enrolledCount > 0 && data.debug.availableCount === 0) {
+                            message = `All ${data.debug.totalStudents} students are already enrolled in this course.`;
+                        }
+                    }
+                    $('#availableStudentsList').html(`<tr><td colspan="4" style="text-align:center; padding:32px; color:#6b7280;">${message}</td></tr>`);
+                }
+            } catch (error) {
+                console.error('Error loading available students:', error);
+                $('#availableStudentsList').html('<tr><td colspan="4" style="text-align:center; padding:32px; color:#dc2626;">Error loading students. Please check the console for details.</td></tr>');
+            }
+        }
+
+        function showEnrollmentConfirmation(studentId, firstName, lastName, idNumber) {
+            $('#enrollmentConfirmStudentName').text(`${firstName} ${lastName}`);
+            $('#enrollmentConfirmStudentId').text(idNumber);
+            $('#confirmEnrollBtn').data('student-id', studentId);
+            $('#enrollmentConfirmModal').css('display', 'flex');
+        }
+
+        async function enrollStudent(studentId) {
+            try {
+                // Show loading state
+                $('#confirmEnrollBtn').prop('disabled', true).text('Enrolling...');
+                
+                // Get anti-forgery token
+                const token = $('input[name="__RequestVerificationToken"]').val() || '';
+                
+                const response = await fetch('/Teacher/EnrollStudent', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'RequestVerificationToken': token
+                    },
+                    body: JSON.stringify({
+                        courseId: courseId,
+                        studentId: studentId
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    // Show success message
+                    showSuccessMessage('Student enrolled successfully!');
+                    $('#enrollmentConfirmModal').css('display', 'none');
+                    $('#addStudentModal').css('display', 'none');
+                    // Small delay before reload to ensure modal is closed
+                    setTimeout(function() {
+                        location.reload();
+                    }, 100);
+                } else {
+                    showErrorMessage(data.message || 'Failed to enroll student');
+                    $('#confirmEnrollBtn').prop('disabled', false).text('Confirm');
+                }
+            } catch (error) {
+                console.error('Error enrolling student:', error);
+                showErrorMessage('Error enrolling student. Please try again.');
+                $('#confirmEnrollBtn').prop('disabled', false).text('Confirm');
+            }
+        }
+
+        function showSuccessMessage(message) {
+            const messageDiv = $('<div>')
+                .css({
+                    'position': 'fixed',
+                    'top': '20px',
+                    'right': '20px',
+                    'background': '#059669',
+                    'color': '#fff',
+                    'padding': '16px 24px',
+                    'border-radius': '8px',
+                    'box-shadow': '0 4px 6px rgba(0,0,0,0.1)',
+                    'z-index': '10000',
+                    'font-weight': '600',
+                    'min-width': '300px'
+                })
+                .text(message);
+            $('body').append(messageDiv);
+            setTimeout(function() {
+                messageDiv.fadeOut(300, function() {
+                    $(this).remove();
+                });
+            }, 3000);
+        }
+
+        function showErrorMessage(message) {
+            const messageDiv = $('<div>')
+                .css({
+                    'position': 'fixed',
+                    'top': '20px',
+                    'right': '20px',
+                    'background': '#dc2626',
+                    'color': '#fff',
+                    'padding': '16px 24px',
+                    'border-radius': '8px',
+                    'box-shadow': '0 4px 6px rgba(0,0,0,0.1)',
+                    'z-index': '10000',
+                    'font-weight': '600',
+                    'min-width': '300px'
+                })
+                .text(message);
+            $('body').append(messageDiv);
+            setTimeout(function() {
+                messageDiv.fadeOut(300, function() {
+                    $(this).remove();
+                });
+            }, 4000);
+        }
+
+        function showRemoveConfirmation(studentId, firstName, lastName, idNumber) {
+            $('#removeConfirmStudentName').text(`${firstName} ${lastName}`);
+            $('#removeConfirmStudentId').text(idNumber);
+            $('#confirmRemoveBtn').data('student-id', studentId);
+            $('#removeConfirmModal').css('display', 'flex');
+        }
+
+        async function removeStudent(studentId) {
+            try {
+                // Show loading state
+                $('#confirmRemoveBtn').prop('disabled', true).text('Removing...');
+                
+                // Get anti-forgery token
+                const token = $('input[name="__RequestVerificationToken"]').val() || '';
+                
+                const response = await fetch(`/Teacher/DropStudent?courseId=${courseId}&studentId=${encodeURIComponent(studentId)}`, {
+                    method: 'POST',
+                    headers: {
+                        'RequestVerificationToken': token
+                    }
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    // Show success message
+                    showSuccessMessage('Student removed successfully!');
+                    $('#removeConfirmModal').css('display', 'none');
+                    // Small delay before reload to ensure modal is closed
+                    setTimeout(function() {
+                        location.reload();
+                    }, 100);
+                } else {
+                    showErrorMessage(data.message || 'Failed to remove student');
+                    $('#confirmRemoveBtn').prop('disabled', false).text('Confirm');
+                }
+            } catch (error) {
+                console.error('Error removing student:', error);
+                showErrorMessage('Error removing student. Please try again.');
+                $('#confirmRemoveBtn').prop('disabled', false).text('Confirm');
+            }
+        }
     </script>
 }
+
+<!-- Add Student Modal -->
+<div id="addStudentModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:1000; align-items:center; justify-content:center;">
+    <div class="modal-backdrop" style="position:absolute; top:0; left:0; width:100%; height:100%;"></div>
+    <div style="background:#ffffff; border-radius:16px; padding:32px; max-width:800px; width:90%; max-height:90vh; overflow-y:auto; position:relative; z-index:1001; box-shadow:0 20px 25px -5px rgba(0,0,0,0.1);">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px;">
+            <h2 style="margin:0; font-weight:800; font-size:24px; color:#111827;">Add Student to Course</h2>
+            <button class="modal-close" style="background:none; border:none; font-size:24px; color:#6b7280; cursor:pointer; padding:0; width:32px; height:32px; display:flex; align-items:center; justify-content:center;">&times;</button>
+        </div>
+        
+        <div style="margin-bottom:24px;">
+            <input type="text" id="modalStudentSearch" placeholder="Search by ID Number, First Name, or Last Name" style="width:100%; padding:12px 16px; border:1px solid #d1d5db; border-radius:8px; font-size:14px;">
+        </div>
+
+        <div style="border:1px solid #e5e7eb; border-radius:8px; overflow:hidden;">
+            <table style="width:100%; border-collapse:collapse;">
+                <thead>
+                    <tr style="background:#059669;">
+                        <th style="padding:12px 16px; text-align:left; font-weight:700; color:#fff;">ID Number</th>
+                        <th style="padding:12px 16px; text-align:left; font-weight:700; color:#fff;">First Name</th>
+                        <th style="padding:12px 16px; text-align:left; font-weight:700; color:#fff;">Last Name</th>
+                        <th style="padding:12px 16px; text-align:left; font-weight:700; color:#fff;">Action</th>
+                    </tr>
+                </thead>
+                <tbody id="availableStudentsList">
+                    <tr>
+                        <td colspan="4" style="text-align:center; padding:32px; color:#6b7280;">Loading students...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Enrollment Confirmation Modal -->
+<div id="enrollmentConfirmModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:2000; align-items:center; justify-content:center;">
+    <div class="enrollment-modal-backdrop" style="position:absolute; top:0; left:0; width:100%; height:100%;"></div>
+    <div style="background:#ffffff; border-radius:16px; padding:32px; max-width:500px; width:90%; position:relative; z-index:2001; box-shadow:0 20px 25px -5px rgba(0,0,0,0.1);">
+        <div style="text-align:center; margin-bottom:24px;">
+            <div style="width:64px; height:64px; background:#d1fae5; border-radius:50%; display:flex; align-items:center; justify-content:center; margin:0 auto 16px;">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                    <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                </svg>
+            </div>
+            <h2 style="margin:0 0 12px 0; font-weight:800; font-size:24px; color:#111827;">Confirm Enrollment</h2>
+            <p style="margin:0; color:#6b7280; font-size:16px; line-height:1.5;">
+                Are you sure you want to enroll<br>
+                <strong style="color:#111827;" id="enrollmentConfirmStudentName"></strong><br>
+                <span style="color:#059669; font-size:14px;" id="enrollmentConfirmStudentId"></span><br>
+                in this course?
+            </p>
+        </div>
+        <div style="display:flex; gap:12px; justify-content:flex-end;">
+            <button id="cancelEnrollBtn" style="background:#f3f4f6; color:#374151; border:none; border-radius:8px; padding:12px 24px; font-weight:600; cursor:pointer; font-size:14px;">
+                Cancel
+            </button>
+            <button id="confirmEnrollBtn" style="background:#059669; color:#fff; border:none; border-radius:8px; padding:12px 24px; font-weight:600; cursor:pointer; font-size:14px;">
+                Confirm
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Remove Student Confirmation Modal -->
+<div id="removeConfirmModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:2000; align-items:center; justify-content:center;">
+    <div class="remove-modal-backdrop" style="position:absolute; top:0; left:0; width:100%; height:100%;"></div>
+    <div style="background:#ffffff; border-radius:16px; padding:32px; max-width:500px; width:90%; position:relative; z-index:2001; box-shadow:0 20px 25px -5px rgba(0,0,0,0.1);">
+        <div style="text-align:center; margin-bottom:24px;">
+            <div style="width:64px; height:64px; background:#fee2e2; border-radius:50%; display:flex; align-items:center; justify-content:center; margin:0 auto 16px;">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M18 6L6 18M6 6l12 12"></path>
+                </svg>
+            </div>
+            <h2 style="margin:0 0 12px 0; font-weight:800; font-size:24px; color:#111827;">Confirm Removal</h2>
+            <p style="margin:0; color:#6b7280; font-size:16px; line-height:1.5;">
+                Are you sure you want to remove<br>
+                <strong style="color:#111827;" id="removeConfirmStudentName"></strong><br>
+                <span style="color:#dc2626; font-size:14px;" id="removeConfirmStudentId"></span><br>
+                from this course?
+            </p>
+        </div>
+        <div style="display:flex; gap:12px; justify-content:flex-end;">
+            <button id="cancelRemoveBtn" style="background:#f3f4f6; color:#374151; border:none; border-radius:8px; padding:12px 24px; font-weight:600; cursor:pointer; font-size:14px;">
+                Cancel
+            </button>
+            <button id="confirmRemoveBtn" style="background:#dc2626; color:#fff; border:none; border-radius:8px; padding:12px 24px; font-weight:600; cursor:pointer; font-size:14px;">
+                Confirm
+            </button>
+        </div>
+    </div>
+</div>
 
 <!-- Green Section with Top Students and Quick Actions -->
 <section style="background:#E8F9E8; padding: 40px 0;">

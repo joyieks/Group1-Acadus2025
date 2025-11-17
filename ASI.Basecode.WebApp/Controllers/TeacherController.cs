@@ -24,6 +24,8 @@ using System.Threading.Tasks;
         private readonly ISupabaseAuthService _supabaseAuthService;
         private readonly ICourseService _courseService;  // ? ADD ICourseService
         private readonly ITeacherCourseService _teacherCourseService;
+        private readonly IUserService _userService;
+        private readonly IAuditLogService _auditLogService;
 
 
         /// <summary>
@@ -33,12 +35,14 @@ using System.Threading.Tasks;
         /// <param name="supabaseAuthService">Supabase authentication service.</param>
         /// <param name="courseService">Course service for database operations.</param>
 
-        public TeacherController(IConfiguration configuration, ISupabaseAuthService supabaseAuthService, ITeacherCourseService teacherCourseService, ICourseService courseService)
+        public TeacherController(IConfiguration configuration, ISupabaseAuthService supabaseAuthService, ITeacherCourseService teacherCourseService, ICourseService courseService, IUserService userService, IAuditLogService auditLogService)
         {
             _configuration = configuration;
             _supabaseAuthService = supabaseAuthService;
             _teacherCourseService = teacherCourseService;
-             _courseService = courseService; 
+             _courseService = courseService;
+            _userService = userService;
+            _auditLogService = auditLogService;
         }
 
         /// <summary>
@@ -239,44 +243,307 @@ private string GetCardColor(int index)
         // ==================== NEW BACKEND FUNCTIONALITIES ====================
 
         /// <summary>
-        /// Drops a student from a course.
+        /// Gets available students (not enrolled in the course).
         /// </summary>
         /// <param name="courseId">The course ID.</param>
-        /// <param name="studentId">The student ID.</param>
-        /// <returns>JSON result indicating success or failure.</returns>
-        [HttpPost]
-        public async Task<IActionResult> DropStudent(int courseId, long studentId)
+        /// <returns>JSON result with available students.</returns>
+        [HttpGet]
+        public async Task<IActionResult> GetAvailableStudents(int courseId)
         {
             try
             {
+                Console.WriteLine($"=== GetAvailableStudents START ===");
+                Console.WriteLine($"CourseId: {courseId}");
+                
                 await AsiBasecodeDBContext.InitializeSupabaseAsync(_configuration);
                 var client = AsiBasecodeDBContext.SupabaseClient;
 
-                // Find the enrollment
-                var enrollmentResponse = await client.From<EnrollmentModel>()
-                    .Filter("course_id", Supabase.Postgrest.Constants.Operator.Equals, courseId)
-                    .Filter("student_id", Supabase.Postgrest.Constants.Operator.Equals, studentId)
-                    .Filter("status", Supabase.Postgrest.Constants.Operator.Equals, "active")
+                // Get all enrollments for this course (check both "active" and "Active" for case sensitivity)
+                var allEnrollmentsResponse = await client
+                    .From<EnrollmentModel>()
+                    .Where(e => e.CourseId == courseId)
                     .Get();
 
-                var enrollment = enrollmentResponse.Models.FirstOrDefault();
-                if (enrollment == null)
+                var allEnrollments = allEnrollmentsResponse?.Models ?? new List<EnrollmentModel>();
+                Console.WriteLine($"Total enrollments for course {courseId}: {allEnrollments.Count}");
+                
+                // Filter active enrollments (check for "Active" enum value)
+                var activeEnrollments = allEnrollments
+                    .Where(e => !string.IsNullOrEmpty(e.Status) && 
+                                (e.Status == "Active" || e.Status.Equals("active", StringComparison.OrdinalIgnoreCase)))
+                    .ToList();
+                
+                Console.WriteLine($"Active enrollments: {activeEnrollments.Count}");
+                
+                var enrolledStudentIds = activeEnrollments
+                    .Select(e => e.StudentId)
+                    .Distinct()
+                    .ToList();
+                
+                Console.WriteLine($"Enrolled student IDs: {string.Join(", ", enrolledStudentIds)}");
+
+                // Get all students
+                var allStudents = await _userService.GetStudentsAsync();
+                Console.WriteLine($"Total students retrieved: {allStudents.Count}");
+                
+                if (allStudents.Count == 0)
                 {
-                    return Json(new { success = false, message = "Enrollment not found or already dropped." });
+                    Console.WriteLine("WARNING: No students found in database!");
+                    return Json(new { 
+                        success = true, 
+                        students = new List<object>(),
+                        debug = new {
+                            totalStudents = 0,
+                            enrolledCount = enrolledStudentIds.Count,
+                            message = "No students found in database. Please create students first."
+                        }
+                    });
                 }
 
-                // Update enrollment status to "dropped"
-                enrollment.Status = "dropped";
-                enrollment.DroppedAt = DateTime.UtcNow;
-                await enrollment.Update<EnrollmentModel>();
+                // Filter out already enrolled students
+                var availableStudents = allStudents
+                    .Where(s => !enrolledStudentIds.Contains(s.UserTypeId))
+                    .Select(s => new
+                    {
+                        studentId = s.UserTypeId,
+                        idNumber = s.UserDisplayId ?? "N/A",
+                        firstName = s.FirstName ?? "",
+                        lastName = s.LastName ?? "",
+                        status = s.IsActive == true ? "Active" : "Inactive"
+                    })
+                    .ToList();
 
-                // Note: EnrolledCount was removed from CourseModel. 
-                // Course enrollment is now tracked through the enrollment table only.
+                Console.WriteLine($"Available students (not enrolled): {availableStudents.Count}");
+                Console.WriteLine($"=== GetAvailableStudents END ===");
 
-                return Json(new { success = true, message = "Student dropped successfully." });
+                return Json(new { 
+                    success = true, 
+                    students = availableStudents,
+                    debug = new {
+                        totalStudents = allStudents.Count,
+                        enrolledCount = enrolledStudentIds.Count,
+                        availableCount = availableStudents.Count
+                    }
+                });
             }
             catch (Exception ex)
             {
+                Console.WriteLine($"Error getting available students: {ex.Message}");
+                Console.WriteLine($"Stack Trace: {ex.StackTrace}");
+                return Json(new { success = false, message = $"Error: {ex.Message}" });
+            }
+        }
+
+        /// <summary>
+        /// Enrolls a student in a course.
+        /// </summary>
+        /// <param name="request">The enrollment request containing courseId and studentId.</param>
+        /// <returns>JSON result indicating success or failure.</returns>
+        [HttpPost]
+        public async Task<IActionResult> EnrollStudent([FromBody] EnrollStudentRequest request)
+        {
+            try
+            {
+                Console.WriteLine($"=== EnrollStudent START ===");
+                Console.WriteLine($"CourseId: {request?.CourseId}, StudentId: {request?.StudentId}");
+                
+                if (request == null || string.IsNullOrWhiteSpace(request.StudentId))
+                {
+                    return Json(new { success = false, message = "Student ID is required." });
+                }
+
+                if (request.CourseId <= 0)
+                {
+                    return Json(new { success = false, message = "Course ID is required." });
+                }
+
+                await AsiBasecodeDBContext.InitializeSupabaseAsync(_configuration);
+                var client = AsiBasecodeDBContext.SupabaseClient;
+
+                // Check if student is already enrolled
+                // Get all enrollments for this course ONLY (no status filter in DB query)
+                Console.WriteLine($"Querying enrollments for course_id = {request.CourseId}");
+                var allEnrollmentsResponse = await client
+                    .From<EnrollmentModel>()
+                    .Filter("course_id", Supabase.Postgrest.Constants.Operator.Equals, request.CourseId)
+                    .Get();
+
+                var allEnrollments = allEnrollmentsResponse?.Models ?? new List<EnrollmentModel>();
+                Console.WriteLine($"Found {allEnrollments.Count} total enrollments for course {request.CourseId}");
+                
+                // Filter in memory for student_id and active status (check for "Active" enum value)
+                var activeEnrollment = allEnrollments
+                    .FirstOrDefault(e => e.StudentId == request.StudentId && 
+                                         !string.IsNullOrEmpty(e.Status) && 
+                                         (e.Status == "Active" || e.Status.Equals("active", StringComparison.OrdinalIgnoreCase)));
+
+                if (activeEnrollment != null)
+                {
+                    Console.WriteLine($"Student {request.StudentId} is already enrolled in course {request.CourseId}");
+                    return Json(new { success = false, message = "Student is already enrolled in this course." });
+                }
+
+                // Create new enrollment
+                Console.WriteLine($"Creating new enrollment for student {request.StudentId} in course {request.CourseId}");
+                var enrollment = new EnrollmentModel
+                {
+                    StudentId = request.StudentId,
+                    CourseId = request.CourseId,
+                    Status = "Active",  // Enum expects "Active" (capitalized)
+                    EnrolledAt = DateTime.UtcNow,
+                    DroppedAt = null
+                };
+
+                await client.From<EnrollmentModel>().Insert(enrollment);
+                Console.WriteLine($"=== EnrollStudent SUCCESS ===");
+
+                // Log audit activity
+                try
+                {
+                    var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? User.FindFirstValue("sub");
+                    var allUsers = await _userService.GetAllUsersAsync();
+                    var currentUser = allUsers.FirstOrDefault(u => u.UserTypeId == currentUserId);
+                    var course = await _courseService.GetCourseByIdAsync(request.CourseId);
+                    var student = allUsers.FirstOrDefault(u => u.UserTypeId == request.StudentId);
+
+                    await _auditLogService.LogActivityAsync(
+                        userId: currentUserId,
+                        userRole: "Teacher",
+                        userName: $"{currentUser?.FirstName} {currentUser?.LastName}".Trim(),
+                        actionType: "ADD_STUDENT",
+                        actionDescription: $"Added student '{($"{student?.FirstName} {student?.LastName}").Trim()}' to course '{course?.Code} - {course?.Name}'",
+                        courseId: request.CourseId,
+                        courseCode: course?.Code,
+                        courseName: course?.Name,
+                        studentId: request.StudentId,
+                        studentName: $"{student?.FirstName} {student?.LastName}".Trim()
+                    );
+                }
+                catch (Exception logEx)
+                {
+                    Console.WriteLine($"Error logging audit activity: {logEx.Message}");
+                }
+
+                return Json(new { success = true, message = "Student enrolled successfully." });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"=== EnrollStudent ERROR ===");
+                Console.WriteLine($"Error: {ex.Message}");
+                Console.WriteLine($"Stack Trace: {ex.StackTrace}");
+                if (ex.InnerException != null)
+                {
+                    Console.WriteLine($"Inner Exception: {ex.InnerException.Message}");
+                }
+                return Json(new { success = false, message = $"Error: {ex.Message}" });
+            }
+        }
+
+        /// <summary>
+        /// Drops a student from a course.
+        /// </summary>
+        /// <param name="courseId">The course ID.</param>
+        /// <param name="studentId">The student ID (UUID string).</param>
+        /// <returns>JSON result indicating success or failure.</returns>
+        [HttpPost]
+        public async Task<IActionResult> DropStudent(int courseId, string studentId)
+        {
+            try
+            {
+                Console.WriteLine($"=== DropStudent START ===");
+                Console.WriteLine($"CourseId: {courseId}, StudentId: {studentId}");
+
+                if (string.IsNullOrWhiteSpace(studentId))
+                {
+                    return Json(new { success = false, message = "Student ID is required." });
+                }
+
+                await AsiBasecodeDBContext.InitializeSupabaseAsync(_configuration);
+                var client = AsiBasecodeDBContext.SupabaseClient;
+
+                // Find the enrollment - get all enrollments for course, filter in memory
+                Console.WriteLine($"Querying enrollments for course_id = {courseId}");
+                var enrollmentResponse = await client.From<EnrollmentModel>()
+                    .Filter("course_id", Supabase.Postgrest.Constants.Operator.Equals, courseId)
+                    .Get();
+
+                var allEnrollments = enrollmentResponse?.Models ?? new List<EnrollmentModel>();
+                Console.WriteLine($"Found {allEnrollments.Count} total enrollments for course {courseId}");
+                
+                // Log all enrollments for debugging
+                foreach (var e in allEnrollments)
+                {
+                    Console.WriteLine($"  Enrollment: StudentId={e.StudentId}, Status={e.Status}, CourseId={e.CourseId}");
+                }
+                
+                // First, check if any enrollment exists for this student (regardless of status)
+                var anyEnrollment = allEnrollments.FirstOrDefault(e => e.StudentId == studentId);
+                if (anyEnrollment == null)
+                {
+                    Console.WriteLine($"No enrollment found for student {studentId} in course {courseId}");
+                    Console.WriteLine($"Looking for studentId: '{studentId}' (length: {studentId?.Length})");
+                    Console.WriteLine($"Available studentIds in enrollments: {string.Join(", ", allEnrollments.Select(e => $"'{e.StudentId}'"))}");
+                    return Json(new { success = false, message = "Student is not enrolled in this course." });
+                }
+                
+                Console.WriteLine($"Found enrollment for student: Status={anyEnrollment.Status}, StudentId={anyEnrollment.StudentId}");
+                
+                // Filter in memory for student_id and active status
+                var enrollment = allEnrollments
+                    .FirstOrDefault(e => e.StudentId == studentId && 
+                                       !string.IsNullOrEmpty(e.Status) && 
+                                       (e.Status == "Active" || e.Status.Equals("active", StringComparison.OrdinalIgnoreCase)));
+                
+                if (enrollment == null)
+                {
+                    Console.WriteLine($"Student {studentId} has enrollment but status is '{anyEnrollment.Status}', not Active");
+                    return Json(new { success = false, message = $"Student enrollment status is '{anyEnrollment.Status}'. Cannot remove a student that is not actively enrolled." });
+                }
+
+                Console.WriteLine($"Found enrollment. Updating status to 'Dropped'");
+                // Update enrollment status to "Dropped" (enum expects capitalized)
+                enrollment.Status = "Dropped";
+                enrollment.DroppedAt = DateTime.UtcNow;
+                await enrollment.Update<EnrollmentModel>();
+
+                Console.WriteLine($"=== DropStudent SUCCESS ===");
+                // Note: EnrolledCount was removed from CourseModel. 
+                // Course enrollment is now tracked through the enrollment table only.
+
+                // Log audit activity
+                try
+                {
+                    var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? User.FindFirstValue("sub");
+                    var allUsers = await _userService.GetAllUsersAsync();
+                    var currentUser = allUsers.FirstOrDefault(u => u.UserTypeId == currentUserId);
+                    var course = await _courseService.GetCourseByIdAsync(courseId);
+                    var student = allUsers.FirstOrDefault(u => u.UserTypeId == studentId);
+
+                    await _auditLogService.LogActivityAsync(
+                        userId: currentUserId,
+                        userRole: "Teacher",
+                        userName: $"{currentUser?.FirstName} {currentUser?.LastName}".Trim(),
+                        actionType: "REMOVE_STUDENT",
+                        actionDescription: $"Removed student '{($"{student?.FirstName} {student?.LastName}").Trim()}' from course '{course?.Code} - {course?.Name}'",
+                        courseId: courseId,
+                        courseCode: course?.Code,
+                        courseName: course?.Name,
+                        studentId: studentId,
+                        studentName: $"{student?.FirstName} {student?.LastName}".Trim()
+                    );
+                }
+                catch (Exception logEx)
+                {
+                    Console.WriteLine($"Error logging audit activity: {logEx.Message}");
+                }
+
+                return Json(new { success = true, message = "Student removed successfully." });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"=== DropStudent ERROR ===");
+                Console.WriteLine($"Error: {ex.Message}");
+                Console.WriteLine($"Stack Trace: {ex.StackTrace}");
                 return Json(new { success = false, message = $"Error: {ex.Message}" });
             }
         }
@@ -354,6 +621,32 @@ private string GetCardColor(int index)
                 activity.IsArchived = true;
                 activity.ArchivedAt = DateTime.UtcNow;
                 await activity.Update<ActivityModel>();
+
+                // Log audit activity
+                try
+                {
+                    var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? User.FindFirstValue("sub");
+                    var allUsers = await _userService.GetAllUsersAsync();
+                    var currentUser = allUsers.FirstOrDefault(u => u.UserTypeId == currentUserId);
+                    var course = await _courseService.GetCourseByIdAsync((int)activity.CourseId);
+
+                    await _auditLogService.LogActivityAsync(
+                        userId: currentUserId,
+                        userRole: "Teacher",
+                        userName: $"{currentUser?.FirstName} {currentUser?.LastName}".Trim(),
+                        actionType: "ARCHIVE_ACTIVITY",
+                        actionDescription: $"Archived activity '{activity.Title}' in course '{course?.Code} - {course?.Name}'",
+                        courseId: activity.CourseId,
+                        courseCode: course?.Code,
+                        courseName: course?.Name,
+                        activityId: activityId,
+                        activityTitle: activity.Title
+                    );
+                }
+                catch (Exception logEx)
+                {
+                    Console.WriteLine($"Error logging audit activity: {logEx.Message}");
+                }
 
                 return Json(new { success = true, message = "Activity archived successfully." });
             }
@@ -771,5 +1064,14 @@ private string GetCardColor(int index)
                 return null;
             }
         }
+    }
+
+    /// <summary>
+    /// Request model for enrolling a student in a course.
+    /// </summary>
+    public class EnrollStudentRequest
+    {
+        public int CourseId { get; set; }
+        public string StudentId { get; set; }
     }
 }
