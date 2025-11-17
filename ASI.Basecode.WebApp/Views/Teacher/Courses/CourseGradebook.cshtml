@@ -91,7 +91,7 @@
                                         <td style="padding:12px 16px; color:#111827;">
                                             <span class="score-display">@activity.RawScore</span>
                                             <form id="@formId" method="post" asp-action="UpdateScore"
-                                                  onsubmit="return restoreEdit('@rowId')"
+                                                  onsubmit="return validateAndSubmit('@rowId', @activity.MaxScore)"
                                                   style="display:none;" class="score-form">
                                                 <input type="hidden" name="studentId" value="@Model.SelectedStudentDetail.StudentId" />
                                                 <input type="hidden" name="activityId" value="@activity.ActivityId" />
@@ -164,7 +164,7 @@
 
     </script>
     <script>
-            function enableEdit(rowId) {
+        function enableEdit(rowId) {
             const row = document.getElementById(rowId);
             const display = row.querySelector('.score-display');
             const form = row.querySelector('.score-form');
@@ -180,23 +180,22 @@
             input.style.border = '2px solid #3b82f6';
             input.style.backgroundColor = '#eff6ff';
         }
-                function restoreEdit(rowId) {
-            const row = document.getElementById(rowId);
-            const editBtn = row.querySelector('.edit-btn');
-            const saveBtn = row.querySelector('.save-btn');
-            const form = row.querySelector('.score-form');
-            const display = row.querySelector('.score-display');
 
-            // Optional: reset styles
-            form.style.display = 'none';
-            saveBtn.style.display = 'none';
-            editBtn.style.display = 'inline-block';
-            display.style.display = 'inline-block';
+        function validateAndSubmit(rowId, maxScore) {
+            const row = document.getElementById(rowId);
+            const input = row.querySelector('.score-input');
+            const value = parseFloat(input.value);
+
+            if (isNaN(value) || value < 0 || value > maxScore) {
+                alert(`Score must be between 0 and ${maxScore}`);
+                input.focus();
+                return false;
+            }
 
             return true; // allow form to submit
         }
-
     </script>
+
 
 
 

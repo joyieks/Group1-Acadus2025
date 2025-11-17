@@ -13,6 +13,9 @@ namespace ASI.Basecode.Services.Interfaces
         Task<List<StudentReportViewModel.ReportItem>> GetStudentReportsAsync(string studentId);
 
         Task<StudentDashboardViewModel> GetStudentDashboardAsync(string studentId);
-        
+
+        byte[] GenerateStudentReportPdf(List<StudentReportViewModel.ReportItem> reports);
+
+
     }
 }

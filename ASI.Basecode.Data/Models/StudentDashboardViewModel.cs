@@ -41,6 +41,8 @@ namespace ASI.Basecode.Data.Models
 
             /// <summary>Identifier of the course related to the task.</summary>
             public long? CourseId { get; set; }
+
+            public string CourseCode { get; set; }
         }
     }
 }

@@ -52,7 +52,7 @@ namespace ASI.Basecode.Data.Repositories
             var res = await _supabaseClient
                 .From<ActivityModel>()
                 .Where(a => a.CourseId == courseId)
-                .Where(a => a.IsArchived == false)
+                .Where(a => a.IsVisible == false)
                 .Get();
 
             return res.Models
@@ -169,7 +169,9 @@ namespace ASI.Basecode.Data.Repositories
                         DueDate = activity.DueDate,
                         Priority = GetPriority(activity.DueDate),
                         StudentId = int.TryParse(studentId, out var sid) ? sid : null,
-                        CourseId = activity.CourseId
+                        CourseId = activity.CourseId,
+                        CourseCode = course.Code
+
                     };
 
                     if (submission.SubmissionStatus == "Graded")

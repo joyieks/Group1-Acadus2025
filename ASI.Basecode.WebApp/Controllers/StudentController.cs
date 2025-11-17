@@ -182,6 +182,24 @@ namespace ASI.Basecode.WebApp.Controllers
         }
 
         [HttpGet]
+        public async Task<IActionResult> DownloadGradeReport()
+        {
+            var supabaseUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrWhiteSpace(supabaseUserId))
+                return Unauthorized();
+
+            var studentId = await GetStudentIdFromSupabaseIdAsync(supabaseUserId);
+            if (string.IsNullOrWhiteSpace(studentId))
+                return Unauthorized();
+
+            var reports = await _studentCourseService.GetStudentReportsAsync(studentId);
+
+            var pdfBytes = _studentCourseService.GenerateStudentReportPdf(reports); // You implement this
+            return File(pdfBytes, "application/pdf", "GradeReport.pdf");
+        }
+
+
+        [HttpGet]
         public async Task<IActionResult> Profile()
         {
             var supabaseUserId = HttpContext.Session.GetString("SupabaseUserId");
@@ -314,5 +332,7 @@ namespace ASI.Basecode.WebApp.Controllers
                 return null;
             }
         }
+
+
     }
 }
