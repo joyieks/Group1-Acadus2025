@@ -125,9 +125,8 @@ namespace ASI.Basecode.WebApp
             // DI Services
             this.ConfigureOtherServices();
 
-            // Configure Authorization
-            this.ConfigureAuthorization();
-
+            // Authentication already configured above
+            
             services.Configure<FormOptions>(options =>
             {
                 options.ValueLengthLimit = 1024 * 1024 * 100;

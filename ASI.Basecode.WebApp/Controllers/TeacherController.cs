@@ -2,23 +2,29 @@ using ASI.Basecode.Data;
 using ASI.Basecode.Data.Models;
 using ASI.Basecode.Services.Interfaces;  // ? For ISupabaseAuthService and ICourseService
 using ASI.Basecode.WebApp.Models;  // ? For TeacherCourseViewModel
+using ASI.Basecode.Services.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
-using System.Linq;
+ namespace ASI.Basecode.WebApp.Controllers
 
-namespace ASI.Basecode.WebApp.Controllers
 {
-    [Authorize(Roles = "Teacher")]  // ? CRITICAL: Require authentication and Teacher role
+    /// <summary>
+    /// Controller for teacher-related actions and dashboard statistics.
+    /// </summary>
+    [Authorize(Roles = "Teacher")]
     public class TeacherController : Controller
     {
         private readonly IConfiguration _configuration;
         private readonly ISupabaseAuthService _supabaseAuthService;
         private readonly ICourseService _courseService;  // ? ADD ICourseService
+        private readonly ITeacherCourseService _teacherCourseService;
+
 
         /// <summary>
         /// Initializes a new instance of the <see cref="TeacherController"/> class.
@@ -26,14 +32,13 @@ namespace ASI.Basecode.WebApp.Controllers
         /// <param name="configuration">Application configuration.</param>
         /// <param name="supabaseAuthService">Supabase authentication service.</param>
         /// <param name="courseService">Course service for database operations.</param>
-        public TeacherController(
-            IConfiguration configuration, 
-    ISupabaseAuthService supabaseAuthService,
-            ICourseService courseService)
+
+        public TeacherController(IConfiguration configuration, ISupabaseAuthService supabaseAuthService, ITeacherCourseService teacherCourseService, ICourseService courseService)
         {
             _configuration = configuration;
-         _supabaseAuthService = supabaseAuthService;
-    _courseService = courseService;  // ? Initialize ICourseService
+            _supabaseAuthService = supabaseAuthService;
+            _teacherCourseService = teacherCourseService;
+             _courseService = courseService; 
         }
 
         /// <summary>
@@ -41,7 +46,7 @@ namespace ASI.Basecode.WebApp.Controllers
         /// </summary>
         /// <returns>The dashboard view.</returns>
         [HttpGet]
-        public async Task<IActionResult> Index()
+        public IActionResult Index()
         {
             // TODO: Implement actual dashboard logic
             var model = new TeacherDashboardViewModel
@@ -195,7 +200,7 @@ private string GetCardColor(int index)
 
             // Optionally, fetch activities for this course
             var activitiesResponse = await client.From<ActivityModel>()
-                .Filter("course_id", Supabase.Postgrest.Constants.Operator.Equals, (int)id)
+                .Filter("courseId", Supabase.Postgrest.Constants.Operator.Equals, (int)id)
                 .Get();
             var activities = activitiesResponse.Models;
 
@@ -553,7 +558,7 @@ private string GetCardColor(int index)
                 if (courseId.HasValue)
                 {
                     var activitiesResponse = await client.From<ActivityModel>()
-                        .Filter("course_id", Supabase.Postgrest.Constants.Operator.Equals, courseId.Value)
+                        .Filter("courseId", Supabase.Postgrest.Constants.Operator.Equals, courseId.Value)
                         .Get();
                     var activityIds = activitiesResponse.Models.Select(a => a.Id).ToList();
                     grades = grades.Where(g => activityIds.Contains(g.ActivityId)).ToList();
@@ -635,7 +640,7 @@ private string GetCardColor(int index)
                 var client = AsiBasecodeDBContext.SupabaseClient;
                 // Get all activities for the course
                 var activitiesResponse = await client.From<ActivityModel>()
-                    .Filter("course_id", Supabase.Postgrest.Constants.Operator.Equals, courseId)
+                    .Filter("courseId", Supabase.Postgrest.Constants.Operator.Equals, courseId)
                     .Get();
                 var activityIds = activitiesResponse.Models.Select(a => a.Id).ToList();
                 if (!activityIds.Any())
@@ -660,63 +665,30 @@ private string GetCardColor(int index)
         }
 
         [HttpGet]
-        public IActionResult CourseGradebook(int id)
+        public async Task<IActionResult> CourseGradebook(int id, string selectedStudentId = null)
         {
-            // Placeholder: Find course by id from sample data
-            var courses = new List<TeacherCourseViewModel>
+            var gradebook = await _teacherCourseService.GetCourseGradebookAsync(id);
+
+            if (!string.IsNullOrEmpty(selectedStudentId))
             {
-                new TeacherCourseViewModel
-                {
-                    Id = 1,
-                    CourseCode = "91299 - ELPHP41",
-                    CourseTitle = "FREE ELECTIVE - PHP",
-                    SemesterInfo = "1st Semester 2025 - 2026",
-                    CardColor = "#E8F9E8"
-                },
-                new TeacherCourseViewModel
-                {
-                    Id = 2,
-                    CourseCode = "91300 - CS101",
-                    CourseTitle = "INTRODUCTION TO COMPUTER SCIENCE",
-                    SemesterInfo = "1st Semester 2025 - 2026",
-                    CardColor = "#D1FAE5"
-                },
-                new TeacherCourseViewModel
-                {
-                    Id = 3,
-                    CourseCode = "91301 - MATH201",
-                    CourseTitle = "DISCRETE MATHEMATICS",
-                    SemesterInfo = "1st Semester 2025 - 2026",
-                    CardColor = "#A7F3D0"
-                },
-                new TeacherCourseViewModel
-                {
-                    Id = 4,
-                    CourseCode = "91302 - ENG102",
-                    CourseTitle = "TECHNICAL WRITING",
-                    SemesterInfo = "1st Semester 2025 - 2026",
-                    CardColor = "#6EE7B7"
-                },
-                new TeacherCourseViewModel
-                {
-                    Id = 5,
-                    CourseCode = "91303 - DATA301",
-                    CourseTitle = "DATA STRUCTURES",
-                    SemesterInfo = "2nd Semester 2025 - 2026",
-                    CardColor = "#34D399"
-                },
-                new TeacherCourseViewModel
-                {
-                    Id = 6,
-                    CourseCode = "91304 - WEBDEV401",
-                    CourseTitle = "WEB DEVELOPMENT",
-                    SemesterInfo = "2nd Semester 2025 - 2026",
-                    CardColor = "#10B981"
-                }
-            };
-            var course = courses.FirstOrDefault(c => c.Id == id) ?? new TeacherCourseViewModel { Id = id, CourseTitle = "Sample Course" };
-            return View("Courses/CourseGradebook", course);
+                var detail = await _teacherCourseService.GetStudentGradeDetailAsync(selectedStudentId, id);
+                gradebook.SelectedStudentDetail = detail;
+            }
+
+            return View("Courses/CourseGradebook", gradebook);
         }
+
+        [HttpPost]
+        public async Task<IActionResult> UpdateScore(string studentId, int activityId, int newScore, int courseId)
+        {
+            var success = await _teacherCourseService.UpdateActivityScoreAsync(studentId, activityId, newScore);
+            if (!success) return BadRequest($"Received: studentId={studentId}, activityId={activityId}, newScore={newScore}, courseId={courseId}");
+
+            return RedirectToAction("CourseGradebook", new { id = courseId, selectedStudentId = studentId });
+        }
+
+
+
 
         [HttpGet]
         public IActionResult CourseActivities(int id)

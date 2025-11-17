@@ -1,4 +1,4 @@
-﻿using ASI.Basecode.Data.Models;
+﻿﻿using ASI.Basecode.Data.Models;
 using ASI.Basecode.Services.Interfaces;
 using ASI.Basecode.WebApp.Models;
 using Microsoft.AspNetCore.Authorization;
@@ -10,12 +10,12 @@ using System.Diagnostics;
 using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
-using System.Security.Claims;  // ← For ClaimTypes
-using static ASI.Basecode.Data.Models.StudentDashboardViewModel;  // ← FIXED: Use correct namespace for TaskItem
+using static ASI.Basecode.Data.Models.StudentDashboardViewModel; 
+using System.Security.Claims;
 
 namespace ASI.Basecode.WebApp.Controllers
 {
-    [Authorize(Roles = "Student")]  // ← CRITICAL: Require authentication and Student role
+    [Authorize(Roles = "Student")]
 
     public class StudentController : Controller
     {
@@ -29,7 +29,7 @@ namespace ASI.Basecode.WebApp.Controllers
             _studentCourseService = studentCourseService;
             _studentService = studentService;
         }
-        
+
         [HttpGet]
         public async Task<IActionResult> Index()
         {
@@ -37,7 +37,7 @@ namespace ASI.Basecode.WebApp.Controllers
             var supabaseUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (string.IsNullOrWhiteSpace(supabaseUserId))
                 return Unauthorized();
-
+            
             // Get student ID from the user record using Supabase ID
             var studentId = await GetStudentIdFromSupabaseIdAsync(supabaseUserId);
             if (string.IsNullOrWhiteSpace(studentId))
@@ -73,9 +73,9 @@ namespace ASI.Basecode.WebApp.Controllers
             var courseViewModels = enrolledCourses.Select(c => new CourseCardViewModel
             {
                 Id = c.Id,
-                CourseCode = c.Code,
-                CourseTitle = c.Name,
-                SemesterInfo = $"Level: {c.Level}",
+                CourseCode = c.Code ?? "N/A",
+                CourseTitle = c.Name ?? "Untitled Course",
+                SemesterInfo = c.SemesterId.ToString(),
                 CardColor = GetRandomCardColor()
             }).ToArray();
 
@@ -137,10 +137,11 @@ data.Feedbacks = paginated.Cast<StudentCourseDetailsViewModel.FeedbackItem>().To
             else
  data.Activities = paginated.Cast<StudentCourseDetailsViewModel.ActivityItem>().ToList();
 
-            return View(data);
-     }
+            return View(data)
 
-        private string GetCourseTitleById(string? courseId)
+        }
+
+        private string GetCourseTitleById(string courseId)
         {
             return courseId switch
             {
@@ -301,7 +302,7 @@ data.Feedbacks = paginated.Cast<StudentCourseDetailsViewModel.FeedbackItem>().To
             try
             {
                 var student = await _studentService.GetStudentBySupabaseIdAsync(supabaseUserId);
-                return student?.Id.ToString();
+                return student?.UserTypeId.ToString();
             }
             catch (Exception ex)
             {
