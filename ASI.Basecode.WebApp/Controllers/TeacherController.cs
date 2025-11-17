@@ -618,8 +618,8 @@ private string GetCardColor(int index)
                     return Json(new { success = false, message = "Activity not found." });
                 }
 
-                activity.IsArchived = true;
-                activity.ArchivedAt = DateTime.UtcNow;
+                activity.IsVisible = true;
+                activity.InvisibleAt = DateTime.UtcNow;
                 await activity.Update<ActivityModel>();
 
                 // Log audit activity

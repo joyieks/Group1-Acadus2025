@@ -12,6 +12,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System;
 using System.IO;
+using QuestPDF.Infrastructure;
+
 
 // Set up SSL bypass for development BEFORE creating the builder
 if (Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == "Development")
@@ -112,6 +114,8 @@ builder.Services.AddScoped<ITeacherCourseService, TeacherCourseService>();
 builder.Services.AddScoped<ITeacherCourseRepository, TeacherCourseRepository>();
 
 builder.Services.AddScoped<ASI.Basecode.Services.Interfaces.IAuditLogService, ASI.Basecode.Services.Services.AuditLogService>();
+
+QuestPDF.Settings.License = LicenseType.Community;
 
 var configurer = new StartupConfigurer(builder.Configuration);
 configurer.ConfigureServices(builder.Services);

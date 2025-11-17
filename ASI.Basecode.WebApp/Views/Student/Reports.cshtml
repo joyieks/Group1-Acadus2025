@@ -9,28 +9,15 @@
         <h2 class="text-2xl font-bold text-[#337D58]">Grade Reports</h2>
 
         <div class="flex flex-col sm:flex-row items-center gap-3">
-            @* <!-- School Year Dropdown -->
-            <select id="schoolYear" class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#337D58] focus:outline-none">
-                <option value="">Select School Year</option>
-                <option value="2024-2025">2024–2025</option>
-                <option value="2023-2024">2023–2024</option>
-                <option value="2022-2023">2022–2023</option>
-            </select>
-
-            <!-- Term Dropdown -->
-            <select id="term" class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#337D58] focus:outline-none">
-                <option value="">Select Term</option>
-                <option value="1st Sem">1st Semester</option>
-                <option value="2nd Sem">2nd Semester</option>
-                <option value="Summer">Summer</option>
-            </select> *@
+            
 
             <!-- Print Button -->
-            <button onclick="window.print()"
-                    class="flex items-center gap-2 bg-[#337D58] text-white px-5 py-2 rounded-lg text-sm font-medium hover:bg-[#2a6648] transition-all duration-200 shadow-sm active:scale-95">
+            <a href="@Url.Action("DownloadGradeReport", "Student")"
+               class="flex items-center gap-2 bg-[#337D58] text-white px-5 py-2 rounded-lg text-sm font-medium hover:bg-[#2a6648] transition-all duration-200 shadow-sm active:scale-95">
                 <img src="@Url.Content("~/img/printer.png")" alt="Print Icon" class="w-5 h-5" />
-                Print Grades
-            </button>
+                Download PDF Report
+            </a>
+
         </div>
     </div>
 

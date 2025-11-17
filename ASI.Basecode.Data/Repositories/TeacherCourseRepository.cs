@@ -26,9 +26,9 @@ namespace ASI.Basecode.Data.Repositories
                 .Filter("courseId", Supabase.Postgrest.Constants.Operator.Equals, courseId)
                 .Get();
 
-            // Filter out archived activities in memory (if IsArchived column exists in model but not in DB, this will handle it)
+            // Filter out archived activities and non-visible activities in memory
             var activities = res.Models
-                .Where(a => !a.IsArchived)  // Filter in memory
+                .Where(a => !a.IsArchived && a.IsVisible == false)  // Filter in memory
                 .OrderBy(a => a.DueDate)
                 .ToList();
 

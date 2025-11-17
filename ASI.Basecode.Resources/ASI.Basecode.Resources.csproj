@@ -7,6 +7,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="QuestPDF" Version="2025.7.4" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Compile Update="Messages\Errors.Designer.cs">
       <DependentUpon>Errors.resx</DependentUpon>
       <DesignTime>True</DesignTime>

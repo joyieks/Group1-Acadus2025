@@ -14,5 +14,7 @@ namespace ASI.Basecode.Data.Models
             public double FinalGrade { get; set; }
 
         }
+
+
     }
 }
