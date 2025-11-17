@@ -122,6 +122,55 @@ namespace ASI.Basecode.Services.Services
                 return new List<AuditLogModel>();
             }
         }
+
+        /// <summary>
+        /// Gets all recent audit logs (for Admin dashboard).
+        /// </summary>
+        public async Task<List<AuditLogModel>> GetAllRecentActivitiesAsync(int limit = 10)
+        {
+            try
+            {
+                var client = await _supabaseAuthService.GetSupabaseClientForAuthAsync();
+
+                var response = await client
+                    .From<AuditLogModel>()
+                    .Order("created_at", Supabase.Postgrest.Constants.Ordering.Descending)
+                    .Limit(limit)
+                    .Get();
+
+                return response?.Models?.ToList() ?? new List<AuditLogModel>();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error retrieving all recent activities: {ex.Message}");
+                return new List<AuditLogModel>();
+            }
+        }
+
+        /// <summary>
+        /// Gets recent audit logs filtered by user role.
+        /// </summary>
+        public async Task<List<AuditLogModel>> GetRecentActivitiesByRoleAsync(string userRole, int limit = 10)
+        {
+            try
+            {
+                var client = await _supabaseAuthService.GetSupabaseClientForAuthAsync();
+
+                var response = await client
+                    .From<AuditLogModel>()
+                    .Filter("userRole", Supabase.Postgrest.Constants.Operator.Equals, userRole)
+                    .Order("created_at", Supabase.Postgrest.Constants.Ordering.Descending)
+                    .Limit(limit)
+                    .Get();
+
+                return response?.Models?.ToList() ?? new List<AuditLogModel>();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error retrieving activities by role {userRole}: {ex.Message}");
+                return new List<AuditLogModel>();
+            }
+        }
     }
 }
 

@@ -23,8 +23,9 @@ namespace ASI.Basecode.WebApp.Controllers
         private readonly IAdminService _adminService;
         private readonly ICourseService _courseService;
         private readonly IUserService _userService;
+        private readonly IAuditLogService _auditLogService;
 
-        public AdminController(IStudentService studentService, ITeacherService teacherService, ISupabaseAuthService supabaseAuthService, IAdminService adminService, ICourseService courseService, IUserService userService)
+        public AdminController(IStudentService studentService, ITeacherService teacherService, ISupabaseAuthService supabaseAuthService, IAdminService adminService, ICourseService courseService, IUserService userService, IAuditLogService auditLogService)
         {
             _studentService = studentService;
             _teacherService = teacherService;
@@ -32,24 +33,35 @@ namespace ASI.Basecode.WebApp.Controllers
             _adminService = adminService;
             _courseService = courseService;
             _userService = userService;
+            _auditLogService = auditLogService;
         }
 
         [HttpGet]
         public async Task<IActionResult> Dashboard()
-        {
-            var (totalStudents, totalInstructors, totalCourses) = await _adminService.GetDashboardStatisticsAsync();
-            
+        { 
             Console.WriteLine($"=== AdminController.Dashboard ===");
+            
+            // Run both queries in parallel for better performance
+            var statisticsTask = _adminService.GetDashboardStatisticsAsync();
+            var activitiesTask = _auditLogService.GetAllRecentActivitiesAsync(limit: 5); // Reduced to 5
+            
+            await Task.WhenAll(statisticsTask, activitiesTask);
+            
+            var (totalStudents, totalInstructors, totalCourses) = statisticsTask.Result;
+            var recentActivities = activitiesTask.Result;
+            
             Console.WriteLine($"Received from service - Students: {totalStudents}, Instructors: {totalInstructors}, Courses: {totalCourses}");
+            Console.WriteLine($"Retrieved {recentActivities.Count} recent activities");
             
             var viewModel = new AdminDashboardViewModel
             {
                 TotalStudents = totalStudents,
                 TotalInstructors = totalInstructors,
-                TotalCourses = totalCourses
+                TotalCourses = totalCourses,
+                RecentActivities = recentActivities
             };
             
-            Console.WriteLine($"ViewModel created - Students: {viewModel.TotalStudents}, Instructors: {viewModel.TotalInstructors}, Courses: {viewModel.TotalCourses}");
+            Console.WriteLine($"ViewModel created - Students: {viewModel.TotalStudents}, Instructors: {viewModel.TotalInstructors}, Courses: {viewModel.TotalCourses}, Recent Activities: {viewModel.RecentActivities.Count}");
             Console.WriteLine($"=== End Dashboard ===");
             
             return View(viewModel);
@@ -171,7 +183,7 @@ namespace ASI.Basecode.WebApp.Controllers
                 Console.WriteLine($"ViewModel created - All: {allUsers.Count}, Students: {students.Count}, Instructors: {instructors.Count}, Displayed: {displayedUsers.Count}");
                 
                 // ? ADDED: Log user IDs for debugging
-                Console.WriteLine($"=== USER IDs DEBUG ===");
+                Console.WriteLine($"=== USER IDS DEBUG ===");
                 foreach (var entry in displayedWithRoles.Take(3))
                 {
                     Console.WriteLine($"User: {entry.User.FirstName} {entry.User.LastName}");
@@ -275,6 +287,13 @@ namespace ASI.Basecode.WebApp.Controllers
        
      if (success)
     {
+                    // Log admin activity
+                    await LogAdminActivityAsync(
+                        actionType: "CREATE_STUDENT",
+                        actionDescription: $"Admin created student {model.FirstName} {model.LastName}",
+                        details: $"Email: {model.Email}, Program: {model.ProgramId}, Department: {model.DepartmentId}"
+                    );
+
                     TempData["SuccessMessage"] = $"Student {model.FirstName} {model.LastName} has been successfully created!";
                     return RedirectToAction("Users");
                 }
@@ -390,6 +409,13 @@ ViewBag.Departments = new List<Department>();
   
        if (success)
     {
+      // Log admin activity
+      await LogAdminActivityAsync(
+          actionType: "CREATE_TEACHER",
+          actionDescription: $"Admin created teacher {model.FirstName} {model.LastName}",
+          details: $"Email: {model.Email}, Department: {model.DepartmentId}"
+      );
+
       TempData["SuccessMessage"] = $"Teacher {model.FirstName} {model.LastName} has been successfully created!";
     return RedirectToAction("Users");
  }
@@ -644,6 +670,13 @@ try
 
                 Console.WriteLine($"? User {existingUser.FirstName} {existingUser.LastName} updated successfully");
 
+                // Log admin activity
+                await LogAdminActivityAsync(
+                    actionType: "UPDATE_USER",
+                    actionDescription: $"Admin updated user {model.FirstName} {model.LastName}",
+                    details: $"User ID: {id}, Email: {model.Email}"
+                );
+
                 // TODO: Update address and emergency contact if needed
 
                 TempData["SuccessMessage"] = $"User {model.FirstName} {model.LastName} has been updated successfully!";
@@ -659,9 +692,45 @@ try
         }
 
         [HttpGet]
-        public IActionResult RecentActivity()
+        public async Task<IActionResult> RecentActivity(string role = "all")
         {
-            return View();
+            var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+            
+            try
+            {
+                Console.WriteLine($"=== RecentActivity: Loading activities for role={role} ===");
+                Console.WriteLine($"[{stopwatch.ElapsedMilliseconds}ms] Starting query...");
+
+                List<AuditLogModel> activities;
+                
+                // Filter by role if specified
+                if (role == "all" || string.IsNullOrWhiteSpace(role))
+                {
+                    activities = await _auditLogService.GetAllRecentActivitiesAsync(limit: 20);
+                }
+                else
+                {
+                    // Capitalize first letter for consistent role names
+                    var roleFilter = char.ToUpper(role[0]) + role.Substring(1).ToLower();
+                    activities = await _auditLogService.GetRecentActivitiesByRoleAsync(roleFilter, limit: 20);
+                }
+                
+                Console.WriteLine($"[{stopwatch.ElapsedMilliseconds}ms] Query completed - Retrieved {activities.Count} activities");
+                
+                stopwatch.Stop();
+                Console.WriteLine($"[TOTAL TIME: {stopwatch.ElapsedMilliseconds}ms]");
+
+                // Pass the current role filter to the view
+                ViewBag.CurrentRole = role;
+
+                return View(activities);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error loading recent activity: {ex.Message}");
+                Console.WriteLine($"Stack Trace: {ex.StackTrace}");
+                return View(new List<AuditLogModel>());
+            }
         }
 
         [HttpGet]
@@ -792,6 +861,13 @@ try
 
                 if (success)
                 {
+                    // Log admin activity
+                    await LogAdminActivityAsync(
+                        actionType: "CREATE_COURSE",
+                        actionDescription: $"Admin created course {model.Name} ({model.Code})",
+                        details: $"Credits: {model.Credits}, Level: {model.Level}, Max Capacity: {model.MaxCapacity}"
+                    );
+
                     TempData["SuccessMessage"] = $"Course '{model.Name}' has been created successfully!";
                     return RedirectToAction("Courses");
                 }
@@ -931,6 +1007,13 @@ try
 
                 Console.WriteLine($"? User {user.FirstName} {user.LastName} status updated to {(isActive ? "Active" : "Inactive")}");
 
+                // Log admin activity
+                await LogAdminActivityAsync(
+                    actionType: isActive ? "ACTIVATE_USER" : "DEACTIVATE_USER",
+                    actionDescription: $"Admin {(isActive ? "activated" : "deactivated")} user {user.FirstName} {user.LastName}",
+                    details: $"User ID: {id}, Email: {user.Email}"
+                );
+
                 return Json(new { success = true, message = $"User status updated to {(isActive ? "Active" : "Inactive")}" });
             }
             catch (Exception ex)
@@ -968,6 +1051,44 @@ try
             {
                 Console.WriteLine($"Error getting admin ID from Supabase ID: {ex.Message}");
                 return null;
+            }
+        }
+
+        /// <summary>
+        /// Logs an admin activity to the audit_logs table
+        /// </summary>
+        /// <param name="actionType">Type of action (e.g., "CREATE_USER", "UPDATE_USER", "DELETE_USER", "CREATE_COURSE")</param>
+        /// <param name="actionDescription">Human-readable description (e.g., "Admin created student John Doe")</param>
+        /// <param name="details">Optional JSON string with additional data</param>
+        private async Task LogAdminActivityAsync(string actionType, string actionDescription, string details = null)
+        {
+            try
+            {
+                // Get current admin user info from session/claims
+                var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? User.FindFirstValue("sub");
+                var currentUserName = User.FindFirstValue(ClaimTypes.Name) ?? User.Identity?.Name ?? "Admin";
+
+                if (string.IsNullOrWhiteSpace(currentUserId))
+                {
+                    Console.WriteLine("Warning: Could not log admin activity - no user ID found in session");
+                    return;
+                }
+
+                await _auditLogService.LogActivityAsync(
+                    userId: currentUserId,
+                    userRole: "Admin",
+                    userName: currentUserName,
+                    actionType: actionType,
+                    actionDescription: actionDescription,
+                    details: details
+                );
+
+                Console.WriteLine($"Admin activity logged: {actionType} - {actionDescription}");
+            }
+            catch (Exception ex)
+            {
+                // Don't throw - audit logging should not break the main flow
+                Console.WriteLine($"Error logging admin activity: {ex.Message}");
             }
         }
     }
