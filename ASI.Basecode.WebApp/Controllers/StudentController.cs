@@ -132,14 +132,18 @@ namespace ASI.Basecode.WebApp.Controllers
             data.CurrentPage = page;
             data.TotalPages = totalPages;
 
-   if (tab == "feedback")
-data.Feedbacks = paginated.Cast<StudentCourseDetailsViewModel.FeedbackItem>().ToList();
+            if (tab == "feedback")
+                data.Feedbacks = paginated.Cast<StudentCourseDetailsViewModel.FeedbackItem>().ToList();
             else
- data.Activities = paginated.Cast<StudentCourseDetailsViewModel.ActivityItem>().ToList();
+                data.Activities = paginated.Cast<StudentCourseDetailsViewModel.ActivityItem>().ToList();
+            {
 
-            return View(data)
+                return View(data);
 
+            }
         }
+
+
 
         private string GetCourseTitleById(string courseId)
         {
