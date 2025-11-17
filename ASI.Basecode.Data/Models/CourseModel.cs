@@ -38,7 +38,7 @@ namespace ASI.Basecode.Data.Models
         /// Gets or sets the number of credits for the course.
         /// </summary>
         [Column("credits")]
-        public long Credits { get; set; }
+        public long? Credits { get; set; }  // ? Made nullable to handle null values from database
 
         /// <summary>
         /// Gets or sets the course level (Undergraduate, Graduate, Doctorate).

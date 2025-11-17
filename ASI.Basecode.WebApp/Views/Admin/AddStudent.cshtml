@@ -101,12 +101,30 @@
                         </div>
                         <div>
                             <label style="display:block; font-weight:600; color:#374151; margin-bottom:8px; font-size:14px;">Program <span style="color:#dc2626;">*</span></label>
-                            <input type="text" asp-for="ProgramId" placeholder="e.g., BS Computer Science" style="width:100%; padding:12px; border:1px solid #d1d5db; border-radius:8px; font-size:14px;"/>
+                            <select asp-for="ProgramId" style="width:100%; padding:12px; border:1px solid #d1d5db; border-radius:8px; font-size:14px;">
+                                <option value="">-- Select Program --</option>
+                                @if (ViewBag.Programs != null)
+                                {
+                                    foreach (var program in ViewBag.Programs)
+                                    {
+                                        <option value="@program.Id">@program.ProgramName (@program.ProgramCode)</option>
+                                    }
+                                }
+                            </select>
                             <span asp-validation-for="ProgramId" style="color:#dc2626; font-size:12px; display:block; margin-top:4px;"></span>
                         </div>
                         <div>
                             <label style="display:block; font-weight:600; color:#374151; margin-bottom:8px; font-size:14px;">Department <span style="color:#dc2626;">*</span></label>
-                            <input type="text" asp-for="DepartmentId" placeholder="e.g., College of Engineering" style="width:100%; padding:12px; border:1px solid #d1d5db; border-radius:8px; font-size:14px;"/>
+                            <select asp-for="DepartmentId" style="width:100%; padding:12px; border:1px solid #d1d5db; border-radius:8px; font-size:14px;">
+                                <option value="">-- Select Department --</option>
+                                @if (ViewBag.Departments != null)
+                                {
+                                    foreach (var dept in ViewBag.Departments)
+                                    {
+                                        <option value="@dept.Id">@dept.DepartmentName (@dept.DepartmentCode)</option>
+                                    }
+                                }
+                            </select>
                             <span asp-validation-for="DepartmentId" style="color:#dc2626; font-size:12px; display:block; margin-top:4px;"></span>
                         </div>
                     </div>
@@ -207,7 +225,7 @@
                     <button type="button" onclick="window.history.back()" style="padding:12px 32px; border-radius:6px; font-size:14px; font-weight:600; cursor:pointer; background:#ffffff; color:#374151; border:2px solid #d1d5db;">
                         Cancel
                     </button>
-                    <button type="submit" style="padding:12px 32px; border-radius:6px; font-size:14px; font-weight:600; cursor:pointer; background:#4f46e5; color:#ffffff; border:none; box-shadow:0 2px 4px rgba(79,70,229,0.2);">
+                    <button type="submit" style="padding:12px 32px; border-radius:6px; font-size:14px; font-weight:600; cursor:pointer; background:#4f46e5; color:#ffffff; border:none; box-shadow:0 2px 4px rgba(0,70,229,0.2);">
                         Create Student
                     </button>
                 </div>

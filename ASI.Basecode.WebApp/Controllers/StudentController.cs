@@ -10,11 +10,12 @@ using System.Diagnostics;
 using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
-
+using System.Security.Claims;  // ← For ClaimTypes
+using static ASI.Basecode.Data.Models.StudentDashboardViewModel;  // ← FIXED: Use correct namespace for TaskItem
 
 namespace ASI.Basecode.WebApp.Controllers
 {
-    [Authorize(Roles = "Student")]  // ? CRITICAL: Require authentication and Student role
+    [Authorize(Roles = "Student")]  // ← CRITICAL: Require authentication and Student role
 
     public class StudentController : Controller
     {
@@ -27,21 +28,8 @@ namespace ASI.Basecode.WebApp.Controllers
             _supabaseAuthService = supabaseAuthService;
             _studentCourseService = studentCourseService;
             _studentService = studentService;
-
         }
         
-        [HttpGet]
-        public IActionResult Index()
-        {
-            var viewModel = new StudentDashboardViewModel();
-
-            
-            viewModel.RecentlyGradedTasks = new List<TaskItem>();
-            viewModel.ToBeGradedTasks = new List<TaskItem>();
-
-            return View(viewModel);
-        }
-
         [HttpGet]
         public async Task<IActionResult> Index()
         {
@@ -144,29 +132,19 @@ namespace ASI.Basecode.WebApp.Controllers
             data.CurrentPage = page;
             data.TotalPages = totalPages;
 
-            if (tab == "feedback")
-                data.Feedbacks = paginated.Cast<StudentCourseDetailsViewModel.FeedbackItem>().ToList();
+   if (tab == "feedback")
+data.Feedbacks = paginated.Cast<StudentCourseDetailsViewModel.FeedbackItem>().ToList();
             else
-                data.Activities = paginated.Cast<StudentCourseDetailsViewModel.ActivityItem>().ToList();
+ data.Activities = paginated.Cast<StudentCourseDetailsViewModel.ActivityItem>().ToList();
 
             return View(data);
-        }
-
-
-        private string GetCourseTitleById(string courseId)
-
-        private (string CourseTitle, double OverallGPA, int CompletedTasks, int TotalTasks, int PendingTasks, 
-                List<StudentCourseDetailsViewModel.ActivityItem> Activities,
-                List<StudentCourseDetailsViewModel.AppealItem> Appeals,
-                List<StudentCourseDetailsViewModel.FeedbackItem> Feedbacks) GetCourseDataById(string courseId)
-      
+     }
 
         private string GetCourseTitleById(string? courseId)
-
         {
             return courseId switch
             {
-                "cs101" => "Introduction to Computer Science",
+           "cs101" => "Introduction to Computer Science",
                 "math201" => "Discrete Mathematics",
                 "eng102" => "Technical Writing",
                 "php41" => "Free Elective - PHP",

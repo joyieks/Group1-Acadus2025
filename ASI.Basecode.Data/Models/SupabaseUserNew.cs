@@ -35,12 +35,16 @@ namespace ASI.Basecode.Data.Models
         public string EmergencyContact { get; set; }
 
         [Column("userTypeId")]
-        public string UserTypeId { get; set; }
+        public string UserTypeId { get; set; }  // UUID from Supabase Auth
 
         [Column("isActive")]
         public bool? IsActive { get; set; }
 
         [Column("profilePictureUrl")]
         public string ProfilePictureUrl { get; set; }
+
+        // ? RENAMED: Human-readable display ID for all user types
+        [Column("userDisplayId")]
+        public string UserDisplayId { get; set; }  // STU-202511001, FAC-202511001, ADM-202511001
     }
 }

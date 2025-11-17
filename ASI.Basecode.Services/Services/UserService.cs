@@ -18,12 +18,16 @@ namespace ASI.Basecode.Services.Services
         private readonly IUserRepository _repository;
         private readonly IMapper _mapper;
         private readonly ISupabaseAuthService _supabaseAuthService;
+        private readonly IStudentService _studentService; // ✨ Inject IStudentService
+        private readonly ITeacherService _teacherService; // ✨ Inject ITeacherService
 
-        public UserService(ISupabaseAuthService supabaseAuthService, IMapper mapper = null, IUserRepository repository = null)
+        public UserService(ISupabaseAuthService supabaseAuthService, IMapper mapper = null, IUserRepository repository = null, IStudentService studentService = null, ITeacherService teacherService = null)
         {
             _mapper = mapper;
             _repository = repository;
             _supabaseAuthService = supabaseAuthService;
+            _studentService = studentService; // ✨ Initialize
+            _teacherService = teacherService; // ✨ Initialize
         }
 
         public LoginResult AuthenticateUser(string userId, string password, ref User user)
@@ -253,29 +257,56 @@ namespace ASI.Basecode.Services.Services
         /// <summary>
         /// Creates a new student account in Supabase Auth and adds student record to database.
         /// </summary>
-        public async Task<bool> CreateStudentAsync(StudentCreateDto model)
-        {
-            try
-            {
-                Console.WriteLine($"=== CreateStudentAsync ===");
-                Console.WriteLine($"Creating student: {model.FirstName} {model.LastName} ({model.Email})");
+     public async Task<bool> CreateStudentAsync(StudentCreateDto model)
+    {
+    try
+{
+       Console.WriteLine($"=== CreateStudentAsync (UserService) ===");
+     Console.WriteLine($"Creating student: {model.FirstName} {model.LastName} ({model.Email})");
+      Console.WriteLine($"  Program ID: {model.ProgramId}, Department ID: {model.DepartmentId}");
 
-                // TODO: Implement Supabase Auth registration
-                // 1. Register user in Supabase Auth
-                // 2. Get UUID from auth response
-                // 3. Create user record in users table
-                // 4. Create student profile record
-                // 5. Create emergency contact record (if provided)
-                // 6. Assign student role (roleId = 1)
+    // ✅ FIX: Pass Program and Department as ID strings (they'll be parsed in StudentService)
+      // Convert DTO to StudentViewModel
+var studentViewModel = new StudentViewModel
+{
+          FirstName = model.FirstName,
+         MiddleName = model.MiddleName,
+         LastName = model.LastName,
+        Suffix = model.Suffix,
+   Email = model.Email,
+          ContactNumber = model.ContactNumber,
+          HouseNumber = model.HouseNumber,
+    StreetName = model.StreetName,
+Subdivision = model.Subdivision,
+              Barangay = model.Barangay,
+       City = model.City,
+               Province = model.Province,
+               ZipCode = model.ZipCode,
+         YearLevel = (int)model.YearLevel,  // ✅ Cast decimal to int
+    Program = model.ProgramId,  // ✅ Pass ID as string (will be parsed)
+          Department = model.DepartmentId,  // ✅ Pass ID as string (will be parsed)
+       EmergencyFirstName = model.EmergencyContactFirstName,
+           EmergencyMiddleName = model.EmergencyContactMiddleName,
+              EmergencyLastName = model.EmergencyContactLastName,
+            EmergencySuffix = model.EmergencyContactSuffix,
+            EmergencyContactNumber = model.EmergencyContactNumber,
+Relationship = model.EmergencyContactRelationship
+      };
 
-                return true; // Placeholder for now
+              // Call StudentService to handle the creation
+         var result = await _studentService.CreateStudentAsync(studentViewModel);
+
+         Console.WriteLine($"Student creation result: {result}");
+       Console.WriteLine($"=== End CreateStudentAsync ===\n");
+
+         return result;
             }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error creating student: {ex.Message}");
+       catch (Exception ex)
+      {
+   Console.WriteLine($"Error creating student: {ex.Message}");
                 Console.WriteLine($"Stack Trace: {ex.StackTrace}");
-                return false;
-            }
+        return false;
+}
         }
 
         /// <summary>
@@ -284,25 +315,44 @@ namespace ASI.Basecode.Services.Services
         public async Task<bool> CreateTeacherAsync(TeacherCreateDto model)
         {
             try
-            {
-                Console.WriteLine($"=== CreateTeacherAsync ===");
-                Console.WriteLine($"Creating teacher: {model.FirstName} {model.LastName} ({model.Email})");
+ {
+   Console.WriteLine($"=== CreateTeacherAsync (UserService) ===");
+   Console.WriteLine($"Creating teacher: {model.FirstName} {model.LastName} ({model.Email})");
+      Console.WriteLine($"  Department ID: {model.DepartmentId}");
 
-                // TODO: Implement Supabase Auth registration
-                // 1. Register user in Supabase Auth
-                // 2. Get UUID from auth response
-                // 3. Create user record in users table
-                // 4. Create teacher profile record
-                // 5. Assign teacher role (roleId = 2)
+    // ✅ FIX: Map DTO to ViewModel and call TeacherService
+      var teacherViewModel = new TeacherViewModel
+       {
+FirstName = model.FirstName,
+  MiddleName = model.MiddleName,
+  LastName = model.LastName,
+         Suffix = model.Suffix,
+    Email = model.Email,
+   ContactNumber = model.ContactNumber,
+     HouseNumber = model.HouseNumber,
+            StreetName = model.StreetName,
+    Subdivision = model.Subdivision,
+   Barangay = model.Barangay,
+    City = model.City,
+  Province = model.Province,
+   ZipCode = model.ZipCode,
+          Department = model.DepartmentId  // Pass department ID
+   };
 
-                return true; // Placeholder for now
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error creating teacher: {ex.Message}");
-                Console.WriteLine($"Stack Trace: {ex.StackTrace}");
-                return false;
-            }
-        }
+   // Call TeacherService to handle the actual creation
+        var result = await _teacherService.CreateTeacherAsync(teacherViewModel);
+
+    Console.WriteLine($"Teacher creation result: {result}");
+  Console.WriteLine($"=== End CreateTeacherAsync ===\n");
+
+    return result;
+   }
+   catch (Exception ex)
+    {
+         Console.WriteLine($"✗ Error creating teacher: {ex.Message}");
+     Console.WriteLine($"Stack Trace: {ex.StackTrace}");
+      return false;
+   }
+  }
     }
 }

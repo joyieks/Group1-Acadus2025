@@ -7,9 +7,9 @@ namespace ASI.Basecode.Services.Interfaces
     public interface ITeacherService
     {
         Task<bool> CreateTeacherAsync(TeacherViewModel model);
-        Task<SupabaseUserNew> GetTeacherByIdAsync(int id);  // Changed return type
-        Task<SupabaseUserNew> GetTeacherByEmailAsync(string email);  // Changed return type
-        Task<bool> UpdateTeacherAsync(TeacherViewModel model);  // Changed parameter type
-        Task<bool> DeleteTeacherAsync(int id);
+        Task<SupabaseUserNew> GetTeacherByIdAsync(int id);  
+        Task<SupabaseUserNew> GetTeacherByEmailAsync(string email);  
+        Task<bool> UpdateTeacherAsync(TeacherViewModel model);  
+       
     }
 }

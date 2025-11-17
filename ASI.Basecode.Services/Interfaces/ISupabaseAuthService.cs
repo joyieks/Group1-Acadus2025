@@ -61,10 +61,6 @@ namespace ASI.Basecode.Services.Interfaces
         /// </summary>
         Task<Dictionary<string, object>> GetUserMetadataAsync(string supabaseUserId);
 
-        /// <summary>
-        /// Deletes a user
-        /// </summary>
-        Task<bool> DeleteUserAsync(string supabaseUserId);
 
         /// <summary>
         /// Gets user by email
@@ -75,11 +71,6 @@ namespace ASI.Basecode.Services.Interfaces
         /// Gets Supabase client for authentication
         /// </summary>
         Task<Supabase.Client> GetSupabaseClientForAuthAsync();
-
-        /// <summary>
-        /// Verifies password reset token
-        /// </summary>
-        Task<bool> VerifyPasswordResetTokenAsync(string token);
 
         /// <summary>
         /// Determines user role based on Supabase user ID

@@ -11,8 +11,6 @@ using System;
 using System.Linq;
 
 
-using Microsoft.AspNetCore.Authorization;
-
 namespace ASI.Basecode.WebApp.Controllers
 {
     [Authorize(Roles = "Admin")]  // ? CRITICAL: Require authentication and Admin role
@@ -136,9 +134,27 @@ namespace ASI.Basecode.WebApp.Controllers
         }
 
         [HttpGet]
-        public IActionResult AddStudent()
+        public async Task<IActionResult> AddStudent()
         {
-            return View(new StudentCreateViewModel());
+            // ? Load programs and departments from database for dropdowns
+     try
+     {
+     var programs = await _adminService.GetAllProgramsAsync();
+       var departments = await _adminService.GetAllDepartmentsAsync();
+
+      ViewBag.Programs = programs;
+          ViewBag.Departments = departments;
+      
+       Console.WriteLine($"Loaded {programs.Count} programs and {departments.Count} departments for Add Student form");
+            }
+     catch (Exception ex)
+    {
+      Console.WriteLine($"Error loading programs/departments: {ex.Message}");
+   ViewBag.Programs = new List<ASI.Basecode.Data.Models.Program>();
+        ViewBag.Departments = new List<Department>();
+   }
+
+      return View(new StudentCreateViewModel());
         }
 
         [HttpPost]
@@ -147,62 +163,125 @@ namespace ASI.Basecode.WebApp.Controllers
         {
             if (!ModelState.IsValid)
             {
-                return View(model);
-            }
+                // ? FIX: Reload dropdown data when validation fails
+       try
+  {
+        var programs = await _adminService.GetAllProgramsAsync();
+         var departments = await _adminService.GetAllDepartmentsAsync();
+
+    ViewBag.Programs = programs;
+          ViewBag.Departments = departments;
+           }
+  catch (Exception ex)
+      {
+         Console.WriteLine($"Error reloading dropdowns: {ex.Message}");
+        ViewBag.Programs = new List<ASI.Basecode.Data.Models.Program>();
+     ViewBag.Departments = new List<Department>();
+  }
+
+       return View(model);
+     }
 
             try
+    {
+     // Map ViewModel to DTO
+  var studentDto = new StudentCreateDto
             {
-                // Map ViewModel to DTO
-                var studentDto = new StudentCreateDto
-                {
-                    FirstName = model.FirstName,
-                    MiddleName = model.MiddleName,
-                    LastName = model.LastName,
-                    Suffix = model.Suffix,
-                    Email = model.Email,
-                    ContactNumber = model.ContactNumber,
-                    HouseNumber = model.HouseNumber,
-                    StreetName = model.StreetName,
-                    Subdivision = model.Subdivision,
-                    Barangay = model.Barangay,
-                    City = model.City,
-                    Province = model.Province,
-                    ZipCode = model.ZipCode,
-                    YearLevel = model.YearLevel,
-                    ProgramId = model.ProgramId,
-                    DepartmentId = model.DepartmentId,
-                    EmergencyContactFirstName = model.EmergencyContactFirstName,
-                    EmergencyContactMiddleName = model.EmergencyContactMiddleName,
-                    EmergencyContactLastName = model.EmergencyContactLastName,
-                    EmergencyContactSuffix = model.EmergencyContactSuffix,
-                    EmergencyContactNumber = model.EmergencyContactNumber,
-                    EmergencyContactRelationship = model.EmergencyContactRelationship
-                };
+   FirstName = model.FirstName,
+         MiddleName = model.MiddleName,
+       LastName = model.LastName,
+         Suffix = model.Suffix,
+        Email = model.Email,
+   ContactNumber = model.ContactNumber,
+   HouseNumber = model.HouseNumber,
+     StreetName = model.StreetName,
+    Subdivision = model.Subdivision,
+   Barangay = model.Barangay,
+       City = model.City,
+ Province = model.Province,
+   ZipCode = model.ZipCode,
+        YearLevel = model.YearLevel,
+     ProgramId = model.ProgramId,
+   DepartmentId = model.DepartmentId,
+     EmergencyContactFirstName = model.EmergencyContactFirstName,
+  EmergencyContactMiddleName = model.EmergencyContactMiddleName,
+  EmergencyContactLastName = model.EmergencyContactLastName,
+  EmergencyContactSuffix = model.EmergencyContactSuffix,
+     EmergencyContactNumber = model.EmergencyContactNumber,
+     EmergencyContactRelationship = model.EmergencyContactRelationship
+ };
 
-                var success = await _userService.CreateStudentAsync(studentDto);
-                
-                if (success)
-                {
+      var success = await _userService.CreateStudentAsync(studentDto);
+       
+     if (success)
+    {
                     TempData["SuccessMessage"] = $"Student {model.FirstName} {model.LastName} has been successfully created!";
                     return RedirectToAction("Users");
                 }
                 else
                 {
                     ModelState.AddModelError(string.Empty, "Failed to create student. Please try again.");
-                    return View(model);
-                }
-            }
+      
+     // ? FIX: Reload dropdown data before returning view
+    try
+   {
+      var programs = await _adminService.GetAllProgramsAsync();
+ var departments = await _adminService.GetAllDepartmentsAsync();
+ ViewBag.Programs = programs;
+    ViewBag.Departments = departments;
+   }
+ catch (Exception reloadEx)
+ {
+Console.WriteLine($"Error reloading dropdowns: {reloadEx.Message}");
+    ViewBag.Programs = new List<ASI.Basecode.Data.Models.Program>();
+ViewBag.Departments = new List<Department>();
+      }
+
+ return View(model);
+}
+  }
             catch (System.Exception ex)
-            {
-                ModelState.AddModelError(string.Empty, $"Error creating student: {ex.Message}");
-                return View(model);
-            }
+   {
+  ModelState.AddModelError(string.Empty, $"Error creating student: {ex.Message}");
+     
+ // ? FIX: Reload dropdown data before returning view
+     try
+    {
+     var programs = await _adminService.GetAllProgramsAsync();
+      var departments = await _adminService.GetAllDepartmentsAsync();
+       ViewBag.Programs = programs;
+    ViewBag.Departments = departments;
+     }
+ catch (Exception reloadEx)
+     {
+   Console.WriteLine($"Error reloading dropdowns: {reloadEx.Message}");
+        ViewBag.Programs = new List<ASI.Basecode.Data.Models.Program>();
+  ViewBag.Departments = new List<Department>();
+    }
+
+     return View(model);
+ }
         }
 
         [HttpGet]
-        public IActionResult AddTeacher()
+        public async Task<IActionResult> AddTeacher()
         {
-            return View(new TeacherCreateViewModel());
+            // ? Load departments from database for dropdown
+        try
+        {
+            var departments = await _adminService.GetAllDepartmentsAsync();
+
+            ViewBag.Departments = departments;
+
+             Console.WriteLine($"Loaded {departments.Count} departments for Add Teacher form");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading departments: {ex.Message}");
+            ViewBag.Departments = new List<Department>();
+        }
+
+          return View(new TeacherCreateViewModel());
         }
 
         [HttpPost]
@@ -211,48 +290,86 @@ namespace ASI.Basecode.WebApp.Controllers
         {
             if (!ModelState.IsValid)
             {
-                return View(model);
-            }
+                // ? FIX: Reload dropdown data when validation fails
+     try
+   {
+       var departments = await _adminService.GetAllDepartmentsAsync();
+   ViewBag.Departments = departments;
+    }
+       catch (Exception ex)
+{
+        Console.WriteLine($"Error reloading departments: {ex.Message}");
+ ViewBag.Departments = new List<Department>();
+  }
+
+      return View(model);
+        }
 
             try
-            {
-                // Map ViewModel to DTO
-                var teacherDto = new TeacherCreateDto
-                {
-                    FirstName = model.FirstName,
-                    MiddleName = model.MiddleName,
-                    LastName = model.LastName,
-                    Suffix = model.Suffix,
-                    Email = model.Email,
-                    ContactNumber = model.ContactNumber,
-                    HouseNumber = model.HouseNumber,
-                    StreetName = model.StreetName,
-                    Subdivision = model.Subdivision,
-                    Barangay = model.Barangay,
-                    City = model.City,
-                    Province = model.Province,
-                    ZipCode = model.ZipCode,
-                    DepartmentId = model.DepartmentId
-                };
+          {
+      // Map ViewModel to DTO
+           var teacherDto = new TeacherCreateDto
+    {
+           FirstName = model.FirstName,
+        MiddleName = model.MiddleName,
+     LastName = model.LastName,
+        Suffix = model.Suffix,
+     Email = model.Email,
+        ContactNumber = model.ContactNumber,
+      HouseNumber = model.HouseNumber,
+      StreetName = model.StreetName,
+     Subdivision = model.Subdivision,
+    Barangay = model.Barangay,
+     City = model.City,
+         Province = model.Province,
+       ZipCode = model.ZipCode,
+     DepartmentId = model.DepartmentId
+    };
 
-                var success = await _userService.CreateTeacherAsync(teacherDto);
-                
-                if (success)
-                {
-                    TempData["SuccessMessage"] = $"Teacher {model.FirstName} {model.LastName} has been successfully created!";
-                    return RedirectToAction("Users");
-                }
-                else
-                {
-                    ModelState.AddModelError(string.Empty, "Failed to create teacher. Please try again.");
-                    return View(model);
-                }
-            }
-            catch (System.Exception ex)
-            {
+    var success = await _userService.CreateTeacherAsync(teacherDto);
+  
+       if (success)
+    {
+      TempData["SuccessMessage"] = $"Teacher {model.FirstName} {model.LastName} has been successfully created!";
+    return RedirectToAction("Users");
+ }
+      else
+    {
+   ModelState.AddModelError(string.Empty, "Failed to create teacher. Please try again.");
+        
+    // ? FIX: Reload dropdown data before returning view
+  try
+  {
+       var departments = await _adminService.GetAllDepartmentsAsync();
+   ViewBag.Departments = departments;
+   }
+ catch (Exception reloadEx)
+  {
+    Console.WriteLine($"Error reloading departments: {reloadEx.Message}");
+ViewBag.Departments = new List<Department>();
+    }
+
+return View(model);
+  }
+         }
+        catch (System.Exception ex)
+       {
                 ModelState.AddModelError(string.Empty, $"Error creating teacher: {ex.Message}");
-                return View(model);
-            }
+      
+    // ? FIX: Reload dropdown data before returning view
+try
+     {
+    var departments = await _adminService.GetAllDepartmentsAsync();
+     ViewBag.Departments = departments;
+   }
+ catch (Exception reloadEx)
+ {
+     Console.WriteLine($"Error reloading departments: {reloadEx.Message}");
+  ViewBag.Departments = new List<Department>();
+  }
+
+    return View(model);
+      }
         }
 
         [HttpGet]

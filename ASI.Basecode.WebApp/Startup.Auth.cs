@@ -13,27 +13,14 @@ namespace ASI.Basecode.WebApp
         /// </summary>
         private void ConfigureAuthorization()
         {
-            // Configure Cookie Authentication
-            this._services.AddAuthentication(options =>
-            {
-                options.DefaultAuthenticateScheme = CookieAuthenticationDefaults.AuthenticationScheme;
-                options.DefaultChallengeScheme = CookieAuthenticationDefaults.AuthenticationScheme;
-            })
-            .AddCookie(options =>
-            {
-                options.LoginPath = "/Auth/Login";
-                options.AccessDeniedPath = "/Auth/AccessDenied";
-            });
+            // REMOVED DUPLICATE: Authentication is already configured in Startup.cs ConfigureServices()
+            // The AddAuthentication().AddCookie() was causing "Scheme already exists: Cookies" error
 
-            // Configure Authorization Policies
-            this._services.AddAuthorization(options =>
-            {
-                options.AddPolicy("AdminOnly", policy => policy.RequireRole("Admin"));
-                options.AddPolicy("TeacherOnly", policy => policy.RequireRole("Teacher"));
-                options.AddPolicy("StudentOnly", policy => policy.RequireRole("Student"));
-            });
+            // Authorization policies are already configured in Startup.cs, so this method can be empty
+            // or removed entirely. Keeping it empty for now to avoid breaking changes.
 
-            this._services.AddMvc();
+            // Note: If you want to add additional authorization logic,
+            // it should NOT include AddAuthentication() or AddCookie() calls.
         }
     }
 }
