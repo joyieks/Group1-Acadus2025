@@ -2,6 +2,7 @@
 using ASI.Basecode.Data.Models;
 using ASI.Basecode.Services.Interfaces;
 using Microsoft.Extensions.Configuration;
+using Microsoft.AspNetCore.Http;
 using Supabase;
 using Supabase.Gotrue;
 using System;
@@ -13,13 +14,47 @@ namespace ASI.Basecode.Services.Services
     public class SupabaseAuthService : ISupabaseAuthService
     {
         private readonly IConfiguration _configuration;
+        private readonly IHttpContextAccessor _httpContextAccessor;
         private Supabase.Client _supabaseClient;
         private Supabase.Gotrue.Client _gotrueClient;
         private AdminClient _adminClient;
 
-        public SupabaseAuthService(IConfiguration configuration)
+        public SupabaseAuthService(IConfiguration configuration, IHttpContextAccessor httpContextAccessor)
         {
             _configuration = configuration;
+            _httpContextAccessor = httpContextAccessor;
+        }
+
+        /// <summary>
+        /// Gets the redirect URL dynamically based on current request or falls back to config
+        /// </summary>
+        private string GetRedirectUrl()
+        {
+            try
+            {
+                // Check if we should use dynamic local redirect (for development)
+                var useLocalRedirect = _configuration.GetValue<bool>("Supabase:UseLocalRedirect", false);
+
+                if (useLocalRedirect && _httpContextAccessor.HttpContext != null)
+                {
+                    var request = _httpContextAccessor.HttpContext.Request;
+                    var scheme = request.Scheme; // http or https
+                    var host = request.Host.ToString(); // localhost:port
+                    var redirectUrl = $"{scheme}://{host}/Account/SetPassword";
+
+                    Console.WriteLine($"🔧 Dynamic Redirect URL: {redirectUrl}");
+                    return redirectUrl;
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"⚠ Warning: Could not determine dynamic redirect URL: {ex.Message}");
+            }
+
+            // Fall back to configured redirect URL
+            var configuredUrl = _configuration["Supabase:RedirectUrl"];
+            Console.WriteLine($"📝 Using Configured Redirect URL: {configuredUrl}");
+            return configuredUrl;
         }
 
         private Supabase.Gotrue.Client GetGotrueClient()
@@ -203,38 +238,42 @@ namespace ASI.Basecode.Services.Services
             }
         }
 
-      
         /// <summary>
-   /// Sends password setup email to user (uses password reset functionality)
-      /// </summary>
-     public async Task<bool> SendPasswordSetupEmailAsync(string email)
+        /// Sends password setup email to user (uses password reset functionality)
+        /// </summary>
+        public async Task<bool> SendPasswordSetupEmailAsync(string email)
         {
-    try
+            try
             {
-     Console.WriteLine($"=== SendPasswordSetupEmailAsync ===");
-   Console.WriteLine($"Target email: {email}");
-  
-       var gotrueClient = GetGotrueClient();
-    var redirectUrl = _configuration["Supabase:RedirectUrl"];
-              
-    Console.WriteLine($"Configured Redirect URL: {redirectUrl}");
-      Console.WriteLine($"Note: Redirect URL must also be configured in Supabase Dashboard > Authentication > URL Configuration");
- Console.WriteLine($"Sending password reset email via Gotrue...");
+                Console.WriteLine($"=== SendPasswordSetupEmailAsync ===");
+                Console.WriteLine($"Target email: {email}");
 
-// Call ResetPasswordForEmail - redirect URL is configured in Supabase dashboard
-await gotrueClient.ResetPasswordForEmail(email);
+                var gotrueClient = GetGotrueClient();
+                var redirectUrl = GetRedirectUrl();
 
-       Console.WriteLine($"✓ Password setup email sent successfully to: {email}");
-    Console.WriteLine($"=== End SendPasswordSetupEmailAsync ===\n");
-      return true;
- }
-      catch (Exception ex)
-      {
-Console.WriteLine($"✗ Error sending password setup email: {ex.Message}");
-      Console.WriteLine($"Stack trace: {ex.StackTrace}");
+                Console.WriteLine($"Redirect URL: {redirectUrl}");
+                Console.WriteLine($"⚠ IMPORTANT: This redirect URL must be added to Supabase Dashboard:");
+                Console.WriteLine($"   Navigate to: Authentication > URL Configuration > Redirect URLs");
+                Console.WriteLine($"   Add URL: {redirectUrl}");
+                Console.WriteLine($"   Recommended: Add wildcard http://localhost:*/Account/SetPassword for all dev ports");
+                Console.WriteLine($"Sending password reset email via Gotrue...");
+
+                // ✅ Note: Redirect URL must be configured in Supabase Dashboard
+                // The current version of Supabase.Gotrue library doesn't support passing options
+                // Supabase will use the Site URL configured in dashboard
+                await gotrueClient.ResetPasswordForEmail(email);
+
+                Console.WriteLine($"✓ Password setup email sent successfully to: {email}");
+                Console.WriteLine($"=== End SendPasswordSetupEmailAsync ===\n");
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"✗ Error sending password setup email: {ex.Message}");
+                Console.WriteLine($"Stack trace: {ex.StackTrace}");
                 Console.WriteLine($"=== End SendPasswordSetupEmailAsync (FAILED) ===\n");
-   throw new Exception($"Error sending password setup email: {ex.Message}", ex);
-   }
+                throw new Exception($"Error sending password setup email: {ex.Message}", ex);
+            }
         }
 
         /// <summary>
@@ -502,7 +541,6 @@ Console.WriteLine($"✗ Error sending password setup email: {ex.Message}");
         /// Currently returns true without actually deleting the user.
         /// TODO: Implement actual deletion from auth.users and public.users
         /// </remarks>
-       
         public async Task<SupabaseUser> GetUserByEmailAsync(string email)
         {
             try
