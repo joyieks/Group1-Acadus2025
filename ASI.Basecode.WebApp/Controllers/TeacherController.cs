@@ -1,15 +1,16 @@
 using ASI.Basecode.Data;
 using ASI.Basecode.Data.Models;
+using ASI.Basecode.Services.Interfaces;
+using ASI.Basecode.Services.Services;
+using ASI.Basecode.WebApp.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
-using System.Collections.Generic;
-using System.Threading.Tasks;
-using System.Linq;
-using ASI.Basecode.WebApp.Models;
 using System;
-using ASI.Basecode.Services.Interfaces;
+using System.Collections.Generic;
+using System.Linq;
 using System.Security.Claims;
+using System.Threading.Tasks;
  namespace ASI.Basecode.WebApp.Controllers
 {
     /// <summary>
@@ -20,15 +21,17 @@ using System.Security.Claims;
     {
         private readonly IConfiguration _configuration;
         private readonly ISupabaseAuthService _supabaseAuthService;
+        private readonly ITeacherCourseService _teacherCourseService;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="TeacherController"/> class.
         /// </summary>
         /// <param name="configuration">Application configuration.</param>
-        public TeacherController(IConfiguration configuration, ISupabaseAuthService supabaseAuthService)
+        public TeacherController(IConfiguration configuration, ISupabaseAuthService supabaseAuthService, ITeacherCourseService teacherCourseService)
         {
             _configuration = configuration;
             _supabaseAuthService = supabaseAuthService;
+            _teacherCourseService = teacherCourseService;
         }
 
         /// <summary>
@@ -633,63 +636,30 @@ using System.Security.Claims;
         }
 
         [HttpGet]
-        public IActionResult CourseGradebook(int id)
+        public async Task<IActionResult> CourseGradebook(int id, string selectedStudentId = null)
         {
-            // Placeholder: Find course by id from sample data
-            var courses = new List<TeacherCourseViewModel>
+            var gradebook = await _teacherCourseService.GetCourseGradebookAsync(id);
+
+            if (!string.IsNullOrEmpty(selectedStudentId))
             {
-                new TeacherCourseViewModel
-                {
-                    Id = 1,
-                    CourseCode = "91299 - ELPHP41",
-                    CourseTitle = "FREE ELECTIVE - PHP",
-                    SemesterInfo = "1st Semester 2025 - 2026",
-                    CardColor = "#E8F9E8"
-                },
-                new TeacherCourseViewModel
-                {
-                    Id = 2,
-                    CourseCode = "91300 - CS101",
-                    CourseTitle = "INTRODUCTION TO COMPUTER SCIENCE",
-                    SemesterInfo = "1st Semester 2025 - 2026",
-                    CardColor = "#D1FAE5"
-                },
-                new TeacherCourseViewModel
-                {
-                    Id = 3,
-                    CourseCode = "91301 - MATH201",
-                    CourseTitle = "DISCRETE MATHEMATICS",
-                    SemesterInfo = "1st Semester 2025 - 2026",
-                    CardColor = "#A7F3D0"
-                },
-                new TeacherCourseViewModel
-                {
-                    Id = 4,
-                    CourseCode = "91302 - ENG102",
-                    CourseTitle = "TECHNICAL WRITING",
-                    SemesterInfo = "1st Semester 2025 - 2026",
-                    CardColor = "#6EE7B7"
-                },
-                new TeacherCourseViewModel
-                {
-                    Id = 5,
-                    CourseCode = "91303 - DATA301",
-                    CourseTitle = "DATA STRUCTURES",
-                    SemesterInfo = "2nd Semester 2025 - 2026",
-                    CardColor = "#34D399"
-                },
-                new TeacherCourseViewModel
-                {
-                    Id = 6,
-                    CourseCode = "91304 - WEBDEV401",
-                    CourseTitle = "WEB DEVELOPMENT",
-                    SemesterInfo = "2nd Semester 2025 - 2026",
-                    CardColor = "#10B981"
-                }
-            };
-            var course = courses.FirstOrDefault(c => c.Id == id) ?? new TeacherCourseViewModel { Id = id, CourseTitle = "Sample Course" };
-            return View("Courses/CourseGradebook", course);
+                var detail = await _teacherCourseService.GetStudentGradeDetailAsync(selectedStudentId, id);
+                gradebook.SelectedStudentDetail = detail;
+            }
+
+            return View("Courses/CourseGradebook", gradebook);
         }
+
+        [HttpPost]
+        public async Task<IActionResult> UpdateScore(string studentId, int activityId, int newScore, int courseId)
+        {
+            var success = await _teacherCourseService.UpdateActivityScoreAsync(studentId, activityId, newScore);
+            if (!success) return BadRequest($"Received: studentId={studentId}, activityId={activityId}, newScore={newScore}, courseId={courseId}");
+
+            return RedirectToAction("CourseGradebook", new { id = courseId, selectedStudentId = studentId });
+        }
+
+
+
 
         [HttpGet]
         public IActionResult CourseActivities(int id)

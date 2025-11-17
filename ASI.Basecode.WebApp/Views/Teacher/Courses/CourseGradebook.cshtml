@@ -1,4 +1,4 @@
-@model ASI.Basecode.WebApp.Models.TeacherCourseViewModel
+@model ASI.Basecode.Data.Models.CourseGradebookViewModel
 @{
     Layout = "~/Views/Shared/_AuthenticatedLayout.cshtml";
     ViewData["Title"] = "Course Gradebook";
@@ -6,7 +6,7 @@
 
 <!-- Hero Section -->
 <section class="hero-section" style="background:#E8F9E8; display:flex; align-items:center; justify-content:center; text-align:center; position:relative; padding: 40px 0;">
-    <a href="/Teacher/FullCourseView/@Model.Id" style="position:absolute; top:20px; left:20px; background:#ffffff; color:#059669; border:1px solid #d1d5db; border-radius:8px; padding:8px 16px; font-weight:600; text-decoration:none; transition:background 0.3s; display:flex; align-items:center; gap:8px;">
+    <a href="/Teacher/FullCourseView/@Model.CourseId" style="position:absolute; top:20px; left:20px; background:#ffffff; color:#059669; border:1px solid #d1d5db; border-radius:8px; padding:8px 16px; font-weight:600; text-decoration:none; transition:background 0.3s; display:flex; align-items:center; gap:8px;">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M19 12H5"></path>
             <path d="M12 19l-7-7 7-7"></path>
@@ -40,41 +40,17 @@
                             </tr>
                         </thead>
                         <tbody>
-                            <tr style="border-bottom:1px solid #e5e7eb;">
-                                <td style="padding:16px; color:#111827; font-weight:500;">2021001</td>
-                                <td style="padding:16px; color:#111827;">John Smith</td>
-                                <td style="padding:16px; color:#059669; font-weight:600;">A (95%)</td>
-                            </tr>
-                            <tr style="background:#f9fafb; border-bottom:1px solid #e5e7eb;">
-                                <td style="padding:16px; color:#111827; font-weight:500;">2021002</td>
-                                <td style="padding:16px; color:#111827;">Jane Doe</td>
-                                <td style="padding:16px; color:#059669; font-weight:600;">A- (92%)</td>
-                            </tr>
-                            <tr style="border-bottom:1px solid #e5e7eb;">
-                                <td style="padding:16px; color:#111827; font-weight:500;">2021003</td>
-                                <td style="padding:16px; color:#111827;">Bob Johnson</td>
-                                <td style="padding:16px; color:#d97706; font-weight:600;">B+ (88%)</td>
-                            </tr>
-                            <tr style="background:#f9fafb; border-bottom:1px solid #e5e7eb;">
-                                <td style="padding:16px; color:#111827; font-weight:500;">2021004</td>
-                                <td style="padding:16px; color:#111827;">Alice Brown</td>
-                                <td style="padding:16px; color:#d97706; font-weight:600;">B (85%)</td>
-                            </tr>
-                            <tr style="border-bottom:1px solid #e5e7eb;">
-                                <td style="padding:16px; color:#111827; font-weight:500;">2021005</td>
-                                <td style="padding:16px; color:#111827;">Charlie Wilson</td>
-                                <td style="padding:16px; color:#dc2626; font-weight:600;">C (75%)</td>
-                            </tr>
-                            <tr style="background:#f9fafb; border-bottom:1px solid #e5e7eb;">
-                                <td style="padding:16px; color:#111827; font-weight:500;">2021006</td>
-                                <td style="padding:16px; color:#111827;">David Lee</td>
-                                <td style="padding:16px; color:#059669; font-weight:600;">A (93%)</td>
-                            </tr>
-                            <tr style="border-bottom:1px solid #e5e7eb;">
-                                <td style="padding:16px; color:#111827; font-weight:500;">2021007</td>
-                                <td style="padding:16px; color:#111827;">Emma Davis</td>
-                                <td style="padding:16px; color:#d97706; font-weight:600;">B- (82%)</td>
-                            </tr>
+                            @foreach (var student in Model.Students)
+                            {
+                                <tr onclick="location.href='@Url.Action("CourseGradebook", "Teacher", new { id = Model.CourseId, selectedStudentId = student.StudentId })'"
+                                    style="border-bottom:1px solid #e5e7eb; cursor:pointer; transition:background 0.2s;"
+                                    onmouseover="this.style.background='#f3f4f6';"
+                                    onmouseout="this.style.background='transparent';">
+                                    <td style="padding:16px; color:#111827; font-weight:500;">@student.StudentId</td>
+                                    <td style="padding:16px; color:#111827;">@student.Name</td>
+                                    <td style="padding:16px; color:#059669; font-weight:600;">@student.AveragePercentage%</td>
+                                </tr>
+                            }
                         </tbody>
                     </table>
                 </div>
@@ -85,51 +61,71 @@
                 <h3 style="margin:0 0 16px 0; font-weight:700; font-size:18px; color:#111827;">Grades</h3>
 
                 <!-- Average Section -->
-                <div style="background:#f9fafb; border:1px solid #e5e7eb; border-radius:8px; padding:16px; margin-bottom:20px;">
-                    <h4 style="margin:0 0 8px 0; font-weight:600; color:#374151; font-size:14px;">Average (Based on all graded activities)</h4>
-                    <div style="font-size:24px; font-weight:800; color:#059669;">87.5%</div>
-                    <div style="font-size:14px; color:#6b7280; margin-top:4px;">Grade: B+</div>
-                </div>
+                @if (Model.SelectedStudentDetail != null)
+                {
+                    <div style="background:#f9fafb; border:1px solid #e5e7eb; border-radius:8px; padding:16px; margin-bottom:20px;">
+                        <h4 style="margin:0 0 8px 0; font-weight:600; color:#374151; font-size:14px;">Average (Based on all graded activities)</h4>
+                        <div style="font-size:24px; font-weight:800; color:#059669;">@Model.SelectedStudentDetail.Percentage%</div>
+                        <div style="font-size:14px; color:#6b7280; margin-top:4px;">Grade: @Model.SelectedStudentDetail.Percentage</div>
+                    </div>
 
-                <!-- Grades Table -->
-                <div style="border-radius:8px; overflow:hidden; border:1px solid #e5e7eb;">
-                    <table style="width:100%; border-collapse:collapse;">
-                        <thead style="background:#f9fafb;">
-                            <tr>
-                                <th style="padding:12px 16px; text-align:left; font-weight:600; color:#374151; border-bottom:1px solid #e5e7eb;">Activity Name</th>
-                                <th style="padding:12px 16px; text-align:left; font-weight:600; color:#374151; border-bottom:1px solid #e5e7eb;">Raw Score</th>
-                                <th style="padding:12px 16px; text-align:left; font-weight:600; color:#374151; border-bottom:1px solid #e5e7eb;">Perfect Score</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr style="border-bottom:1px solid #f3f4f6;">
-                                <td style="padding:12px 16px; color:#111827; font-weight:500;">Quiz 1: Introduction to Programming</td>
-                                <td style="padding:12px 16px; color:#111827;">45/50</td>
-                                <td style="padding:12px 16px; color:#059669; font-weight:600;">50/50</td>
-                            </tr>
-                            <tr style="background:#f9fafb; border-bottom:1px solid #f3f4f6;">
-                                <td style="padding:12px 16px; color:#111827; font-weight:500;">Assignment 1: Hello World Program</td>
-                                <td style="padding:12px 16px; color:#111827;">95/100</td>
-                                <td style="padding:12px 16px; color:#059669; font-weight:600;">100/100</td>
-                            </tr>
-                            <tr style="border-bottom:1px solid #f3f4f6;">
-                                <td style="padding:12px 16px; color:#111827; font-weight:500;">Midterm Exam</td>
-                                <td style="padding:12px 16px; color:#111827;">85/100</td>
-                                <td style="padding:12px 16px; color:#059669; font-weight:600;">100/100</td>
-                            </tr>
-                            <tr style="background:#f9fafb; border-bottom:1px solid #f3f4f6;">
-                                <td style="padding:12px 16px; color:#111827; font-weight:500;">Lab Exercise 1: Variables & Data Types</td>
-                                <td style="padding:12px 16px; color:#111827;">50/50</td>
-                                <td style="padding:12px 16px; color:#059669; font-weight:600;">50/50</td>
-                            </tr>
-                            <tr style="border-bottom:1px solid #f3f4f6;">
-                                <td style="padding:12px 16px; color:#111827; font-weight:500;">Project 1: Calculator Application</td>
-                                <td style="padding:12px 16px; color:#111827;">180/200</td>
-                                <td style="padding:12px 16px; color:#059669; font-weight:600;">200/200</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
+                    <!-- Grades Table -->
+                    <div style="border-radius:8px; overflow:hidden; border:1px solid #e5e7eb;">
+                        <table style="width:100%; border-collapse:collapse;">
+                            <thead style="background:#f9fafb;">
+                                <tr>
+                                    <th style="padding:12px 16px; text-align:left; font-weight:600; color:#374151; border-bottom:1px solid #e5e7eb;">Activity Name</th>
+                                    <th style="padding:12px 16px; text-align:left; font-weight:600; color:#374151; border-bottom:1px solid #e5e7eb;">Raw Score</th>
+                                    <th style="padding:12px 16px; text-align:left; font-weight:600; color:#374151; border-bottom:1px solid #e5e7eb;">Perfect Score</th>
+                                    <th style="padding:12px 16px; text-align:left; font-weight:600; color:#374151; border-bottom:1px solid #e5e7eb;">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var activity in Model.SelectedStudentDetail.Activities)
+                                {
+                                    var rowId = $"row-{activity.ActivityId}";
+                                    var formId = $"form-{activity.ActivityId}";
+                                    <tr id="@rowId" style="border-bottom:1px solid #f3f4f6;">
+                                        <td style="padding:12px 16px; color:#111827; font-weight:500;">@activity.ActivityName</td>
+
+                                        <td style="padding:12px 16px; color:#111827;">
+                                            <span class="score-display">@activity.RawScore</span>
+                                            <form id="@formId" method="post" asp-action="UpdateScore"
+                                                  onsubmit="return restoreEdit('@rowId')"
+                                                  style="display:none;" class="score-form">
+                                                <input type="hidden" name="studentId" value="@Model.SelectedStudentDetail.StudentId" />
+                                                <input type="hidden" name="activityId" value="@activity.ActivityId" />
+                                                <input type="hidden" name="courseId" value="@Model.CourseId" />
+                                                <input type="text" name="newScore" value="@activity.RawScore"
+                                                       style="width:60px; padding:4px 6px; border:1px solid #d1d5db; border-radius:4px;"
+                                                       class="score-input" />
+                                            </form>
+                                        </td>
+
+                                        <td style="padding:12px 16px; color:#059669; font-weight:600;">@activity.MaxScore</td>
+
+                                        <td style="padding:12px 16px;">
+                                            <button type="button" class="edit-btn" onclick="enableEdit('@rowId')"
+                                                    style="background:#3b82f6; color:#fff; border:none; padding:4px 10px; border-radius:4px;">
+                                                Edit
+                                            </button>
+                                            <button type="submit" form="@formId"
+                                                    class="save-btn" style="display:none; background:#059669; color:#fff; border:none; padding:4px 10px; border-radius:4px;">
+                                                Save
+                                            </button>
+                                        </td>
+                                    </tr>
+                                }
+
+                            </tbody>
+
+                        </table>
+                    </div>
+                }
+                else
+                {
+                    <div style="font-size:14px; color:#6b7280;">Select a student to view detailed grades.</div>
+                }
             </div>
         </div>
     </div>
@@ -165,5 +161,43 @@
                 }
             });
         });
+
     </script>
+    <script>
+            function enableEdit(rowId) {
+            const row = document.getElementById(rowId);
+            const display = row.querySelector('.score-display');
+            const form = row.querySelector('.score-form');
+            const input = row.querySelector('.score-input');
+            const editBtn = row.querySelector('.edit-btn');
+            const saveBtn = row.querySelector('.save-btn');
+
+            display.style.display = 'none';
+            form.style.display = 'inline-block';
+            saveBtn.style.display = 'inline-block';
+            editBtn.style.display = 'none';
+
+            input.style.border = '2px solid #3b82f6';
+            input.style.backgroundColor = '#eff6ff';
+        }
+                function restoreEdit(rowId) {
+            const row = document.getElementById(rowId);
+            const editBtn = row.querySelector('.edit-btn');
+            const saveBtn = row.querySelector('.save-btn');
+            const form = row.querySelector('.score-form');
+            const display = row.querySelector('.score-display');
+
+            // Optional: reset styles
+            form.style.display = 'none';
+            saveBtn.style.display = 'none';
+            editBtn.style.display = 'inline-block';
+            display.style.display = 'inline-block';
+
+            return true; // allow form to submit
+        }
+
+    </script>
+
+
+
 }

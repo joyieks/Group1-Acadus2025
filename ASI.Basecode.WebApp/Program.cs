@@ -112,6 +112,9 @@ builder.Services.AddSingleton(provider =>
 builder.Services.AddScoped<IStudentCourseService, StudentCourseService>();
 builder.Services.AddScoped<IStudentCourseRepository, StudentCourseRepository>();
 
+builder.Services.AddScoped<ITeacherCourseService, TeacherCourseService>();
+builder.Services.AddScoped<ITeacherCourseRepository, TeacherCourseRepository>();
+
 var configurer = new StartupConfigurer(builder.Configuration);
 configurer.ConfigureServices(builder.Services);
 
