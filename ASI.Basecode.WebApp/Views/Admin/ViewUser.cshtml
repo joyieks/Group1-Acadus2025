@@ -1,6 +1,18 @@
+@model ASI.Basecode.Data.Models.SupabaseUserNew
 @{
     Layout = "~/Views/Shared/_AuthenticatedLayout.cshtml";
     ViewData["Title"] = "View User";
+    var role = ViewBag.Role ?? "Unknown";
+    var department = ViewBag.Department ?? "Not Assigned";
+    var isStudent = role.Equals("Student", StringComparison.OrdinalIgnoreCase);
+    var isTeacher = role.Equals("Teacher", StringComparison.OrdinalIgnoreCase) || role.Equals("Instructor", StringComparison.OrdinalIgnoreCase);
+    var gridColumns = (isStudent || isTeacher) ? "3fr 5fr" : "1fr";
+    var isActive = Model?.IsActive ?? true;
+    var buttonColor = isActive ? "#dc2626" : "#059669";
+    var buttonText = isActive ? "Deactivate" : "Reactivate";
+    var statusBadge = isActive ? "Active" : "Inactive";
+    var userTypeLabel = isStudent ? "Student" : isTeacher ? "Teacher" : "User";
+    var infoSectionTitle = isStudent ? "Student Information" : isTeacher ? "Teacher Information" : "User Information";
 }
 
 <!-- Hero Section -->
@@ -15,8 +27,8 @@
     <div style="max-width: 1200px; margin: 0 auto; padding: 0 16px;">
         <p style="margin:0 0 4px 0; color:#4b5563; font-size:20px;">User Management</p>
         <h1 style="font-size:48px; font-weight:800; margin:0 0 4px 0; color:#111827;">View User</h1>
-        <p style="margin:0 0 16px 0; color:#4b5563; font-size:18px;">View detailed user information and academic performance.</p>
-        <p style="margin:0 0 0 0; color:#6b7280; font-size:14px;">Access comprehensive student profiles, contact details, and course enrollment history.</p>
+        <p style="margin:0 0 16px 0; color:#4b5563; font-size:18px;">View detailed user information.</p>
+        <p style="margin:0 0 0 0; color:#6b7280; font-size:14px;">Access comprehensive user profiles and contact details.</p>
     </div>
 </section>
 
@@ -25,31 +37,31 @@
     <div style="max-width: 1200px; margin: 0 auto; padding: 0 16px;">
         <!-- Action Buttons -->
         <div style="display:flex; justify-content:flex-end; gap:12px; margin-bottom:24px;">
-            <a href="@Url.Action("EditUser", "Admin", new { id = "123213" })" style="background:#059669; color:#ffffff; border:none; border-radius:6px; padding:12px 20px; font-weight:600; text-decoration:none;">Edit Student</a>
-            <button onclick="deactivateUser()" style="background:#dc2626; color:#ffffff; border:none; border-radius:6px; padding:12px 20px; font-weight:600; cursor:pointer;">Deactivate</button>
+            <a href="@Url.Action("EditUser", "Admin", new { id = Model.Id })" style="background:#059669; color:#ffffff; border:none; border-radius:6px; padding:12px 20px; font-weight:600; text-decoration:none;">Edit @userTypeLabel</a>
+            <button onclick="toggleUserStatus()" style="background:@buttonColor; color:#ffffff; border:none; border-radius:6px; padding:12px 20px; font-weight:600; cursor:pointer;">@buttonText</button>
         </div>
 
-        <div style="display:grid; grid-template-columns: 3fr 5fr; gap:24px;">
+        <div style="display:grid; grid-template-columns: @gridColumns; gap:24px;">
 
-            <!-- Left Column: Student Information -->
+            <!-- Left Column: User Information -->
             <div>
                 <div style="background:#f9fafb; border:1px solid #e5e7eb; border-radius:8px; padding:24px;">
-                    <h3 style="margin:0 0 20px 0; font-weight:700; font-size:18px; color:#111827;">Student Information</h3>
+                    <h3 style="margin:0 0 20px 0; font-weight:700; font-size:18px; color:#111827;">@infoSectionTitle</h3>
 
-                    <!-- Student Name (Full Width) -->
+                    <!-- User Name -->
                     <div style="margin-bottom:20px;">
-                        <div style="font-size:24px; font-weight:800; color:#111827; margin-bottom:4px;">Johnny Appleseed</div>
-                        <div style="color:#6b7280; font-size:14px;">Student • Active</div>
+                        <div style="font-size:24px; font-weight:800; color:#111827; margin-bottom:4px;">@Model.FirstName @Model.LastName</div>
+                        <div style="color:#6b7280; font-size:14px;">@role • @statusBadge</div>
                     </div>
 
                     <!-- Profile Picture -->
                     <div style="display:flex; align-items:center; gap:16px; margin-bottom:24px;">
-                        <div style="width:64px; height:64px; border-radius:9999px; overflow:hidden; border:2px solid #d1fae5; background:#e5e7eb; display:grid; place-items:center; color:#065f46; font-weight:800; font-size:20px;">
-                            <img src="/img/acaduslogo.png" alt="Profile picture" style="width:100%; height:100%; object-fit:cover;" />
+                        <div style="width:64px; height:64px; border-radius:9999px; overflow:hidden; border:2px solid #d1fae5; background:#e5e7eb; display:grid; place-items:center;">
+                            <img src="/img/acaduslogo.png" alt="Profile" style="width:100%; height:100%; object-fit:cover;" />
                         </div>
                         <div>
-                            <div style="font-weight:600; color:#111827;">ID: 123213</div>
-                            <div style="color:#6b7280; font-size:14px;">CCS Department</div>
+                            <div style="font-weight:600; color:#111827;">ID: @(Model.UserDisplayId ?? Model.Id.ToString())</div>
+                            <div style="color:#6b7280; font-size:14px;">@department</div>
                         </div>
                     </div>
 
@@ -58,24 +70,24 @@
                         <h4 style="font-size:16px; font-weight:700; color:#111827; margin:0 0 12px 0; padding-bottom:8px; border-bottom:1px solid #e5e7eb;">Personal Information</h4>
                         <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
                             <div>
-                                <span style="font-size:12px; font-weight:600; color:#6b7280; text-transform:uppercase; letter-spacing:0.5px;">First Name</span>
-                                <div style="font-size:14px; color:#111827; padding:6px 0;">Johnny</div>
+                                <span style="font-size:12px; font-weight:600; color:#6b7280; text-transform:uppercase;">First Name</span>
+                                <div style="font-size:14px; color:#111827; padding:6px 0;">@(Model.FirstName ?? "Not provided")</div>
                             </div>
                             <div>
-                                <span style="font-size:12px; font-weight:600; color:#6b7280; text-transform:uppercase; letter-spacing:0.5px;">Last Name</span>
-                                <div style="font-size:14px; color:#111827; padding:6px 0;">Appleseed</div>
+                                <span style="font-size:12px; font-weight:600; color:#6b7280; text-transform:uppercase;">Last Name</span>
+                                <div style="font-size:14px; color:#111827; padding:6px 0;">@(Model.LastName ?? "Not provided")</div>
                             </div>
                             <div>
-                                <span style="font-size:12px; font-weight:600; color:#6b7280; text-transform:uppercase; letter-spacing:0.5px;">Middle Name</span>
-                                <div style="font-size:14px; color:#111827; padding:6px 0;">Michael</div>
+                                <span style="font-size:12px; font-weight:600; color:#6b7280; text-transform:uppercase;">Middle Name</span>
+                                <div style="font-size:14px; color:#111827; padding:6px 0;">@(Model.MiddleName ?? "N/A")</div>
                             </div>
                             <div>
-                                <span style="font-size:12px; font-weight:600; color:#6b7280; text-transform:uppercase; letter-spacing:0.5px;">Contact</span>
-                                <div style="font-size:14px; color:#111827; padding:6px 0;">+63 912 345 6789</div>
+                                <span style="font-size:12px; font-weight:600; color:#6b7280; text-transform:uppercase;">Contact</span>
+                                <div style="font-size:14px; color:#111827; padding:6px 0;">@(Model.ContactNumber ?? "Not provided")</div>
                             </div>
                             <div style="grid-column:1/-1;">
-                                <span style="font-size:12px; font-weight:600; color:#6b7280; text-transform:uppercase; letter-spacing:0.5px;">Email</span>
-                                <div style="font-size:14px; color:#111827; padding:6px 0;">johnny.appleseed@example.com</div>
+                                <span style="font-size:12px; font-weight:600; color:#6b7280; text-transform:uppercase;">Email</span>
+                                <div style="font-size:14px; color:#111827; padding:6px 0;">@(Model.Email ?? "Not provided")</div>
                             </div>
                         </div>
                     </div>
@@ -83,249 +95,115 @@
                     <!-- Address Information -->
                     <div style="margin-bottom:20px;">
                         <h4 style="font-size:16px; font-weight:700; color:#111827; margin:0 0 12px 0; padding-bottom:8px; border-bottom:1px solid #e5e7eb;">Address Information</h4>
-                        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
-                            <div>
-                                <span style="font-size:12px; font-weight:600; color:#6b7280; text-transform:uppercase; letter-spacing:0.5px;">House/Apt</span>
-                                <div style="font-size:14px; color:#111827; padding:6px 0;">123</div>
-                            </div>
-                            <div>
-                                <span style="font-size:12px; font-weight:600; color:#6b7280; text-transform:uppercase; letter-spacing:0.5px;">Street</span>
-                                <div style="font-size:14px; color:#111827; padding:6px 0;">Main Street</div>
-                            </div>
-                            <div>
-                                <span style="font-size:12px; font-weight:600; color:#6b7280; text-transform:uppercase; letter-spacing:0.5px;">Barangay</span>
-                                <div style="font-size:14px; color:#111827; padding:6px 0;">Barangay 1</div>
-                            </div>
-                            <div>
-                                <span style="font-size:12px; font-weight:600; color:#6b7280; text-transform:uppercase; letter-spacing:0.5px;">City</span>
-                                <div style="font-size:14px; color:#111827; padding:6px 0;">Manila</div>
-                            </div>
-                            <div style="grid-column:1/-1;">
-                                <span style="font-size:12px; font-weight:600; color:#6b7280; text-transform:uppercase; letter-spacing:0.5px;">Province & Zip</span>
-                                <div style="font-size:14px; color:#111827; padding:6px 0;">Metro Manila, 1000</div>
-                            </div>
-                        </div>
+                        @if (!string.IsNullOrEmpty(Model.Address))
+                        {
+                            <div style="font-size:14px; color:#111827;">@Model.Address</div>
+                        }
+                        else
+                        {
+                            <div style="font-size:14px; color:#6b7280; font-style:italic;">Address not provided</div>
+                        }
                     </div>
 
                     <!-- Emergency Contact -->
                     <div>
                         <h4 style="font-size:16px; font-weight:700; color:#111827; margin:0 0 12px 0; padding-bottom:8px; border-bottom:1px solid #e5e7eb;">Emergency Contact</h4>
-                        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
-                            <div>
-                                <span style="font-size:12px; font-weight:600; color:#6b7280; text-transform:uppercase; letter-spacing:0.5px;">Name</span>
-                                <div style="font-size:14px; color:#111827; padding:6px 0;">Jane Appleseed</div>
-                            </div>
-                            <div>
-                                <span style="font-size:12px; font-weight:600; color:#6b7280; text-transform:uppercase; letter-spacing:0.5px;">Contact</span>
-                                <div style="font-size:14px; color:#111827; padding:6px 0;">+63 912 345 6788</div>
-                            </div>
-                            <div style="grid-column:1/-1;">
-                                <span style="font-size:12px; font-weight:600; color:#6b7280; text-transform:uppercase; letter-spacing:0.5px;">Relationship</span>
-                                <div style="font-size:14px; color:#111827; padding:6px 0;">Mother</div>
-                            </div>
-                        </div>
+                        @if (!string.IsNullOrEmpty(Model.EmergencyContact))
+                        {
+                            <div style="font-size:14px; color:#111827;">@Model.EmergencyContact</div>
+                        }
+                        else
+                        {
+                            <div style="font-size:14px; color:#6b7280; font-style:italic;">Emergency contact not provided</div>
+                        }
                     </div>
                 </div>
             </div>
 
-            <!-- Right Column: Grades and Performance -->
-            <div>
-                <div style="background:#f9fafb; border:1px solid #e5e7eb; border-radius:8px; padding:24px;">
-                    <h3 style="margin:0 0 20px 0; font-weight:700; font-size:18px; color:#111827;">Academic Performance</h3>
-
-                    <!-- Overall GPA/Average -->
-                    <div style="background:#ffffff; border:1px solid #e5e7eb; border-radius:8px; padding:20px; margin-bottom:24px; text-align:center;">
-                        <div style="font-size:14px; color:#6b7280; margin-bottom:8px;">Overall Grade Point Average</div>
-                        <div style="font-size:48px; font-weight:800; color:#059669; margin-bottom:4px;">3.75</div>
-                        <div style="font-size:14px; color:#6b7280;">Excellent Performance</div>
-                    </div>
-
-                    <!-- Course Grades Table -->
-                    <div style="margin-bottom:24px;">
-                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
-                            <h4 style="font-size:16px; font-weight:700; color:#111827; margin:0;">Course Grades</h4>
-                            <button id="editGradesBtn" onclick="toggleEditGrades()" style="background:#059669; color:#ffffff; border:none; border-radius:6px; padding:8px 16px; font-weight:600; cursor:pointer;">Edit Grades</button>
-                        </div>
-                        <div style="border-radius:8px; overflow:hidden; border:1px solid #e5e7eb;">
-                            <table id="gradesTable" style="width:100%; border-collapse:collapse;">
-                                <thead style="background:#059669;">
-                                    <tr>
-                                        <th style="padding:12px 16px; text-align:left; font-weight:700; color:#fff;">Course</th>
-                                        <th style="padding:12px 16px; text-align:left; font-weight:700; color:#fff;">Grade</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr style="border-bottom:1px solid #e5e7eb;">
-                                        <td style="padding:16px; color:#111827; font-weight:500;">CS101 - Introduction to Programming</td>
-                                        <td style="padding:16px;">
-                                            <span class="grade-display">A (95%)</span>
-                                            <input type="text" class="grade-input" value="95" style="display:none; width:80px; padding:4px; border:1px solid #d1d5db; border-radius:4px; text-align:center;">
-                                        </td>
-                                    </tr>
-                                    <tr style="background:#f9fafb; border-bottom:1px solid #e5e7eb;">
-                                        <td style="padding:16px; color:#111827; font-weight:500;">CS102 - Data Structures</td>
-                                        <td style="padding:16px;">
-                                            <span class="grade-display">A- (92%)</span>
-                                            <input type="text" class="grade-input" value="92" style="display:none; width:80px; padding:4px; border:1px solid #d1d5db; border-radius:4px; text-align:center;">
-                                        </td>
-                                    </tr>
-                                    <tr style="border-bottom:1px solid #e5e7eb;">
-                                        <td style="padding:16px; color:#111827; font-weight:500;">MATH101 - Calculus I</td>
-                                        <td style="padding:16px;">
-                                            <span class="grade-display">B+ (88%)</span>
-                                            <input type="text" class="grade-input" value="88" style="display:none; width:80px; padding:4px; border:1px solid #d1d5db; border-radius:4px; text-align:center;">
-                                        </td>
-                                    </tr>
-                                    <tr style="background:#f9fafb; border-bottom:1px solid #e5e7eb;">
-                                        <td style="padding:16px; color:#111827; font-weight:500;">CS201 - Algorithms</td>
-                                        <td style="padding:16px;">
-                                            <span class="grade-display">A (96%)</span>
-                                            <input type="text" class="grade-input" value="96" style="display:none; width:80px; padding:4px; border:1px solid #d1d5db; border-radius:4px; text-align:center;">
-                                        </td>
-                                    </tr>
-                                    <tr style="border-bottom:1px solid #e5e7eb;">
-                                        <td style="padding:16px; color:#111827; font-weight:500;">CS301 - Software Engineering</td>
-                                        <td style="padding:16px;">
-                                            <span class="grade-display">B (85%)</span>
-                                            <input type="text" class="grade-input" value="85" style="display:none; width:80px; padding:4px; border:1px solid #d1d5db; border-radius:4px; text-align:center;">
-                                        </td>
-                                    </tr>
-                                    <tr style="background:#f9fafb;">
-                                        <td style="padding:16px; color:#111827; font-weight:500;">CS401 - Advanced Programming</td>
-                                        <td style="padding:16px;">
-                                            <span class="grade-display">In Progress</span>
-                                            <input type="text" class="grade-input" value="" placeholder="Enter grade %" style="display:none; width:80px; padding:4px; border:1px solid #d1d5db; border-radius:4px; text-align:center;">
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                        <div id="gradeActions" style="display:none; margin-top:16px; text-align:right;">
-                            <button onclick="saveGrades()" style="background:#059669; color:#ffffff; border:none; border-radius:6px; padding:8px 16px; font-weight:600; cursor:pointer; margin-right:8px;">Save Changes</button>
-                            <button onclick="cancelEditGrades()" style="background:#6b7280; color:#ffffff; border:none; border-radius:6px; padding:8px 16px; font-weight:600; cursor:pointer;">Cancel</button>
+            <!-- Right Column: Role-specific content -->
+            @if (isStudent)
+            {
+                <!-- Student: Academic Performance -->
+                <div>
+                    <div style="background:#f9fafb; border:1px solid #e5e7eb; border-radius:8px; padding:24px;">
+                        <h3 style="margin:0 0 20px 0; font-weight:700; font-size:18px; color:#111827;">Academic Performance</h3>
+                        <div style="padding:32px; text-align:center; color:#6b7280;">
+                            No data available yet
                         </div>
                     </div>
                 </div>
-            </div>
+            }
+            else if (isTeacher)
+            {
+                <!-- Teacher: Handled Courses -->
+                <div>
+                    <div style="background:#f9fafb; border:1px solid #e5e7eb; border-radius:8px; padding:24px;">
+                        <h3 style="margin:0 0 20px 0; font-weight:700; font-size:18px; color:#111827;">Handled Courses</h3>
+
+                        <!-- Total Courses Card -->
+                        <div style="background:#ffffff; border:1px solid #e5e7eb; border-radius:8px; padding:24px; margin-bottom:24px; text-align:center;">
+                            <div style="font-size:14px; color:#6b7280; margin-bottom:12px;">Total Courses This Semester</div>
+                            <div style="font-size:64px; font-weight:800; color:#059669; margin-bottom:8px; line-height:1;">0</div>
+                            <div style="font-size:14px; color:#6b7280;">Active Teaching Load</div>
+                        </div>
+
+                        <!-- Current Semester Courses -->
+                        <div>
+                            <h4 style="font-size:16px; font-weight:700; color:#111827; margin:0 0 16px 0;">Current Semester Courses</h4>
+                            <div style="border-radius:8px; overflow:hidden; border:1px solid #e5e7eb;">
+                                <table style="width:100%; border-collapse:collapse;">
+                                    <thead style="background:#059669;">
+                                        <tr>
+                                            <th style="padding:12px 16px; text-align:left; font-weight:700; color:#fff; font-size:14px;">Course Code</th>
+                                            <th style="padding:12px 16px; text-align:left; font-weight:700; color:#fff; font-size:14px;">Course Name</th>
+                                            <th style="padding:12px 16px; text-align:left; font-weight:700; color:#fff; font-size:14px;">Schedule</th>
+                                            <th style="padding:12px 16px; text-align:center; font-weight:700; color:#fff; font-size:14px;">Enrolled</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td colspan="4" style="padding:32px; text-align:center; color:#6b7280; background:#ffffff;">
+                                                No courses assigned yet
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
         </div>
     </div>
 </section>
 
 <script>
-    let isEditingGrades = false;
-
-    function toggleEditGrades() {
-        isEditingGrades = !isEditingGrades;
-        const editBtn = document.getElementById('editGradesBtn');
-        const gradeActions = document.getElementById('gradeActions');
-        const gradeDisplays = document.querySelectorAll('.grade-display');
-        const gradeInputs = document.querySelectorAll('.grade-input');
-
-        if (isEditingGrades) {
-            // Switch to edit mode
-            editBtn.textContent = 'Cancel Edit';
-            editBtn.style.background = '#6b7280';
-            gradeActions.style.display = 'block';
-
-            // Show input fields, hide display spans
-            gradeDisplays.forEach(display => display.style.display = 'none');
-            gradeInputs.forEach(input => input.style.display = 'inline-block');
-
-            // Focus on first input
-            const firstInput = document.querySelector('.grade-input');
-            if (firstInput) {
-                firstInput.focus();
-                firstInput.select();
-            }
-        } else {
-            // Switch back to view mode
-            cancelEditGrades();
-        }
-    }
-
-    function saveGrades() {
-        const gradeDisplays = document.querySelectorAll('.grade-display');
-        const gradeInputs = document.querySelectorAll('.grade-input');
-
-        // Update display values with input values
-        gradeInputs.forEach((input, index) => {
-            const percentage = input.value.trim();
-            let displayText = 'Not Graded';
-
-            if (percentage) {
-                const percent = parseInt(percentage);
-                let letterGrade = '';
-
-                if (percent >= 97) letterGrade = 'A+';
-                else if (percent >= 93) letterGrade = 'A';
-                else if (percent >= 90) letterGrade = 'A-';
-                else if (percent >= 87) letterGrade = 'B+';
-                else if (percent >= 83) letterGrade = 'B';
-                else if (percent >= 80) letterGrade = 'B-';
-                else if (percent >= 77) letterGrade = 'C+';
-                else if (percent >= 73) letterGrade = 'C';
-                else if (percent >= 70) letterGrade = 'C-';
-                else if (percent >= 67) letterGrade = 'D+';
-                else if (percent >= 63) letterGrade = 'D';
-                else letterGrade = 'F';
-
-                displayText = `${letterGrade} (${percent}%)`;
-            }
-
-            gradeDisplays[index].textContent = displayText;
-        });
-
-        // Switch back to view mode
-        toggleEditGrades();
-
-        // Here you would typically send the updates to the server
-        console.log('Grades saved successfully');
-    }
-
-    function cancelEditGrades() {
-        const editBtn = document.getElementById('editGradesBtn');
-        const gradeActions = document.getElementById('gradeActions');
-        const gradeDisplays = document.querySelectorAll('.grade-display');
-        const gradeInputs = document.querySelectorAll('.grade-input');
-
-        // Switch back to view mode
-        editBtn.textContent = 'Edit Grades';
-        editBtn.style.background = '#059669';
-        gradeActions.style.display = 'none';
-
-        // Show display spans, hide input fields
-        gradeDisplays.forEach(display => display.style.display = 'inline');
-        gradeInputs.forEach(input => input.style.display = 'none');
-
-        isEditingGrades = false;
-    }
-
-    function deactivateUser() {
-        if (confirm('Are you sure you want to deactivate this user?')) {
-            // TODO: Implement deactivate logic
-            alert('Deactivate functionality to be implemented');
-        }
-    }
-
-    // Handle Enter key in grade inputs
-    document.addEventListener('keydown', function(e) {
-        if (e.key === 'Enter' && isEditingGrades) {
-            const activeInput = document.activeElement;
-            if (activeInput.classList.contains('grade-input')) {
-                // Move to next input or save if it's the last one
-                const inputs = Array.from(document.querySelectorAll('.grade-input'));
-                const currentIndex = inputs.indexOf(activeInput);
-
-                if (currentIndex < inputs.length - 1) {
-                    inputs[currentIndex + 1].focus();
-                    inputs[currentIndex + 1].select();
+    function toggleUserStatus() {
+        const userId = @Model.Id;
+        const isActive = @Json.Serialize(Model.IsActive == true);
+        const userName = '@Html.Raw(Model.FirstName) @Html.Raw(Model.LastName)';
+        const newStatus = isActive === true ? false : true;
+        
+        if (confirm(`Are you sure you want to ${newStatus ? 'reactivate' : 'deactivate'} ${userName}?`)) {
+            fetch('/Admin/SetUserStatus', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id: userId, isActive: newStatus })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert(data.message);
+                    window.location.reload();
                 } else {
-                    saveGrades();
+                    alert(data.message || 'Failed to update user status.');
                 }
-            }
-        } else if (e.key === 'Escape' && isEditingGrades) {
-            cancelEditGrades();
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred.');
+            });
         }
-    });
+    }
 </script>
 

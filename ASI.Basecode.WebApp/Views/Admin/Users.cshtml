@@ -7,7 +7,6 @@
 }
 
 <section class="bg-[#E8F9E8]" style="padding: 0 0 24px 0;">
-
 	<div class="container" style="max-width: 1200px; margin: 0 auto; padding: 0 16px;">
 		<!-- Header -->
 		<div style="text-align:center; padding: 24px 0;">
@@ -38,44 +37,45 @@
 			</div>
 		</div>
 	</div>
-
 </section>
 
 <!-- White section with search and table -->
 <section style="background:#ffffff; padding: 24px 0;">
 	<div class="container" style="max-width: 1200px; margin: 0 auto; padding: 0 16px;">
-		
-		<!-- Search bar and Add button -->
-		<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px; gap:16px;">
-			<form method="get" asp-action="Users" style="display:flex; flex:1; max-width:600px; gap:12px;">
+		<!-- Search bar and Add buttons aligned left -->
+		<div style="display:flex; justify-content:flex-start; align-items:center; margin-bottom:24px; gap:12px; flex-wrap:wrap;">
+			<form method="get" asp-action="Users" style="display:flex; flex:1 1 400px; max-width:600px; gap:12px; min-width:260px;">
 				<input type="hidden" name="tab" value="@Model?.ActiveTab" />
+				<input type="hidden" name="status" value="@Model?.ActiveStatus" />
 				<input type="text" name="search" placeholder="Search by name or email" 
 					   value="@Model?.SearchTerm"
 					   style="flex:1; padding:10px 16px; border:1px solid #d1d5db; border-radius:8px; font-size:14px; background:#ffffff;">
 				<button type="submit" style="background:#059669; color:#fff; border:none; border-radius:8px; padding:10px 24px; font-weight:600; cursor:pointer;">Search</button>
 				@if (!string.IsNullOrWhiteSpace(Model?.SearchTerm))
 				{
-					<a asp-action="Users" asp-route-tab="@Model.ActiveTab" style="background:#6b7280; color:#fff; border:none; border-radius:8px; padding:10px 24px; font-weight:600; cursor:pointer; text-decoration:none;">Clear</a>
+					<a asp-action="Users" asp-route-tab="@Model.ActiveTab" asp-route-status="@Model.ActiveStatus" style="background:#6b7280; color:#fff; border:none; border-radius:8px; padding:10px 24px; font-weight:600; cursor:pointer; text-decoration:none;">Clear</a>
 				}
 			</form>
-			<a id="addStudentBtn" asp-controller="Admin" asp-action="AddStudent" style="background:#059669; color:#fff; border:none; border-radius:8px; padding:10px 24px; font-weight:600; cursor:pointer; text-decoration:none;">Add Student</a>
-			<a id="addTeacherBtn" asp-controller="Admin" asp-action="AddTeacher" style="background:#059669; color:#fff; border:none; border-radius:8px; padding:10px 24px; font-weight:600; cursor:pointer; text-decoration:none;">Add Teacher</a>
+			
+			<!-- Status Filter Dropdown -->
+			<select id="statusFilter" onchange="filterByStatus()" style="padding:10px 16px; border:1px solid #d1d5db; border-radius:8px; font-size:14px; background:#ffffff; cursor:pointer;">
+				<option value="all" selected="@(Model?.ActiveStatus == "all" || string.IsNullOrEmpty(Model?.ActiveStatus))">All Status</option>
+				<option value="active" selected="@(Model?.ActiveStatus == "active")">Active Only</option>
+				<option value="inactive" selected="@(Model?.ActiveStatus == "inactive")">Inactive Only</option>
+			</select>
+
+			<a id="addStudentBtn" asp-controller="Admin" asp-action="AddStudent" style="display:none; background:#059669; color:#fff; border:none; border-radius:8px; padding:10px 24px; font-weight:600; cursor:pointer; text-decoration:none; min-width:140px; text-align:center;">Add Student</a>
+			<a id="addTeacherBtn" asp-controller="Admin" asp-action="AddTeacher" style="display:none; background:#059669; color:#fff; border:none; border-radius:8px; padding:10px 24px; font-weight:600; cursor:pointer; text-decoration:none; min-width:140px; text-align:center;">Add Teacher</a>
 		</div>
 
 		<!-- Tabs -->
 		<div style="display:flex; gap:0; background:#059669; padding:0; border-radius:8px 8px 0 0; overflow:hidden;">
-			<a asp-action="Users" asp-route-tab="all" asp-route-search="@Model?.SearchTerm"
-			   style="background:#059669; color:#fff; border:none; padding:12px 24px; font-weight:600; cursor:pointer; border-radius:0; position:relative; border-bottom:@(Model?.ActiveTab == "all" ? "3px solid #84FFC2" : "3px solid transparent"); transition:all 0.3s ease; text-decoration:none;">
-				All users
-			</a>
-			<a asp-action="Users" asp-route-tab="students" asp-route-search="@Model?.SearchTerm"
-			   style="background:#059669; color:@(Model?.ActiveTab == "students" ? "#fff" : "rgba(255,255,255,0.7)"); border:none; padding:12px 24px; font-weight:600; cursor:pointer; border-radius:0; position:relative; border-bottom:@(Model?.ActiveTab == "students" ? "3px solid #84FFC2" : "3px solid transparent"); transition:all 0.3s ease; text-decoration:none;">
-				Students (@(Model?.Students.Count ?? 0))
-			</a>
-			<a asp-action="Users" asp-route-tab="instructors" asp-route-search="@Model?.SearchTerm"
-			   style="background:#059669; color:@(Model?.ActiveTab == "instructors" ? "#fff" : "rgba(255,255,255,0.7)"); border:none; padding:12px 24px; font-weight:600; cursor:pointer; border-radius:0; position:relative; border-bottom:@(Model?.ActiveTab == "instructors" ? "3px solid #84FFC2" : "3px solid transparent"); transition:all 0.3s ease; text-decoration:none;">
-				Instructors (@(Model?.Instructors.Count ?? 0))
-			</a>
+			<a id="tabAll" asp-action="Users" asp-route-tab="all" asp-route-search="@Model?.SearchTerm" asp-route-status="@Model?.ActiveStatus"
+			   style="background:#059669; color:#fff; border:none; padding:12px 24px; font-weight:600; cursor:pointer; border-radius:0; position:relative; border-bottom:@(Model?.ActiveTab == "all" ? "3px solid #84FFC2" : "3px solid transparent"); transition:all 0.3s ease; text-decoration:none;">All users</a>
+			<a id="tabStudents" asp-action="Users" asp-route-tab="students" asp-route-search="@Model?.SearchTerm" asp-route-status="@Model?.ActiveStatus"
+			   style="background:#059669; color:@(Model?.ActiveTab == "students" ? "#fff" : "rgba(255,255,255,0.7)"); border:none; padding:12px 24px; font-weight:600; cursor:pointer; border-radius:0; position:relative; border-bottom:@(Model?.ActiveTab == "students" ? "3px solid #84FFC2" : "3px solid transparent"); transition:all 0.3s ease; text-decoration:none;">Students (@(Model?.Students.Count ?? 0))</a>
+			<a id="tabInstructors" asp-action="Users" asp-route-tab="instructors" asp-route-search="@Model?.SearchTerm" asp-route-status="@Model?.ActiveStatus"
+			   style="background:#059669; color:@(Model?.ActiveTab == "instructors" ? "#fff" : "rgba(255,255,255,0.7)"); border:none; padding:12px 24px; font-weight:600; cursor:pointer; border-radius:0; position:relative; border-bottom:@(Model?.ActiveTab == "instructors" ? "3px solid #84FFC2" : "3px solid transparent"); transition:all 0.3s ease; text-decoration:none;">Instructors (@(Model?.Instructors.Count ?? 0))</a>
 		</div>
 
 		<!-- Table -->
@@ -86,7 +86,6 @@
 						<th style="padding:12px 16px; text-align:left; font-weight:700; color:#111827;">ID No.</th>
 						<th style="padding:12px 16px; text-align:left; font-weight:700; color:#111827;">Name</th>
 						<th style="padding:12px 16px; text-align:left; font-weight:700; color:#111827;">Role</th>
-						<th style="padding:12px 16px; text-align:left; font-weight:700; color:#111827;">Department/Office</th>
 						<th style="padding:12px 16px; text-align:left; font-weight:700; color:#111827;">Status</th>
 						<th style="padding:12px 16px; text-align:left; font-weight:700; color:#111827;">Actions</th>
 					</tr>
@@ -94,13 +93,22 @@
 				<tbody>
 					@if (Model?.DisplayedUsersWithRoles != null && Model.DisplayedUsersWithRoles.Count > 0)
 					{
-						@foreach (var entry in Model.DisplayedUsersWithRoles)
+						int rowNumber = 1;
+						foreach (var entry in Model.DisplayedUsersWithRoles)
 						{
 							<tr style="border-bottom:1px solid #e5e7eb;" data-user-id="@entry.User.Id">
-								<td style="padding:16px; color:#111827;">@entry.User.Id</td>
+								<td style="padding:16px; color:#111827;">
+									@if (!string.IsNullOrWhiteSpace(entry.User.UserDisplayId))
+									{
+										@entry.User.UserDisplayId
+									}
+									else
+									{
+										@rowNumber
+									}
+								</td>
 								<td style="padding:16px; color:#111827;">@UsersTableViewModel.GetFullName(entry.User)</td>
 								<td style="padding:16px; color:#111827;">@entry.GetRoleNames()</td>
-								<td style="padding:16px; color:#111827;">-</td>
 								<td style="padding:16px;">
 									@if (entry.User.IsActive == true)
 									{
@@ -127,12 +135,13 @@
 									</div>
 								</td>
 							</tr>
+							rowNumber++;
 						}
 					}
 					else
 					{
 						<tr style="border-bottom:1px solid #e5e7eb;">
-							<td colspan="6" style="padding:32px; text-align:center; color:#6b7280;">
+							<td colspan="5" style="padding:32px; text-align:center; color:#6b7280;">
 								@if (Model?.SearchTerm != null)
 								{
 									<p style="margin:0;">No users found matching "@Model.SearchTerm"</p>
@@ -147,9 +156,67 @@
 				</tbody>
 			</table>
 		</div>
-
 	</div>
 </section>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Tab logic for showing/hiding Add buttons
+    const tabAll = document.getElementById('tabAll');
+    const tabStudents = document.getElementById('tabStudents');
+    const tabInstructors = document.getElementById('tabInstructors');
+    const addStudentBtn = document.getElementById('addStudentBtn');
+    const addTeacherBtn = document.getElementById('addTeacherBtn');
+
+    function updateAddButtons() {
+        // Hide both by default
+        addStudentBtn.style.display = 'none';
+        addTeacherBtn.style.display = 'none';
+        // Show based on active tab
+        if (window.location.href.includes('tab=students')) {
+            addStudentBtn.style.display = 'inline-block';
+        } else if (window.location.href.includes('tab=instructors')) {
+            addTeacherBtn.style.display = 'inline-block';
+        }
+    }
+
+    // Initial state
+    updateAddButtons();
+
+    // Add click listeners to tabs
+    tabAll.addEventListener('click', function() {
+        setTimeout(updateAddButtons, 100);
+    });
+    tabStudents.addEventListener('click', function() {
+        setTimeout(updateAddButtons, 100);
+    });
+    tabInstructors.addEventListener('click', function() {
+        setTimeout(updateAddButtons, 100);
+    });
+});
+
+// Status filter function
+function filterByStatus() {
+    const statusValue = document.getElementById('statusFilter').value;
+    const urlParams = new URLSearchParams(window.location.search);
+    
+    // Update status parameter
+    urlParams.set('status', statusValue);
+    
+    // Preserve other parameters
+    const tab = urlParams.get('tab') || 'all';
+    const search = urlParams.get('search') || '';
+    
+    // Build new URL
+    let newUrl = '@Url.Action("Users", "Admin")' + '?tab=' + tab + '&status=' + statusValue;
+    if (search) {
+        newUrl += '&search=' + encodeURIComponent(search);
+    }
+    
+    // Navigate to new URL
+    window.location.href = newUrl;
+}
+</script>
 
 <!-- Deactivate Modal -->
 <div id="deactivateModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:1000; align-items:center; justify-content:center;">
@@ -193,39 +260,62 @@
 
 <script>
 	function navigateToView(button) {
-		// Find the row and extract the ID number from the first cell and role from the third cell
-		const row = button.closest('tr');
-		const idCell = row?.cells?.[0];
-		const roleCell = row?.cells?.[2];
-		const id = idCell ? idCell.textContent.trim() : '';
-		const role = roleCell ? roleCell.textContent.trim() : '';
-		
-		// Navigate to appropriate view based on role
-		if (role === 'Teacher') {
-			window.location.href = '@Url.Action("ViewTeacher", "Admin")' + (id ? ('?id=' + encodeURIComponent(id)) : '');
-		} else {
-			window.location.href = '@Url.Action("ViewUser", "Admin")' + (id ? ('?id=' + encodeURIComponent(id)) : '');
-		}
-	}
-	
-	function navigateToEdit(button) {
-		// Find the row and extract the user ID from the data attribute
 		const row = button.closest('tr');
 		const userId = row ? row.getAttribute('data-user-id') : '';
 		
-		// Navigate to EditUser action
-		window.location.href = '@Url.Action("EditUser", "Admin")' + (userId ? ('?id=' + encodeURIComponent(userId)) : '');
+		console.log('Navigating to view - User ID:', userId);
+		
+		// Validate userId before navigation
+		if (!userId || userId === 'null' || userId === 'undefined' || userId === '0' || userId === '') {
+			console.error('❌ Invalid user ID:', userId);
+			alert('Error: Invalid user ID. Cannot view user details.');
+			return;
+		}
+		
+		// Parse and validate as integer
+		const userIdInt = parseInt(userId);
+		if (isNaN(userIdInt) || userIdInt <= 0) {
+			console.error('❌ Invalid user ID after parsing:', userIdInt);
+			alert('Error: Invalid user ID. Cannot view user details.');
+			return;
+		}
+		
+		// ✅ FIX: Route ALL users (students and teachers) to ViewUser action
+		// ViewUser.cshtml already handles both roles dynamically
+		window.location.href = '@Url.Action("ViewUser", "Admin")?id=' + userIdInt;
 	}
 	
-	// Global variable to store the current row being acted upon
+	function navigateToEdit(button) {
+		const row = button.closest('tr');
+		const userId = row ? row.getAttribute('data-user-id') : '';
+		
+		console.log('Navigating to edit - User ID:', userId);
+		
+		// Validate userId before navigation
+		if (!userId || userId === 'null' || userId === 'undefined' || userId === '0' || userId === '') {
+			console.error('❌ Invalid user ID:', userId);
+			alert('Error: Invalid user ID. Cannot edit user.');
+			return;
+		}
+		
+		// Parse and validate as integer
+		const userIdInt = parseInt(userId);
+		if (isNaN(userIdInt) || userIdInt <= 0) {
+			console.error('❌ Invalid user ID after parsing:', userIdInt);
+			alert('Error: Invalid user ID. Cannot edit user.');
+			return;
+		}
+		
+		// ✅ CRITICAL: Pass ID as URL parameter (not route parameter)
+		window.location.href = '@Url.Action("EditUser", "Admin")?id=' + userIdInt;
+	}
+	
 	let currentActionRow = null;
 	
 	function showDeactivateModal(button) {
 		currentActionRow = button.closest('tr');
-		const nameCell = currentActionRow.cells[1]; // Name column
-		const roleCell = currentActionRow.cells[2]; // Role column
+		const nameCell = currentActionRow.cells[1];
 		const name = nameCell ? nameCell.textContent.trim() : 'this user';
-		const role = roleCell ? roleCell.textContent.trim().toLowerCase() : 'user';
 		
 		document.getElementById('deactivateModalText').textContent = `Are you sure you want to deactivate ${name}? This action will prevent them from accessing the system.`;
 		document.getElementById('deactivateModal').style.display = 'flex';
@@ -238,29 +328,78 @@
 	
 	function confirmDeactivate() {
 		if (currentActionRow) {
-			const statusCell = currentActionRow.cells[4]; // Status column
-			const statusSpan = statusCell.querySelector('span');
-			const deactivateBtn = currentActionRow.querySelector('.deactivate-action');
-			const reactivateBtn = currentActionRow.querySelector('.reactivate-action');
+			const userId = currentActionRow.getAttribute('data-user-id');
+			const nameCell = currentActionRow.cells[1];
+			const name = nameCell ? nameCell.textContent.trim() : 'this user';
 			
-			// Update status to inactive
-			statusSpan.textContent = 'Inactive';
-			statusSpan.style.background = '#e5e7eb';
-			statusSpan.style.color = '#4b5563';
+			// ✅ ADDED: Validation and logging
+			console.log('=== DEACTIVATE DEBUG ===');
+			console.log('Row:', currentActionRow);
+			console.log('User ID (raw):', userId);
+			console.log('User ID (parsed):', parseInt(userId));
+			console.log('User Name:', name);
 			
-			// Toggle action buttons
-			deactivateBtn.style.display = 'none';
-			reactivateBtn.style.display = 'block';
+			if (!userId || userId === 'null' || userId === 'undefined' || userId === '0') {
+				console.error('❌ Invalid user ID:', userId);
+				alert('Error: Invalid user ID. Cannot deactivate user.');
+				hideDeactivateModal();
+				return;
+			}
 			
-			// TODO: Implement actual deactivation logic (API call)
-			alert('User deactivated successfully');
+			const userIdInt = parseInt(userId);
+			if (isNaN(userIdInt) || userIdInt <= 0) {
+				console.error('❌ Invalid user ID after parsing:', userIdInt);
+				alert('Error: Invalid user ID. Cannot deactivate user.');
+				hideDeactivateModal();
+				return;
+			}
+			
+			console.log('✅ Validation passed. Sending request...');
+			
+			fetch('/Admin/SetUserStatus', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ id: userIdInt, isActive: false })
+			})
+			.then(response => {
+				console.log('Response status:', response.status);
+				return response.json();
+			})
+			.then(data => {
+				console.log('Response data:', data);
+				if (data.success) {
+					const statusCell = currentActionRow.cells[3];
+					const statusSpan = statusCell.querySelector('span');
+					const deactivateBtn = currentActionRow.querySelector('.deactivate-action');
+					const reactivateBtn = currentActionRow.querySelector('.reactivate-action');
+					
+					statusSpan.textContent = 'Inactive';
+					statusSpan.style.background = '#e5e7eb';
+					statusSpan.style.color = '#4b5563';
+					
+					deactivateBtn.style.display = 'none';
+					reactivateBtn.style.display = 'block';
+					
+					console.log('✅ User deactivated successfully');
+					alert(`${name} has been deactivated successfully.`);
+				} else {
+					console.error('❌ Deactivation failed:', data.message);
+					alert(data.message || 'Failed to deactivate user.');
+				}
+			})
+			.catch(error => {
+				console.error('❌ Error during fetch:', error);
+				alert('An error occurred. Please try again.');
+			});
+		} else {
+			console.error('❌ No current action row found');
 		}
 		hideDeactivateModal();
 	}
 	
 	function showReactivateModal(button) {
 		currentActionRow = button.closest('tr');
-		const nameCell = currentActionRow.cells[1]; // Name column
+		const nameCell = currentActionRow.cells[1];
 		const name = nameCell ? nameCell.textContent.trim() : 'this user';
 		
 		document.getElementById('reactivateModalText').textContent = `Are you sure you want to reactivate ${name}? This will restore their access to the system.`;
@@ -274,27 +413,75 @@
 	
 	function confirmReactivate() {
 		if (currentActionRow) {
-			const statusCell = currentActionRow.cells[4]; // Status column
-			const statusSpan = statusCell.querySelector('span');
-			const deactivateBtn = currentActionRow.querySelector('.deactivate-action');
-			const reactivateBtn = currentActionRow.querySelector('.reactivate-action');
+			const userId = currentActionRow.getAttribute('data-user-id');
+			const nameCell = currentActionRow.cells[1];
+			const name = nameCell ? nameCell.textContent.trim() : 'this user';
 			
-			// Update status to active
-			statusSpan.textContent = 'Active';
-			statusSpan.style.background = '#d1fae5';
-			statusSpan.style.color = '#065f46';
+			// ✅ ADDED: Validation and logging
+			console.log('=== REACTIVATE DEBUG ===');
+			console.log('Row:', currentActionRow);
+			console.log('User ID (raw):', userId);
+			console.log('User ID (parsed):', parseInt(userId));
+			console.log('User Name:', name);
 			
-			// Toggle action buttons
-			reactivateBtn.style.display = 'none';
-			deactivateBtn.style.display = 'block';
+			if (!userId || userId === 'null' || userId === 'undefined' || userId === '0') {
+				console.error('❌ Invalid user ID:', userId);
+				alert('Error: Invalid user ID. Cannot reactivate user.');
+				hideReactivateModal();
+				return;
+			}
 			
-			// TODO: Implement actual reactivation logic (API call)
-			alert('User reactivated successfully');
+			const userIdInt = parseInt(userId);
+			if (isNaN(userIdInt) || userIdInt <= 0) {
+				console.error('❌ Invalid user ID after parsing:', userIdInt);
+				alert('Error: Invalid user ID. Cannot reactivate user.');
+				hideReactivateModal();
+				return;
+			}
+			
+			console.log('✅ Validation passed. Sending request...');
+			
+			fetch('/Admin/SetUserStatus', {
+				method: 'POST',
+			 headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ id: userIdInt, isActive: true })
+			})
+			.then(response => {
+				console.log('Response status:', response.status);
+				return response.json();
+			})
+			.then(data => {
+				console.log('Response data:', data);
+				if (data.success) {
+					const statusCell = currentActionRow.cells[3];
+					const statusSpan = statusCell.querySelector('span');
+					const deactivateBtn = currentActionRow.querySelector('.deactivate-action');
+					const reactivateBtn = currentActionRow.querySelector('.reactivate-action');
+					
+					statusSpan.textContent = 'Active';
+					statusSpan.style.background = '#d1fae5';
+					statusSpan.style.color = '#065f46';
+					
+					reactivateBtn.style.display = 'none';
+					deactivateBtn.style.display = 'block';
+					
+					console.log('✅ User reactivated successfully');
+					alert(`${name} has been reactivated successfully.`);
+				} else {
+					console.error('❌ Reactivation failed:', data.message);
+					alert(data.message || 'Failed to reactivate user.');
+				}
+			})
+			.catch(error => {
+				console.error('❌ Error during fetch:', error);
+				alert('An error occurred. Please try again.');
+			});
+		} else {
+			console.error('❌ No current action row found');
 		}
 		hideReactivateModal();
 	}
 	
-	// Toggle action menu dropdowns
 	document.addEventListener('DOMContentLoaded', function() {
 		const actionBtns = document.querySelectorAll('.action-menu-btn');
 		
@@ -303,91 +490,27 @@
 				e.stopPropagation();
 				const menu = this.nextElementSibling;
 				
-				// Close all other menus
 				document.querySelectorAll('.action-menu').forEach(m => {
 					if (m !== menu) m.style.display = 'none';
 				});
 				
-				// Toggle current menu
 				menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
 			});
 		});
 		
-		// Close menus when clicking outside
 		document.addEventListener('click', function() {
 			document.querySelectorAll('.action-menu').forEach(menu => {
 				menu.style.display = 'none';
 			});
 		});
-
-		// Tab switching with animated underline and filtering
-		const tabBtns = document.querySelectorAll('.tab-btn');
-		const tableRows = document.querySelectorAll('tbody tr');
-		const addStudentBtn = document.getElementById('addStudentBtn');
-		const addTeacherBtn = document.getElementById('addTeacherBtn');
-		
-		tabBtns.forEach(btn => {
-			btn.addEventListener('click', function() {
-				// Remove active class from all tabs
-				tabBtns.forEach(tab => {
-					tab.classList.remove('active');
-					tab.style.color = 'rgba(255,255,255,0.7)';
-					tab.style.borderBottom = '3px solid transparent';
-				});
-				
-				// Add active class to clicked tab
-				this.classList.add('active');
-				this.style.color = '#fff';
-				this.style.borderBottom = '3px solid #84FFC2';
-				
-				// Filter table rows based on selected tab
-				const tabText = this.textContent.trim();
-				
-				// Hide all buttons first
-				addStudentBtn.style.display = 'none';
-				addTeacherBtn.style.display = 'none';
-				
-				tableRows.forEach(row => {
-					const roleCell = row.cells[2]; // Role column is at index 2
-					const roleText = roleCell.textContent.trim();
-					
-					if (tabText === 'All users') {
-						// Show all rows, no add button
-						row.style.display = '';
-					} else if (tabText === 'Students') {
-						// Show only students, show Add Student button
-						if (roleText === 'Student') {
-							row.style.display = '';
-						} else {
-							row.style.display = 'none';
-						}
-						addStudentBtn.style.display = 'block';
-					} else if (tabText === 'Teachers') {
-						// Show only teachers, show Add Teacher button
-						if (roleText === 'Teacher') {
-							row.style.display = '';
-						} else {
-							row.style.display = 'none';
-						}
-						addTeacherBtn.style.display = 'block';
-					}
-				});
-			});
-		});
 	});
 
-
-// Close modals when clicking outside
-window.onclick = function(event) {
-	const deactivateModal = document.getElementById('deactivateModal');
-	const reactivateModal = document.getElementById('reactivateModal');
-	
-	if (event.target === deactivateModal) {
-		hideDeactivateModal();
+	window.onclick = function(event) {
+		const deactivateModal = document.getElementById('deactivateModal');
+		const reactivateModal = document.getElementById('reactivateModal');
+		
+		if (event.target === deactivateModal) hideDeactivateModal();
+		if (event.target === reactivateModal) hideReactivateModal();
 	}
-	if (event.target === reactivateModal) {
-		hideReactivateModal();
-	}
-}
 </script>
 
