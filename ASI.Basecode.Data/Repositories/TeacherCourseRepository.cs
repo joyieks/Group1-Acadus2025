@@ -20,15 +20,19 @@ namespace ASI.Basecode.Data.Repositories
         }
         public async Task<List<ActivityModel>> GetActivitiesByCourseIdAsync(long courseId)
         {
+            // Get all activities for the course (filter IsArchived in memory to avoid column not found error)
             var res = await _supabaseClient
                 .From<ActivityModel>()
-                .Where(a => a.CourseId == courseId)
-                .Where(a => a.IsArchived == false)
+                .Filter("courseId", Supabase.Postgrest.Constants.Operator.Equals, courseId)
                 .Get();
 
-            return res.Models
+            // Filter out archived activities in memory (if IsArchived column exists in model but not in DB, this will handle it)
+            var activities = res.Models
+                .Where(a => !a.IsArchived)  // Filter in memory
                 .OrderBy(a => a.DueDate)
                 .ToList();
+
+            return activities;
         }
 
         public async Task<List<ActivitySubmissionModel>> GetSubmissionsByStudentAndCourseAsync(string studentId, long courseId)

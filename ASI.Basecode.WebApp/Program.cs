@@ -111,6 +111,8 @@ builder.Services.AddScoped<IStudentCourseRepository, StudentCourseRepository>();
 builder.Services.AddScoped<ITeacherCourseService, TeacherCourseService>();
 builder.Services.AddScoped<ITeacherCourseRepository, TeacherCourseRepository>();
 
+builder.Services.AddScoped<ASI.Basecode.Services.Interfaces.IAuditLogService, ASI.Basecode.Services.Services.AuditLogService>();
+
 var configurer = new StartupConfigurer(builder.Configuration);
 configurer.ConfigureServices(builder.Services);
 

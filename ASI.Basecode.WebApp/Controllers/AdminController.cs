@@ -676,12 +676,36 @@ try
             return View();
         }
 
+        /// <summary>
+        /// API endpoint to generate course code based on year level
+        /// </summary>
+        [HttpGet]
+        public async Task<IActionResult> GenerateCourseCode(string level)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(level))
+                {
+                    return Json(new { success = false, message = "Year level is required" });
+                }
+
+                var generatedCode = await _courseService.GenerateCourseCodeAsync(level);
+                return Json(new { success = true, code = generatedCode });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error generating course code: {ex.Message}");
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
+
         [HttpGet]
         public async Task<IActionResult> AddCourse()
         {
             try
             {
                 var model = new CourseCreateViewModel();
+                model.Code = string.Empty; // Ensure Code is empty for auto-generation
                 
                 // Populate instructor dropdown
                 var instructors = await _courseService.GetActiveInstructorsAsync();
@@ -698,9 +722,10 @@ try
                 // Populate level dropdown
                 model.Levels = new List<LevelOption>
                 {
-                    new LevelOption { Value = "Undergraduate", Label = "Undergraduate" },
-                    new LevelOption { Value = "Graduate", Label = "Graduate" },
-                    new LevelOption { Value = "Doctorate", Label = "Doctorate" }
+                    new LevelOption { Value = "1st Year", Label = "1st Year" },
+                    new LevelOption { Value = "2nd Year", Label = "2nd Year" },
+                    new LevelOption { Value = "3rd Year", Label = "3rd Year" },
+                    new LevelOption { Value = "4th Year", Label = "4th Year" }
                 };
 
                 Console.WriteLine($"=== AdminController.AddCourse (GET) ===");
@@ -722,6 +747,9 @@ try
         {
             try
             {
+                // Remove Code validation errors since it's auto-generated
+                ModelState.Remove(nameof(model.Code));
+                
                 if (!ModelState.IsValid)
                 {
                     // Repopulate dropdowns on validation failure
@@ -737,19 +765,21 @@ try
 
                     model.Levels = new List<LevelOption>
                     {
-                        new LevelOption { Value = "Undergraduate", Label = "Undergraduate" },
-                        new LevelOption { Value = "Graduate", Label = "Graduate" },
-                        new LevelOption { Value = "Doctorate", Label = "Doctorate" }
+                        new LevelOption { Value = "1st Year", Label = "1st Year" },
+                        new LevelOption { Value = "2nd Year", Label = "2nd Year" },
+                        new LevelOption { Value = "3rd Year", Label = "3rd Year" },
+                        new LevelOption { Value = "4th Year", Label = "4th Year" }
                     };
 
                     return View(model);
                 }
 
                 Console.WriteLine($"=== AdminController.AddCourse (POST) ===");
-                Console.WriteLine($"Creating course: {model.Name} ({model.Code})");
+                Console.WriteLine($"Creating course: {model.Name} (Code will be auto-generated)");
 
+                // Pass empty code to trigger auto-generation
                 var (success, message, courseId) = await _courseService.CreateCourseAsync(
-                    code: model.Code,
+                    code: string.Empty, // Auto-generate code
                     name: model.Name,
                     description: model.Description,
                     credits: model.Credits,
@@ -782,9 +812,10 @@ try
 
                     model.Levels = new List<LevelOption>
                     {
-                        new LevelOption { Value = "Undergraduate", Label = "Undergraduate" },
-                        new LevelOption { Value = "Graduate", Label = "Graduate" },
-                        new LevelOption { Value = "Doctorate", Label = "Doctorate" }
+                        new LevelOption { Value = "1st Year", Label = "1st Year" },
+                        new LevelOption { Value = "2nd Year", Label = "2nd Year" },
+                        new LevelOption { Value = "3rd Year", Label = "3rd Year" },
+                        new LevelOption { Value = "4th Year", Label = "4th Year" }
                     };
 
                     return View(model);
@@ -795,6 +826,26 @@ try
                 Console.WriteLine($"Error creating course: {ex.Message}");
                 Console.WriteLine($"Stack Trace: {ex.StackTrace}");
                 ModelState.AddModelError(string.Empty, $"Error creating course: {ex.Message}");
+                
+                // Repopulate dropdowns on exception
+                var instructors = await _courseService.GetActiveInstructorsAsync();
+                model.Instructors = instructors
+                    .Select(i => new InstructorOption { UserTypeId = i.UserTypeId, FullName = i.FullName })
+                    .ToList();
+
+                var semesters = await _courseService.GetAllSemestersAsync();
+                model.Semesters = semesters
+                    .Select(s => new SemesterOption { Id = s.Id, SemesterName = s.SemesterName })
+                    .ToList();
+
+                model.Levels = new List<LevelOption>
+                {
+                    new LevelOption { Value = "1st Year", Label = "1st Year" },
+                    new LevelOption { Value = "2nd Year", Label = "2nd Year" },
+                    new LevelOption { Value = "3rd Year", Label = "3rd Year" },
+                    new LevelOption { Value = "4th Year", Label = "4th Year" }
+                };
+                
                 return View(model);
             }
         }

@@ -65,6 +65,11 @@
     </style>
     <script>
         $(document).ready(function() {
+            // Destroy existing DataTable instance if it exists
+            if ($.fn.DataTable.isDataTable('#recentActivityTable')) {
+                $('#recentActivityTable').DataTable().destroy();
+            }
+            
             $('#recentActivityTable').DataTable({
                 paging: true,
                 pageLength: 5,
@@ -72,6 +77,11 @@
                 ordering: true,
                 info: false,
                 lengthChange: false,
+                autoWidth: false,
+                columns: [
+                    null, // Activity
+                    null  // Date & Time
+                ],
                 "language": {
                     "paginate": {
                         "previous": "Prev",

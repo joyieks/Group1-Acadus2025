@@ -1,7 +1,8 @@
+@model IEnumerable<ASI.Basecode.Data.Models.AuditLogModel>
 @*
     Recent Activity View Component View
     Renders a list of recent activities in the Teacher dashboard overview section,
-    styled similarly to the Admin dashboard's recent activity panel.
+    styled similarly to the Admin dashboard's recent activity section.
 *@
 
 <div style="background:#ffffff; border-radius:12px; padding:24px; box-shadow:0 1px 3px rgba(0,0,0,0.1);">
@@ -14,62 +15,32 @@
         <thead style="background:#f9fafb;">
             <tr>
                 <th style="padding:12px; text-align:left; font-weight:600; color:#111827;">Activity</th>
-                <th style="padding:12px; text-align:left; font-weight:600; color:#111827;">User</th>
-                <th style="padding:12px; text-align:left; font-weight:600; color:#111827;">Date</th>
+                <th style="padding:12px; text-align:left; font-weight:600; color:#111827;">Date & Time</th>
             </tr>
         </thead>
         <tbody>
-            <tr style="background:#E8F9E8;">
-                <td style="padding:16px; font-weight:700; color:#111827;">Task item title</td>
-                <td style="padding:16px; color:#6b7280;">User of action</td>
-                <td style="padding:16px; color:#6b7280;">MMMM DD, 00:00 XM</td>
-            </tr>
-            <tr>
-                <td style="padding:16px; font-weight:700; color:#111827;">Task item title</td>
-                <td style="padding:16px; color:#6b7280;">User of action</td>
-                <td style="padding:16px; color:#6b7280;">MMMM DD, 00:00 XM</td>
-            </tr>
-            <tr style="background:#E8F9E8;">
-                <td style="padding:16px; font-weight:700; color:#111827;">Task item title</td>
-                <td style="padding:16px; color:#6b7280;">User of action</td>
-                <td style="padding:16px; color:#6b7280;">MMMM DD, 00:00 XM</td>
-            </tr>
-            <tr>
-                <td style="padding:16px; font-weight:700; color:#111827;">Task item title</td>
-                <td style="padding:16px; color:#6b7280;">User of action</td>
-                <td style="padding:16px; color:#6b7280;">MMMM DD, 00:00 XM</td>
-            </tr>
-            <tr style="background:#E8F9E8;">
-                <td style="padding:16px; font-weight:700; color:#111827;">Task item title</td>
-                <td style="padding:16px; color:#6b7280;">User of action</td>
-                <td style="padding:16px; color:#6b7280;">MMMM DD, 00:00 XM</td>
-            </tr>
-            <tr>
-                <td style="padding:16px; font-weight:700; color:#111827;">Task item title</td>
-                <td style="padding:16px; color:#6b7280;">User of action</td>
-                <td style="padding:16px; color:#6b7280;">MMMM DD, 00:00 XM</td>
-            </tr>
-            <tr style="background:#E8F9E8;">
-                <td style="padding:16px; font-weight:700; color:#111827;">Task item title</td>
-                <td style="padding:16px; color:#6b7280;">User of action</td>
-                <td style="padding:16px; color:#6b7280;">MMMM DD, 00:00 XM</td>
-            </tr>
-            <tr>
-                <td style="padding:16px; font-weight:700; color:#111827;">Task item title</td>
-                <td style="padding:16px; color:#6b7280;">User of action</td>
-                <td style="padding:16px; color:#6b7280;">MMMM DD, 00:00 XM</td>
-            </tr>
-            <tr style="background:#E8F9E8;">
-                <td style="padding:16px; font-weight:700; color:#111827;">Task item title</td>
-                <td style="padding:16px; color:#6b7280;">User of action</td>
-                <td style="padding:16px; color:#6b7280;">MMMM DD, 00:00 XM</td>
-            </tr>
-            <tr>
-                <td style="padding:16px; font-weight:700; color:#111827;">Task item title</td>
-                <td style="padding:16px; color:#6b7280;">User of action</td>
-                <td style="padding:16px; color:#6b7280;">MMMM DD, 00:00 XM</td>
-            </tr>
-            <!-- Add more rows as needed -->
+            @if (Model != null && Model.Any())
+            {
+                var rowIndex = 0;
+                @foreach (var log in Model)
+                {
+                    var isHighlighted = rowIndex % 2 == 0;
+                    var dateTime = log.CreatedAt.Kind == DateTimeKind.Utc ? log.CreatedAt.ToLocalTime() : log.CreatedAt;
+                    var formattedDate = dateTime.ToString("MMMM dd, yyyy, hh:mm tt");
+                    <tr style="@(isHighlighted ? "background:#E8F9E8;" : "")">
+                        <td style="padding:16px; font-weight:700; color:#111827;">@log.ActionDescription</td>
+                        <td style="padding:16px; color:#6b7280;">@formattedDate</td>
+                    </tr>
+                    rowIndex++;
+                }
+            }
+            else
+            {
+                <tr>
+                    <td style="padding:32px; text-align:center; color:#6b7280;">No recent activities found.</td>
+                    <td></td>
+                </tr>
+            }
         </tbody>
     </table>
 </div>
