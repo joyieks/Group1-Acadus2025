@@ -15,13 +15,18 @@ namespace ASI.Basecode.Services.Services
     {
         private readonly ISupabaseAuthService _supabaseAuthService;
         private readonly IConfiguration _configuration;
+        private readonly IdGeneratorService _idGenerator; // ✅ NEW
         private Supabase.Client _supabaseClient;
         private static HttpClient _httpClient;
 
-        public StudentService(ISupabaseAuthService supabaseAuthService, IConfiguration configuration)
+        public StudentService(
+        ISupabaseAuthService supabaseAuthService, 
+            IConfiguration configuration,
+            IdGeneratorService idGenerator) // ✅ NEW
         {
-            _supabaseAuthService = supabaseAuthService;
-            _configuration = configuration;
+      _supabaseAuthService = supabaseAuthService;
+      _configuration = configuration;
+     _idGenerator = idGenerator; // ✅ NEW
         }
 
         private HttpClient GetHttpClient()
@@ -99,43 +104,67 @@ namespace ASI.Basecode.Services.Services
 
                 Console.WriteLine($"✓ Step 1 Complete: Auth user created with ID: {supabaseUserId}");
 
-                var client = await GetSupabaseClientAsync();
+ var client = await GetSupabaseClientAsync();
 
-                // Step 2: Insert into users table (stores all personal information)
-                Console.WriteLine($"Step 2: Inserting into users table...");
-                var userRecord = new SupabaseUserNew
-                {
-                    FirstName = model.FirstName,
-                    LastName = model.LastName,
-                    MiddleName = model.MiddleName,
-                    Suffix = model.Suffix,
-                    Email = model.Email,
-                    ContactNumber = model.ContactNumber,
-                    UserTypeId = supabaseUserId, // Supabase Auth UUID
-                    IsActive = true,
-                    ProfilePictureUrl = null,
-                    Address = null,
-                    EmergencyContact = null
-                };
+ // ✅ Step 1.5: Generate unique student display ID
+        Console.WriteLine($"Step 1.5: Generating unique student display ID...");
+   var studentDisplayId = await _idGenerator.GenerateStudentIdAsync();
+      Console.WriteLine($"✓ Step 1.5 Complete: Generated student display ID: {studentDisplayId}");
 
-                var insertedUserResponse = await client.From<SupabaseUserNew>().Insert(userRecord);
-                var insertedUser = insertedUserResponse.Model;
-                Console.WriteLine($"✓ Step 2 Complete: User record created with ID: {insertedUser.Id}");
+            // Step 2: Insert into users table (stores all personal information)
+     Console.WriteLine($"Step 2: Inserting into users table...");
+          var userRecord = new SupabaseUserNew
+  {
+   FirstName = model.FirstName,
+    LastName = model.LastName,
+   MiddleName = model.MiddleName,
+    Suffix = model.Suffix,
+        Email = model.Email,
+ ContactNumber = model.ContactNumber,
+    UserTypeId = supabaseUserId, // Supabase Auth UUID
+UserDisplayId = studentDisplayId, // ✅ UPDATED: Human-readable display ID
+   IsActive = true,
+    ProfilePictureUrl = null,
+   Address = null,
+        EmergencyContact = null
+       };
 
-                // Step 3: Lookup program and department IDs
-                Console.WriteLine($"Step 3: Looking up program and department IDs...");
+    var insertedUserResponse = await client.From<SupabaseUserNew>().Insert(userRecord);
+ var insertedUser = insertedUserResponse.Model;
+        Console.WriteLine($"✓ Step 2 Complete: User record created with ID: {insertedUser.Id} (DisplayId: {studentDisplayId})");
+
+    // Step 3: Parse program and department IDs from model
+     Console.WriteLine($"Step 3: Parsing program and department IDs...");
                 int? programId = null;
                 int? departmentId = null;
 
+                // ✅ FIX: If Program/Department contain names, look them up
+                // If they're null, that means the IDs were already parsed in UserService
                 try
                 {
-                    // Try to find program by name
-                    var programQuery = await client.From<ASI.Basecode.Data.Models.Program>()
-                        .Where(x => x.ProgramName == model.Program)
-                        .Get();
-                    var programRecord = programQuery?.Models?.FirstOrDefault();
-                    programId = programRecord?.Id;
-                    Console.WriteLine($"  Program lookup: {(programId.HasValue ? $"Found ID {programId}" : "Not found, will use null")}");
+                    if (!string.IsNullOrEmpty(model.Program))
+                    {
+                        // Try to parse as integer first (if it's an ID string)
+                        if (int.TryParse(model.Program, out int progId))
+                        {
+                            programId = progId;
+                            Console.WriteLine($"  Program: Parsed ID {programId} from string");
+                        }
+                        else
+                        {
+                            // It's a name, look it up
+                            var programQuery = await client.From<ASI.Basecode.Data.Models.Program>()
+                                .Where(x => x.ProgramName == model.Program)
+                                .Get();
+                            var programRecord = programQuery?.Models?.FirstOrDefault();
+                            programId = programRecord?.Id;
+                            Console.WriteLine($"  Program lookup by name '{model.Program}': {(programId.HasValue ? $"Found ID {programId}" : "Not found")}");
+                        }
+                    }
+                    else
+                    {
+                        Console.WriteLine($"  Program: Not provided (null)");
+                    }
                 }
                 catch (Exception ex)
                 {
@@ -144,13 +173,29 @@ namespace ASI.Basecode.Services.Services
 
                 try
                 {
-                    // Try to find department by name
-                    var deptQuery = await client.From<Department>()
-                        .Where(x => x.DepartmentName == model.Department)
-                        .Get();
-                    var deptRecord = deptQuery?.Models?.FirstOrDefault();
-                    departmentId = deptRecord?.Id;
-                    Console.WriteLine($"  Department lookup: {(departmentId.HasValue ? $"Found ID {departmentId}" : "Not found, will use null")}");
+                    if (!string.IsNullOrEmpty(model.Department))
+                    {
+                        // Try to parse as integer first (if it's an ID string)
+                        if (int.TryParse(model.Department, out int deptId))
+                        {
+                            departmentId = deptId;
+                            Console.WriteLine($"  Department: Parsed ID {departmentId} from string");
+                        }
+                        else
+                        {
+                            // It's a name, look it up
+                            var deptQuery = await client.From<Department>()
+                                .Where(x => x.DepartmentName == model.Department)
+                                .Get();
+                            var deptRecord = deptQuery?.Models?.FirstOrDefault();
+                            departmentId = deptRecord?.Id;
+                            Console.WriteLine($"  Department lookup by name '{model.Department}': {(departmentId.HasValue ? $"Found ID {departmentId}" : "Not found")}");
+                        }
+                    }
+                    else
+                    {
+                        Console.WriteLine($"  Department: Not provided (null)");
+                    }
                 }
                 catch (Exception ex)
                 {
@@ -162,7 +207,8 @@ namespace ASI.Basecode.Services.Services
                 Console.WriteLine($"Step 4: Creating studentProfile record...");
                 var student = new Student
                 {
-                    StudentId = supabaseUserId,   // References users.userTypeId
+                    StudentId = supabaseUserId,   // References users.userTypeId (UUID)
+                    StudentDisplayId = studentDisplayId, // ✅ UPDATED: Human-readable display ID
                     YearLevel = model.YearLevel,
                     ProgramId = programId,  // FK to programs table
                     DepartmentId = departmentId,  // FK to departments table
@@ -171,11 +217,11 @@ namespace ASI.Basecode.Services.Services
 
                 var insertedStudentResponse = await client.From<Student>().Insert(student);
                 var insertedStudent = insertedStudentResponse.Model;
-                Console.WriteLine($"✓ Step 4 Complete: StudentProfile created with ID: {insertedStudent.Id}");
+                Console.WriteLine($"✓ Step 4 Complete: StudentProfile created with ID: {insertedStudent.Id} (DisplayId: {studentDisplayId})");
 
                 // Step 5: Lookup Student role and assign in user_roles table
                 Console.WriteLine($"Step 5: Looking up Student role and assigning in user_roles table...");
-                
+
                 // Lookup Student role by name to get ID
                 int studentRoleId = 1; // Default to 1 if lookup fails
                 try
@@ -183,31 +229,31 @@ namespace ASI.Basecode.Services.Services
                     var roleQuery = await client.From<Role>()
                      .Where(x => x.RoleName == "Student")
     .Get();
-        var roleRecord = roleQuery?.Models?.FirstOrDefault();
-              if (roleRecord != null)
-   {
-            studentRoleId = roleRecord.Id;
-             Console.WriteLine($"  Role lookup: Found 'Student' role with ID {studentRoleId}");
+                    var roleRecord = roleQuery?.Models?.FirstOrDefault();
+                    if (roleRecord != null)
+                    {
+                        studentRoleId = roleRecord.Id;
+                        Console.WriteLine($"  Role lookup: Found 'Student' role with ID {studentRoleId}");
+                    }
+                    else
+                    {
+                        Console.WriteLine($"  Warning: Student role not found, using default ID 1");
+                    }
                 }
-        else
-          {
-         Console.WriteLine($"  Warning: Student role not found, using default ID 1");
-          }
- }
-        catch (Exception ex)
-       {
-            Console.WriteLine($"  Warning: Role lookup failed: {ex.Message}, using default ID 1");
-    }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"  Warning: Role lookup failed: {ex.Message}, using default ID 1");
+                }
 
-              var userRole = new UserRole
-     {
-      UserId = supabaseUserId, // Supabase Auth UUID
-         RoleId = studentRoleId, // Now an int referencing roles.id
-               CreatedAt = DateTime.UtcNow
-           };
+                var userRole = new UserRole
+                {
+                    UserId = supabaseUserId, // Supabase Auth UUID
+                    RoleId = studentRoleId, // Now an int referencing roles.id
+                    CreatedAt = DateTime.UtcNow
+                };
 
-             await client.From<UserRole>().Insert(userRole);
-     Console.WriteLine($"✓ Step 5 Complete: Student role (ID {studentRoleId}) assigned");
+                await client.From<UserRole>().Insert(userRole);
+                Console.WriteLine($"✓ Step 5 Complete: Student role (ID {studentRoleId}) assigned");
 
                 // Step 6: Create address record (optional - if addresses are still used)
                 if (!string.IsNullOrEmpty(model.City) && !string.IsNullOrEmpty(model.Province))
@@ -282,20 +328,10 @@ namespace ASI.Basecode.Services.Services
             {
                 Console.WriteLine($"\n✗✗✗ STUDENT CREATION FAILED ✗✗✗");
                 Console.WriteLine($"  Error: {ex.Message}");
-                Console.WriteLine($"  Stack Trace: {ex.StackTrace}\n");
-
-                try
-                {
-                    Console.WriteLine($"Attempting to clean up auth user...");
-                    await _supabaseAuthService.DeleteUserAsync(model.Email);
-                    Console.WriteLine($"✓ Auth user cleanup successful");
-                }
-                catch (Exception cleanupEx)
-                {
-                    Console.WriteLine($"⚠ Auth user cleanup failed: {cleanupEx.Message}");
-                }
-
-                throw new Exception($"Error creating student: {ex.Message}", ex);
+                Console.WriteLine($"Stack Trace: {ex.StackTrace}\n");
+         
+                // Return false to indicate failure
+                return false;
             }
         }
 
@@ -304,40 +340,40 @@ namespace ASI.Basecode.Services.Services
             try
             {
                 var client = await GetSupabaseClientAsync();
-       
+
                 // Get studentProfile first
                 var studentProfile = await client.From<Student>()
- .Where(x => x.Id == studentProfileId)
-      .Single();
+                .Where(x => x.Id == studentProfileId)
+                .Single();
 
                 // Then get the full user record
-var user = await client.From<SupabaseUserNew>()
-        .Where(x => x.UserTypeId == studentProfile.StudentId)
-          .Single();
+                var user = await client.From<SupabaseUserNew>()
+                        .Where(x => x.UserTypeId == studentProfile.StudentId)
+                          .Single();
 
- return user;
-          }
-       catch (Exception ex)
+                return user;
+            }
+            catch (Exception ex)
             {
-             throw new Exception($"Error retrieving student: {ex.Message}", ex);
-          }
-    }
+                throw new Exception($"Error retrieving student: {ex.Message}", ex);
+            }
+        }
 
         public async Task<SupabaseUserNew> GetStudentByEmailAsync(string email)
         {
-       try
-        {
-  var client = await GetSupabaseClientAsync();
-          // Query users table directly by email
-     var response = await client.From<SupabaseUserNew>()
-       .Where(x => x.Email == email)
-       .Single();
-
-     return response;
-     }
-   catch (Exception ex)
+            try
             {
-    throw new Exception($"Error retrieving student by email: {ex.Message}", ex);
+                var client = await GetSupabaseClientAsync();
+                // Query users table directly by email
+                var response = await client.From<SupabaseUserNew>()
+                  .Where(x => x.Email == email)
+                  .Single();
+
+                return response;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Error retrieving student by email: {ex.Message}", ex);
             }
         }
 
@@ -361,152 +397,122 @@ var user = await client.From<SupabaseUserNew>()
 
         public async Task<bool> UpdateStudentAsync(StudentViewModel model)
         {
-     try
-      {
-         var client = await GetSupabaseClientAsync();
+            try
+            {
+                var client = await GetSupabaseClientAsync();
 
-   // Get the user record
-  var existingUser = await GetStudentByEmailAsync(model.Email);
-            if (existingUser == null)
-   {
-     return false;
+                // Get the user record
+                var existingUser = await GetStudentByEmailAsync(model.Email);
+                if (existingUser == null)
+                {
+                    return false;
                 }
 
-       // Update user table
-      existingUser.FirstName = model.FirstName;
-         existingUser.LastName = model.LastName;
-        existingUser.MiddleName = model.MiddleName;
-existingUser.Suffix = model.Suffix;
-         existingUser.ContactNumber = model.ContactNumber;
+                // Update user table
+                existingUser.FirstName = model.FirstName;
+                existingUser.LastName = model.LastName;
+                existingUser.MiddleName = model.MiddleName;
+                existingUser.Suffix = model.Suffix;
+                existingUser.ContactNumber = model.ContactNumber;
 
-  await client.From<SupabaseUserNew>()
-         .Where(x => x.UserTypeId == existingUser.UserTypeId)
-   .Update(existingUser);
+                await client.From<SupabaseUserNew>()
+                       .Where(x => x.UserTypeId == existingUser.UserTypeId)
+                 .Update(existingUser);
 
-      // Update studentProfile table
-     var studentProfile = await client.From<Student>()
-  .Where(x => x.StudentId == existingUser.UserTypeId)
-          .Single();
+                // Update studentProfile table
+                var studentProfile = await client.From<Student>()
+             .Where(x => x.StudentId == existingUser.UserTypeId)
+                     .Single();
 
-   // Lookup program and department IDs
-       int? programId = null;
-    int? departmentId = null;
+                // Lookup program and department IDs
+                int? programId = null;
+                int? departmentId = null;
 
- try
-   {
-         var programQuery = await client.From<ASI.Basecode.Data.Models.Program>()
-       .Where(x => x.ProgramName == model.Program)
-     .Get();
-  programId = programQuery?.Models?.FirstOrDefault()?.Id;
-}
-   catch { }
+                try
+                {
+                    var programQuery = await client.From<ASI.Basecode.Data.Models.Program>()
+                  .Where(x => x.ProgramName == model.Program)
+                .Get();
+                    programId = programQuery?.Models?.FirstOrDefault()?.Id;
+                }
+                catch { }
 
-   try
-   {
-var deptQuery = await client.From<Department>()
-.Where(x => x.DepartmentName == model.Department)
-   .Get();
-  departmentId = deptQuery?.Models?.FirstOrDefault()?.Id;
-}
-   catch { }
+                try
+                {
+                    var deptQuery = await client.From<Department>()
+                    .Where(x => x.DepartmentName == model.Department)
+                       .Get();
+                    departmentId = deptQuery?.Models?.FirstOrDefault()?.Id;
+                }
+                catch { }
 
-studentProfile.YearLevel = model.YearLevel;
-          studentProfile.ProgramId = programId;  // Fixed: use ProgramId
-    studentProfile.DepartmentId = departmentId;  // Fixed: use int, not string
+                studentProfile.YearLevel = model.YearLevel;
+                studentProfile.ProgramId = programId;  // Fixed: use ProgramId
+                studentProfile.DepartmentId = departmentId;  // Fixed: use int, not string
 
-         await client.From<Student>()
-           .Where(x => x.StudentId == existingUser.UserTypeId)
-      .Update(studentProfile);
+                await client.From<Student>()
+                  .Where(x => x.StudentId == existingUser.UserTypeId)
+             .Update(studentProfile);
 
-       // Update address if exists
-   try
-             {
-       var studentAddress = await client.From<StudentAddress>()
-     .Where(x => x.StudentId == studentProfile.Id && x.IsPrimary == true)
-   .Single();
+                // Update address if exists
+                try
+                {
+                    var studentAddress = await client.From<StudentAddress>()
+                  .Where(x => x.StudentId == studentProfile.Id && x.IsPrimary == true)
+                .Single();
 
-      var address = await client.From<Address>()
-      .Where(x => x.Id == studentAddress.AddressId)
- .Single();
+                    var address = await client.From<Address>()
+                    .Where(x => x.Id == studentAddress.AddressId)
+               .Single();
 
-            address.HouseNumber = model.HouseNumber;
-         address.StreetName = model.StreetName;
-    address.Subdivision = model.Subdivision;
-         address.Barangay = model.Barangay;
-                 address.City = model.City;
-   address.Province = model.Province;
-              address.ZipCode = model.ZipCode;
+                    address.HouseNumber = model.HouseNumber;
+                    address.StreetName = model.StreetName;
+                    address.Subdivision = model.Subdivision;
+                    address.Barangay = model.Barangay;
+                    address.City = model.City;
+                    address.Province = model.Province;
+                    address.ZipCode = model.ZipCode;
 
-            await client.From<Address>().Update(address);
-      }
+                    await client.From<Address>().Update(address);
+                }
                 catch
-       {
-       // Address doesn't exist or error occurred, skip
-       }
+                {
+                    // Address doesn't exist or error occurred, skip
+                }
 
-  // Update emergency contact if exists
-    try
-       {
-        var studentEmergencyContact = await client.From<StudentEmergencyContact>()
-   .Where(x => x.StudentId == studentProfile.Id && x.IsPrimary == true)
-    .Single();
+                // Update emergency contact if exists
+                try
+                {
+                    var studentEmergencyContact = await client.From<StudentEmergencyContact>()
+               .Where(x => x.StudentId == studentProfile.Id && x.IsPrimary == true)
+                .Single();
 
-       var emergencyContact = await client.From<Contact>()
-            .Where(x => x.Id == studentEmergencyContact.ContactId)
-              .Single();
+                    var emergencyContact = await client.From<Contact>()
+                         .Where(x => x.Id == studentEmergencyContact.ContactId)
+                           .Single();
 
-      emergencyContact.FirstName = model.EmergencyFirstName;
-      emergencyContact.LastName = model.EmergencyLastName;
-          emergencyContact.MiddleName = model.EmergencyMiddleName;
-      emergencyContact.Suffix = model.EmergencySuffix;
-        emergencyContact.ContactNumber = model.EmergencyContactNumber;
+                    emergencyContact.FirstName = model.EmergencyFirstName;
+                    emergencyContact.LastName = model.EmergencyLastName;
+                    emergencyContact.MiddleName = model.EmergencyMiddleName;
+                    emergencyContact.Suffix = model.EmergencySuffix;
+                    emergencyContact.ContactNumber = model.EmergencyContactNumber;
 
-     await client.From<Contact>().Update(emergencyContact);
+                    await client.From<Contact>().Update(emergencyContact);
 
-          studentEmergencyContact.Relationship = model.Relationship;
-            await client.From<StudentEmergencyContact>().Update(studentEmergencyContact);
-      }
-      catch
-        {
-               // Emergency contact doesn't exist or error occurred, skip
-     }
+                    studentEmergencyContact.Relationship = model.Relationship;
+                    await client.From<StudentEmergencyContact>().Update(studentEmergencyContact);
+                }
+                catch
+                {
+                    // Emergency contact doesn't exist or error occurred, skip
+                }
 
-        return true;
- }
-       catch (Exception ex)
-   {
-     throw new Exception($"Error updating student: {ex.Message}", ex);
-      }
-        }
-
-        public async Task<bool> DeleteStudentAsync(int id)
-        {
-       try
+                return true;
+            }
+            catch (Exception ex)
             {
-     var client = await GetSupabaseClientAsync();
-
-      // Get studentProfile first
-    var studentProfile = await client.From<Student>()
-  .Where(x => x.Id == id)
- .Single();
-
-      if (studentProfile == null)
-        {
-      return false;
-        }
-
-   // Delete from Supabase Auth
-           await _supabaseAuthService.DeleteUserAsync(studentProfile.StudentId);
-    
-        // Delete studentProfile (cascade should handle related records)
-                await client.From<Student>().Where(x => x.Id == id).Delete();
-
-        return true;
-   }
-       catch (Exception ex)
-            {
-                throw new Exception($"Error deleting student: {ex.Message}", ex);
-  }
+                throw new Exception($"Error updating student: {ex.Message}", ex);
+            }
         }
     }
-}
+}      

@@ -1,5 +1,4 @@
-using Microsoft.AspNetCore.Mvc;
-using Acadus___Alliance_Project_2025.Models;
+﻿using Microsoft.AspNetCore.Mvc;
 using ASI.Basecode.Services.Interfaces;
 using Microsoft.Extensions.Configuration;
 using System.Threading.Tasks;
@@ -10,6 +9,7 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using System.Security.Claims;
 using System.Collections.Generic;
 using System.Linq;
+using ASI.Basecode.WebApp.Models;
 
 namespace ASI.Basecode.WebApp.Controllers
 {
@@ -54,6 +54,7 @@ namespace ASI.Basecode.WebApp.Controllers
         {
             if (!ModelState.IsValid)
             {
+                ModelState.AddModelError(string.Empty, "Please fill in all required fields.");
                 return View(model);
             }
             
@@ -129,76 +130,51 @@ namespace ASI.Basecode.WebApp.Controllers
                     }
                     else
                     {
-                        ModelState.AddModelError(string.Empty, "Please confirm your email before logging in.");
+                        ModelState.AddModelError(string.Empty, "⚠️ Email not verified. Please check your inbox and verify your email address before logging in.");
                         return View(model);
                     }
                 }
+                else
+                {
+                    // Session or user is null - invalid credentials
+                    ModelState.AddModelError(string.Empty, "❌ Invalid email or password. Please check your credentials and try again.");
+                    return View(model);
+                }
+            }
+            catch (Supabase.Gotrue.Exceptions.GotrueException gex)
+            {
+                // Supabase-specific authentication errors
+                Console.WriteLine($"Supabase Auth Error: {gex.Message}");
+                
+                if (gex.Message.Contains("Invalid login credentials") || gex.Message.Contains("invalid_grant"))
+                {
+                    ModelState.AddModelError(string.Empty, "❌ Invalid email or password. Please check your credentials and try again.");
+                }
+                else if (gex.Message.Contains("Email not confirmed"))
+                {
+                    ModelState.AddModelError(string.Empty, "⚠️ Email not verified. Please check your inbox and verify your email address.");
+                }
+                else if (gex.Message.Contains("too many requests") || gex.Message.Contains("rate limit"))
+                {
+                    ModelState.AddModelError(string.Empty, "⏳ Too many login attempts. Please wait a few minutes and try again.");
+                }
+                else
+                {
+                    ModelState.AddModelError(string.Empty, $"❌ Login failed: {gex.Message}");
+                }
+                
+                return View(model);
             }
             catch (System.Exception ex)
             {
                 // Log the error for debugging
-                Console.WriteLine($"Supabase Auth Error: {ex.Message}");
-            }
-
-            // If authentication failed, show error message
-            ModelState.AddModelError(string.Empty, "Invalid email or password.");
-            return View(model);
-        }
-
-        public IActionResult EmailVerification()
-        {
-            return View(new EmailVerificationModel());
-        }
-
-        [HttpPost]
-        public IActionResult EmailVerification(EmailVerificationModel model)
-        {
-            if (!ModelState.IsValid)
-            {
+                Console.WriteLine($"Unexpected Auth Error: {ex.GetType().Name} - {ex.Message}");
+                Console.WriteLine($"Stack Trace: {ex.StackTrace}");
+                
+                // Generic error message for unexpected errors
+                ModelState.AddModelError(string.Empty, "❌ An unexpected error occurred. Please try again later or contact support if the problem persists.");
                 return View(model);
             }
-
-            return RedirectToAction("OTPVerification");
-        }
-
-        public IActionResult OTPVerification()
-        {
-            return View(new OTPVerificationModel());
-        }
-
-        [HttpPost]
-        public IActionResult OTPVerification(OTPVerificationModel model)
-        {
-            if (!ModelState.IsValid)
-            {
-                return View(model);
-            }
-
-            var code = string.Concat(model.Otp1, model.Otp2, model.Otp3, model.Otp4);
-            if (code.Length != 4)
-            {
-                ModelState.AddModelError(string.Empty, "Please enter the 4-digit code.");
-                return View(model);
-            }
-
-            return RedirectToAction("NewPassword");
-        }
-
-        public IActionResult NewPassword()
-        {
-            return View(new NewPasswordModel());
-        }
-
-        [HttpPost]
-        public IActionResult NewPassword(NewPasswordModel model)
-        {
-            if (!ModelState.IsValid)
-            {
-                return View(model);
-            }
-
-            // Redirect to success or login
-            return RedirectToAction("Login");
         }
 
         /// <summary>

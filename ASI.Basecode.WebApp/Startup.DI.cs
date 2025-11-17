@@ -4,7 +4,6 @@ using ASI.Basecode.Data.Repositories;
 using ASI.Basecode.Services.Interfaces;
 using ASI.Basecode.Services.ServiceModels;
 using ASI.Basecode.Services.Services;
-using ASI.Basecode.WebApp.Authentication;
 using ASI.Basecode.WebApp.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
@@ -45,6 +44,9 @@ namespace ASI.Basecode.WebApp
             // Production Services
             this._services.AddScoped<ASI.Basecode.Services.Interfaces.IPasswordGenerator, ASI.Basecode.Services.Services.PasswordGenerator>();
             this._services.AddScoped<ASI.Basecode.Services.Interfaces.IEmailService, ASI.Basecode.Services.Services.EmailService>();
+            
+            // ✅ ID Generator Service
+            this._services.AddScoped<ASI.Basecode.Services.Services.IdGeneratorService>();
 
             this._services.AddHttpClient();
         }

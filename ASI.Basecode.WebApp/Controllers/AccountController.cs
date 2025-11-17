@@ -1,5 +1,4 @@
-using Microsoft.AspNetCore.Mvc;
-using ASI.Basecode.Services.Interfaces;
+﻿using ASI.Basecode.Services.Interfaces;
 using Microsoft.Extensions.Configuration;
 using System;
 using System.Collections.Generic;
@@ -8,6 +7,9 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
 
 namespace ASI.Basecode.WebApp.Controllers
 {
@@ -40,50 +42,60 @@ namespace ASI.Basecode.WebApp.Controllers
         /// Handles both initial load and hash fragment with tokens
         /// </summary>
         [HttpGet]
-        public IActionResult SetPassword()
+   public async Task<IActionResult> SetPassword()
         {
             try
-            {
-                // Pass Supabase configuration to the view securely
-                ViewBag.SupabaseUrl = _configuration["Supabase:Url"];
-                ViewBag.SupabaseAnonKey = _configuration["Supabase:AnonKey"];
+        {
+      // ✅ FIX: Sign out any existing ASP.NET Core session
+   // This prevents the issue where an admin creates a student/teacher,
+            // and when they click the password setup link, they get redirected to admin dashboard
+      // instead of being able to set their password and login as the new user
+                if (User.Identity?.IsAuthenticated == true)
+           {
+       Console.WriteLine($"🔐 SetPassword: Signing out existing user session for {User.Identity.Name}");
+      await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+     Console.WriteLine("✓ Existing session cleared for password setup");
+       }
 
-                // Check for error in URL parameters (from Supabase redirect)
-                var error = Request.Query["error"].ToString();
-                var errorCode = Request.Query["error_code"].ToString();
-                var errorDescription = Request.Query["error_description"].ToString();
+   // Pass Supabase configuration to the view securely
+            ViewBag.SupabaseUrl = _configuration["Supabase:Url"];
+      ViewBag.SupabaseAnonKey = _configuration["Supabase:AnonKey"];
 
-                if (!string.IsNullOrEmpty(error))
-                {
-                    AuditLog("PASSWORD_RESET_LINK_ERROR", "UNKNOWN", $"{errorCode}: {errorDescription}");
+          // Check for error in URL parameters (from Supabase redirect)
+ var error = Request.Query["error"].ToString();
+var errorCode = Request.Query["error_code"].ToString();
+   var errorDescription = Request.Query["error_description"].ToString();
 
-                    if (errorCode == "otp_expired")
-                    {
-                        ViewBag.Error = "This password reset link has expired. Please request a new one.";
-                        ViewBag.ErrorType = "expired";
-                    }
-                    else
-                    {
-                        ViewBag.Error = "This password reset link is invalid or has been used. Please request a new one.";
-                        ViewBag.ErrorType = "invalid";
-                    }
+    if (!string.IsNullOrEmpty(error))
+    {
+     AuditLog("PASSWORD_RESET_LINK_ERROR", "UNKNOWN", $"{errorCode}: {errorDescription}");
 
-                    return View("~/Views/Account/SetPassword.cshtml");
-                }
+  if (errorCode == "otp_expired")
+      {
+         ViewBag.Error = "This password reset link has expired. Please request a new one.";
+    ViewBag.ErrorType = "expired";
+           }
+         else
+{
+   ViewBag.Error = "This password reset link is invalid or has been used. Please request a new one.";
+        ViewBag.ErrorType = "invalid";
+   }
 
-                // Don't check for session server-side
-                // The session will be established via JavaScript when the hash fragment is processed
-                AuditLog("PASSWORD_RESET_PAGE_ACCESSED", "VISITOR", "Password reset page loaded");
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error loading password reset page: {ex.Message}");
-                ViewBag.Error = "An error occurred. Please try requesting a new password reset link.";
-            }
+      return View("~/Views/Account/SetPassword.cshtml");
+}
+
+     // Don't check for session server-side
+// The session will be established via JavaScript when the hash fragment is processed
+            AuditLog("PASSWORD_RESET_PAGE_ACCESSED", "VISITOR", "Password reset page loaded");
+      }
+         catch (Exception ex)
+    {
+Console.WriteLine($"Error loading password reset page: {ex.Message}");
+   ViewBag.Error = "An error occurred. Please try requesting a new password reset link.";
+         }
 
             return View("~/Views/Account/SetPassword.cshtml");
-        }
-
+ }
         /// <summary>
         /// Shows the password reset request page
         /// </summary>

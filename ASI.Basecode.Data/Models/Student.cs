@@ -12,7 +12,7 @@ namespace ASI.Basecode.Data.Models
         public int Id { get; set; }
 
         [Column("studentId")]
-        public string StudentId { get; set; }  // References users.userTypeId
+        public string StudentId { get; set; }  // References users.userTypeId (UUID)
 
         [Column("yearLevel")]
         public int? YearLevel { get; set; }
@@ -22,6 +22,10 @@ namespace ASI.Basecode.Data.Models
 
         [Column("departmentId")]
         public int? DepartmentId { get; set; }  // Changed from string to int to match departments table
+
+        // ? RENAMED: Human-readable student display ID
+        [Column("studentDisplayId")]
+        public string StudentDisplayId { get; set; }  // STU-202511001
 
         [Column("created_at")]
         public DateTime CreatedAt { get; set; }

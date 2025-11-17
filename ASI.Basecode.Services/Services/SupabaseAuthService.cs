@@ -2,6 +2,7 @@
 using ASI.Basecode.Data.Models;
 using ASI.Basecode.Services.Interfaces;
 using Microsoft.Extensions.Configuration;
+using Microsoft.AspNetCore.Http;
 using Supabase;
 using Supabase.Gotrue;
 using System;
@@ -13,13 +14,47 @@ namespace ASI.Basecode.Services.Services
     public class SupabaseAuthService : ISupabaseAuthService
     {
         private readonly IConfiguration _configuration;
+        private readonly IHttpContextAccessor _httpContextAccessor;
         private Supabase.Client _supabaseClient;
         private Supabase.Gotrue.Client _gotrueClient;
         private AdminClient _adminClient;
 
-        public SupabaseAuthService(IConfiguration configuration)
+        public SupabaseAuthService(IConfiguration configuration, IHttpContextAccessor httpContextAccessor)
         {
             _configuration = configuration;
+            _httpContextAccessor = httpContextAccessor;
+        }
+
+        /// <summary>
+        /// Gets the redirect URL dynamically based on current request or falls back to config
+        /// </summary>
+        private string GetRedirectUrl()
+        {
+            try
+            {
+                // Check if we should use dynamic local redirect (for development)
+                var useLocalRedirect = _configuration.GetValue<bool>("Supabase:UseLocalRedirect", false);
+
+                if (useLocalRedirect && _httpContextAccessor.HttpContext != null)
+                {
+                    var request = _httpContextAccessor.HttpContext.Request;
+                    var scheme = request.Scheme; // http or https
+                    var host = request.Host.ToString(); // localhost:port
+                    var redirectUrl = $"{scheme}://{host}/Account/SetPassword";
+
+                    Console.WriteLine($"🔧 Dynamic Redirect URL: {redirectUrl}");
+                    return redirectUrl;
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"⚠ Warning: Could not determine dynamic redirect URL: {ex.Message}");
+            }
+
+            // Fall back to configured redirect URL
+            var configuredUrl = _configuration["Supabase:RedirectUrl"];
+            Console.WriteLine($"📝 Using Configured Redirect URL: {configuredUrl}");
+            return configuredUrl;
         }
 
         private Supabase.Gotrue.Client GetGotrueClient()
@@ -77,9 +112,9 @@ namespace ASI.Basecode.Services.Services
                 // Replace the Auth client with our custom one
                 try
                 {
-                    var authField = _supabaseClient.GetType().GetField("Auth", 
+                    var authField = _supabaseClient.GetType().GetField("Auth",
                         System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
-                    
+
                     if (authField != null)
                     {
                         authField.SetValue(_supabaseClient, GetGotrueClient());
@@ -189,7 +224,7 @@ namespace ASI.Basecode.Services.Services
             {
                 Console.WriteLine($"ERROR in CreateUserAsync: {ex.GetType().Name}: {ex.Message}");
                 Console.WriteLine($"Stack Trace: {ex.StackTrace}");
-                
+
                 if (ex.InnerException != null)
                 {
                     Console.WriteLine($"Inner Exception: {ex.InnerException.GetType().Name}: {ex.InnerException.Message}");
@@ -210,17 +245,33 @@ namespace ASI.Basecode.Services.Services
         {
             try
             {
-                var gotrueClient = GetGotrueClient();
-                var redirectUrl = _configuration["Supabase:RedirectUrl"];
+                Console.WriteLine($"=== SendPasswordSetupEmailAsync ===");
+                Console.WriteLine($"Target email: {email}");
 
+                var gotrueClient = GetGotrueClient();
+                var redirectUrl = GetRedirectUrl();
+
+                Console.WriteLine($"Redirect URL: {redirectUrl}");
+                Console.WriteLine($"⚠ IMPORTANT: This redirect URL must be added to Supabase Dashboard:");
+                Console.WriteLine($"   Navigate to: Authentication > URL Configuration > Redirect URLs");
+                Console.WriteLine($"   Add URL: {redirectUrl}");
+                Console.WriteLine($"   Recommended: Add wildcard http://localhost:*/Account/SetPassword for all dev ports");
+                Console.WriteLine($"Sending password reset email via Gotrue...");
+
+                // ✅ Note: Redirect URL must be configured in Supabase Dashboard
+                // The current version of Supabase.Gotrue library doesn't support passing options
+                // Supabase will use the Site URL configured in dashboard
                 await gotrueClient.ResetPasswordForEmail(email);
 
-                Console.WriteLine($"Password setup email sent successfully to: {email} with redirect to: {redirectUrl}");
+                Console.WriteLine($"✓ Password setup email sent successfully to: {email}");
+                Console.WriteLine($"=== End SendPasswordSetupEmailAsync ===\n");
                 return true;
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error sending password setup email: {ex.Message}");
+                Console.WriteLine($"✗ Error sending password setup email: {ex.Message}");
+                Console.WriteLine($"Stack trace: {ex.StackTrace}");
+                Console.WriteLine($"=== End SendPasswordSetupEmailAsync (FAILED) ===\n");
                 throw new Exception($"Error sending password setup email: {ex.Message}", ex);
             }
         }
@@ -490,31 +541,6 @@ namespace ASI.Basecode.Services.Services
         /// Currently returns true without actually deleting the user.
         /// TODO: Implement actual deletion from auth.users and public.users
         /// </remarks>
-        [System.Obsolete("This method is not fully implemented. It does not actually delete users yet.", false)]
-        public async Task<bool> DeleteUserAsync(string supabaseUserId)
-        {
-            try
-            {
-                Console.WriteLine($"⚠️ WARNING: DeleteUserAsync called for {supabaseUserId} but NOT IMPLEMENTED");
-                Console.WriteLine($"  User deletion requires implementation of:");
-                Console.WriteLine($"  1. Delete from auth.users via AdminClient.DeleteUser()");
-                Console.WriteLine($"  2. Delete from public.users table");
-                Console.WriteLine($"  3. Handle cascading deletes for related records");
-                
-                // TODO: Implement actual deletion
-                // var adminClient = GetAdminClient();
-                  // await adminClient.DeleteUser(supabaseUserId);
-               // var client = await GetSupabaseClientAsync();
-                // await client.From<SupabaseUserNew>().Where(x => x.UserTypeId == supabaseUserId).Delete();
-                    
-                   return false;  // Return false to indicate not implemented
-            }
-            catch (Exception ex)
-            {
-                throw new Exception($"Error deleting user from Supabase Auth: {ex.Message}", ex);
-            }
-        }
-
         public async Task<SupabaseUser> GetUserByEmailAsync(string email)
         {
             try
@@ -539,158 +565,300 @@ namespace ASI.Basecode.Services.Services
         }
 
         /// <summary>
-        /// Verifies password reset token
+        /// Determines user role based on Supabase user ID by checking the users, user_roles, and roles tables
         /// </summary>
-        /// <remarks>
-        /// NOTE: This method always returns true because Supabase handles 
-        /// token verification internally via the ResetPasswordForEmail flow.
-        /// Custom token verification is not needed for the current implementation.
-        /// </remarks>
-        [System.Obsolete("Token verification is handled internally by Supabase. This method is not needed.", false)]
-        public Task<bool> VerifyPasswordResetTokenAsync(string token)
+        public async Task<string> GetUserRoleAsync(string supabaseUserId)
         {
             try
             {
-                Console.WriteLine($"ℹ️ INFO: VerifyPasswordResetTokenAsync called");
-                Console.WriteLine($"  Supabase handles token verification internally via ResetPasswordForEmail");
-                Console.WriteLine($"  This method is not needed for current password reset flow");
-                return Task.FromResult(true);
+                var client = await GetSupabaseClientAsync();
+
+                Console.WriteLine($"=== ROLE LOOKUP DEBUG ===");
+                Console.WriteLine($"Looking up role for Supabase Auth User ID: {supabaseUserId}");
+
+                // Step 1: Get the user from the users table using their userTypeId (Supabase Auth ID)
+                SupabaseUserNew userRecord = null;
+                try
+                {
+                    var userQuery = await client
+         .From<SupabaseUserNew>()
+                   .Where(x => x.UserTypeId == supabaseUserId)
+                   .Get();
+
+                    userRecord = userQuery?.Models?.FirstOrDefault();
+
+                    if (userRecord != null)
+                    {
+                        Console.WriteLine($"✓ Found user in users table:");
+                        Console.WriteLine($"  - User ID: {userRecord.Id}");
+                        Console.WriteLine($"  - Email: {userRecord.Email}");
+                        Console.WriteLine($"  - Name: {userRecord.FirstName} {userRecord.LastName}");
+                    }
+                    else
+                    {
+                        Console.WriteLine($"✗ No user found in users table with userTypeId: {supabaseUserId}");
+                        Console.WriteLine($"  User needs to be added to the users table first");
+                        return "Student"; // Default to Student if not in database
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"✗ Error querying users table: {ex.Message}");
+                    return "Student";
+                }
+
+                // Step 2: Get the user's role from user_roles table
+                // Convert userId to string for comparison
+                string userIdString = userRecord.Id.ToString();
+                UserRole userRoleRecord = null;
+                try
+                {
+                    // Get ALL user_roles and filter in memory since Supabase doesn't support complex queries
+                    var allUserRoles = await client
+                               .From<UserRole>()
+                          .Get();
+
+                    // FIXED: Use supabaseUserId (userTypeId) instead of userRecord.Id (database ID)
+                    // The user_roles.userId column contains the Supabase Auth UUID, not the database ID
+                    userRoleRecord = allUserRoles?.Models?.FirstOrDefault(x => x.UserId == supabaseUserId);
+
+                    if (userRoleRecord != null)
+                    {
+                        Console.WriteLine($"✓ Found user_role mapping:");
+                        Console.WriteLine($"  - User Role ID: {userRoleRecord.Id}");
+                        Console.WriteLine($"  - User ID: {userRoleRecord.UserId}");
+                        Console.WriteLine($"  - Role ID: {userRoleRecord.RoleId}");
+                    }
+                    else
+                    {
+                        Console.WriteLine($"✗ No role mapping found in user_roles table for userTypeId: {supabaseUserId}");
+                        Console.WriteLine($"  User needs to be assigned a role in user_roles table");
+                        return "Student"; // Default to Student if no role assigned
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"✗ Error querying user_roles table: {ex.Message}");
+                    return "Student";
+                }
+
+                // Step 3: Get the role name from roles table by ID
+                try
+                {
+                    // userRoleRecord.RoleId is now an integer referencing roles.id
+                    var roleQuery = await client
+                          .From<Role>()
+                          .Where(x => x.Id == userRoleRecord.RoleId)
+                           .Get();
+
+                    var roleRecord = roleQuery?.Models?.FirstOrDefault();
+
+                    if (roleRecord != null && !string.IsNullOrEmpty(roleRecord.RoleName))
+                    {
+                        Console.WriteLine($"✓ Found role:");
+                        Console.WriteLine($"  - Role ID: {roleRecord.Id}");
+                        Console.WriteLine($"  - Role Name: {roleRecord.RoleName}");
+                        Console.WriteLine($"=== ROLE LOOKUP SUCCESS: {roleRecord.RoleName} ===");
+                        return roleRecord.RoleName;
+                    }
+                    else
+                    {
+                        Console.WriteLine($"✗ No role found in roles table with ID: {userRoleRecord.RoleId}");
+                        Console.WriteLine($"  Role ID might be invalid or role was deleted");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"✗ Error querying roles table: {ex.Message}");
+                }
+
+                // If we got here, something went wrong - default to Student
+                Console.WriteLine($"=== ROLE LOOKUP FAILED: Defaulting to Student ===");
+                return "Student";
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error verifying password reset token: {ex.Message}");
-                return Task.FromResult(false);
+                Console.WriteLine($"✗ FATAL ERROR in GetUserRoleAsync: {ex.Message}");
+                Console.WriteLine($"Stack Trace: {ex.StackTrace}");
+                // Return Student as safe default instead of throwing
+                return "Student";
             }
         }
 
         /// <summary>
-        /// Determines user role and name based on Supabase user ID by checking the users, user_roles, and roles tables
+        /// Gets user role and name by Supabase user ID
         /// </summary>
-        public async Task<(string Role, string Name)> GetUserRoleAndNameAsync(string supabaseUserId)
+      public async Task<(string Role, string Name)> GetUserRoleAndNameAsync(string supabaseUserId)
         {
-            try
-       {
-             var client = await GetSupabaseClientAsync();
-  
-        Console.WriteLine($"=== ROLE LOOKUP DEBUG ===");
-     Console.WriteLine($"Looking up role for Supabase Auth User ID: {supabaseUserId}");
-   
-         // Step 1: Get the user from the users table using their userTypeId (Supabase Auth ID)
-            SupabaseUserNew userRecord = null;
-                try
-      {
-            var userQuery = await client
- .From<SupabaseUserNew>()
-           .Where(x => x.UserTypeId == supabaseUserId)
-           .Get();
+     try
+            {
+      Console.WriteLine($"\n=== LOADING USER ROLE AND NAME ===");
+      Console.WriteLine($"Supabase User ID: {supabaseUserId}");
 
-  userRecord = userQuery?.Models?.FirstOrDefault();
-                   
+         var client = await GetSupabaseClientAsync();
+
+      // Step 1: Get user record from users table
+       Console.WriteLine($"Step 1: Querying users table...");
+           SupabaseUserNew userRecord = null;
+    try
+                {
+   var userQuery = await client
+           .From<SupabaseUserNew>()
+              .Where(x => x.UserTypeId == supabaseUserId)
+     .Get();
+
+           userRecord = userQuery?.Models?.FirstOrDefault();
+
             if (userRecord != null)
-    {
-          Console.WriteLine($"✓ Found user in users table:");
-          Console.WriteLine($"  - User ID: {userRecord.Id}");
-   Console.WriteLine($"  - Email: {userRecord.Email}");
-      Console.WriteLine($"  - Name: {userRecord.FirstName} {userRecord.LastName}");
-  }
-     else
-       {
-               Console.WriteLine($"✗ No user found in users table with userTypeId: {supabaseUserId}");
-            Console.WriteLine($"  User needs to be added to the users table first");
-         return ("Student", "User"); // Default to Student if not in database
-      }
-   }
-         catch (Exception ex)
-   {
-     Console.WriteLine($"✗ Error querying users table: {ex.Message}");
-  return ("Student", "User");
-  }
-
-         // Step 2: Get the user's role from user_roles table
-      // Convert userId to string for comparison
-             string userIdString = userRecord.Id.ToString();
-     UserRole userRoleRecord = null;
-      try
-     {
-         // Get ALL user_roles and filter in memory since Supabase doesn't support complex queries
-     var allUserRoles = await client
-                .From<UserRole>()
-           .Get();
-
-    // FIXED: Use supabaseUserId (userTypeId) instead of userRecord.Id (database ID)
-            // The user_roles.userId column contains the Supabase Auth UUID, not the database ID
-            userRoleRecord = allUserRoles?.Models?.FirstOrDefault(x => x.UserId == supabaseUserId);
-        
- if (userRoleRecord != null)
-            {
-       Console.WriteLine($"✓ Found user_role mapping:");
-   Console.WriteLine($"  - User Role ID: {userRoleRecord.Id}");
-      Console.WriteLine($"  - User ID: {userRoleRecord.UserId}");
-     Console.WriteLine($"  - Role ID: {userRoleRecord.RoleId}");
-            }
-            else
-   {
-      Console.WriteLine($"✗ No role mapping found in user_roles table for userTypeId: {supabaseUserId}");
-      Console.WriteLine($"  User needs to be assigned a role in user_roles table");
-       return ("Student", $"{userRecord.FirstName} {userRecord.LastName}"); // Default to Student if no role assigned
-}
-     }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"✗ Error querying user_roles table: {ex.Message}");
-            return ("Student", $"{userRecord.FirstName} {userRecord.LastName}");
-   }
-
-         // Step 3: Get the role name from roles table by ID
-  try
-       {
-   // userRoleRecord.RoleId is now an integer referencing roles.id
- var roleQuery = await client
-       .From<Role>()
-       .Where(x => x.Id == userRoleRecord.RoleId)
-        .Get();
-
-        var roleRecord = roleQuery?.Models?.FirstOrDefault();
-
-    if (roleRecord != null && !string.IsNullOrEmpty(roleRecord.RoleName))
-   {
-       Console.WriteLine($"✓ Found role:");
-  Console.WriteLine($"  - Role ID: {roleRecord.Id}");
-            Console.WriteLine($"  - Role Name: {roleRecord.RoleName}");
-   Console.WriteLine($"=== ROLE LOOKUP SUCCESS: {roleRecord.RoleName} ===");
-                return (roleRecord.RoleName, $"{userRecord.FirstName} {userRecord.LastName}");
-   }
-     else
-            {
- Console.WriteLine($"✗ No role found in roles table with ID: {userRoleRecord.RoleId}");
-    Console.WriteLine($"  Role ID might be invalid or role was deleted");
+          {
+      Console.WriteLine($"✓ Found user record in users table");
+              Console.WriteLine($"  - User ID (DB): {userRecord.Id}");
+             Console.WriteLine($"  - First Name: {userRecord.FirstName}");
+     Console.WriteLine($"  - Last Name: {userRecord.LastName}");
        }
-   }
-     catch (Exception ex)
-        {
-      Console.WriteLine($"✗ Error querying roles table: {ex.Message}");
+     else
+         {
+        Console.WriteLine($"✗ No user found in users table with userTypeId: {supabaseUserId}");
+              return ("Student", "User"); // Default if not in database
+      }
+       }
+catch (Exception ex)
+                {
+     Console.WriteLine($"✗ Error querying users table: {ex.Message}");
+         return ("Student", "User");
+          }
+
+            // Step 2: Get the user's role
+ var roleName = await GetUserRoleAsync(supabaseUserId);
+                
+   // Step 3: Build full name
+       var fullName = $"{userRecord.FirstName} {userRecord.LastName}".Trim();
+         if (string.IsNullOrWhiteSpace(fullName))
+   {
+           fullName = userRecord.Email?.Split('@')[0] ?? "User";
+         }
+
+                Console.WriteLine($"\n✓ Role and Name lookup complete:");
+                Console.WriteLine($"  - Role: {roleName}");
+          Console.WriteLine($"  - Name: {fullName}");
+     Console.WriteLine($"=== ROLE AND NAME LOOKUP SUCCESS ===\n");
+
+  return (roleName, fullName);
+       }
+            catch (Exception ex)
+     {
+  Console.WriteLine($"✗ FATAL ERROR in GetUserRoleAndNameAsync: {ex.Message}");
+       Console.WriteLine($"Stack Trace: {ex.StackTrace}");
+         // Return defaults as safe fallback
+         return ("Student", "User");
+            }
  }
 
-                // If we got here, something went wrong - default to Student
-    Console.WriteLine($"=== ROLE LOOKUP FAILED: Defaulting to Student ===");
-           return ("Student", $"{userRecord?.FirstName} {userRecord?.LastName}" ?? "User");
-}
-       catch (Exception ex)
-       {
-  Console.WriteLine($"✗ FATAL ERROR in GetUserRoleAsync: {ex.Message}");
-      Console.WriteLine($"Stack Trace: {ex.StackTrace}");
-       // Return Student as safe default instead of throwing
-      return ("Student", "User");
-}
-        }
-
         /// <summary>
-        /// Signs in a user with email and password
-        /// </summary>
+   /// Signs in a user with email and password using ANON key (public authentication)
+    /// </summary>
         public async Task<Supabase.Gotrue.Session> SignInAsync(string email, string password)
+   {
+          try
+       {
+    Console.WriteLine($"=== SIGN IN ATTEMPT ===");
+ Console.WriteLine($"Email: {email}");
+         Console.WriteLine($"Password Length: {password?.Length ?? 0} characters");
+
+        // ✅ Use ANON KEY for user sign-in (not Service Role Key)
+   var url = _configuration["Supabase:Url"];
+       var anonKey = _configuration["Supabase:AnonKey"];
+
+     Console.WriteLine($"Using Anon Key for authentication: {anonKey?.Substring(0, Math.Min(20, anonKey?.Length ?? 0))}...");
+         Console.WriteLine($"Supabase URL: {url}");
+
+      // Create a separate client with ANON key for authentication
+      var authOptions = new SupabaseOptions
+     {
+       AutoConnectRealtime = false,
+         AutoRefreshToken = true,
+           Headers = new System.Collections.Generic.Dictionary<string, string>
+      {
+    { "X-Client-Info", "supabase-csharp/1.1.1" }
+           }
+    };
+
+          var authClient = new Supabase.Client(url, anonKey, authOptions);
+     await authClient.InitializeAsync();
+
+    Console.WriteLine("✓ Auth client initialized with Anon Key");
+     Console.WriteLine($"Attempting to sign in with Supabase Auth...");
+
+      try
+           {
+          // Sign in using the auth client with anon key
+         var session = await authClient.Auth.SignIn(email, password);
+
+            if (session != null)
+           {
+     Console.WriteLine($"✓ Sign in SUCCESS!");
+          Console.WriteLine($"  - User ID: {session.User?.Id}");
+      Console.WriteLine($"  - Email: {session.User?.Email}");
+     Console.WriteLine($"  - Email Confirmed: {session.User?.EmailConfirmedAt.HasValue}");
+           Console.WriteLine($"  - Email Confirmed At: {session.User?.EmailConfirmedAt}");
+   }
+                 else
+         {
+            Console.WriteLine($"✗ Sign in returned NULL session");
+    Console.WriteLine($"  → This usually means authentication failed");
+            }
+
+       return session;
+                }
+    catch (Supabase.Gotrue.Exceptions.GotrueException gex)
+  {
+        Console.WriteLine($"✗ GOTRUE EXCEPTION during sign in:");
+    Console.WriteLine($"  - Message: {gex.Message}");
+        Console.WriteLine($"  - Status Code: {gex.StatusCode}");
+       Console.WriteLine($"  - Content: {gex.Content}");
+        
+         // ✅ Enhanced error analysis
+  if (gex.Message.Contains("Invalid login credentials") || gex.Message.Contains("invalid_credentials"))
+              {
+              Console.WriteLine($"  → Invalid email or password");
+      Console.WriteLine($"");
+ Console.WriteLine($"  🔍 TROUBLESHOOTING STEPS:");
+    Console.WriteLine($"     1. Check if user exists in Supabase Dashboard:");
+        Console.WriteLine($"        → Go to: {url.Replace("https://", "https://app.supabase.com/project/")}/auth/users");
+  Console.WriteLine($"        → Search for: {email}");
+       Console.WriteLine($"     2. If user NOT found:");
+            Console.WriteLine($"    → Create user manually in Dashboard");
+      Console.WriteLine($"        → OR use registration system");
+    Console.WriteLine($"     3. If user found but login fails:");
+       Console.WriteLine($"        → Check 'Email Confirmed' column has a timestamp");
+           Console.WriteLine($"→ Try resetting password in Dashboard");
+      Console.WriteLine($"     → Verify email case matches (should be lowercase)");
+      }
+   else if (gex.Message.Contains("Email not confirmed"))
+       {
+          Console.WriteLine($"  → User email not verified");
+            Console.WriteLine($"  → ACTION: Confirm email in Supabase Dashboard or resend verification email");
+      }
+             else if (gex.Message.Contains("rate limit") || gex.Message.Contains("too many"))
         {
-            var supabaseClient = await GetSupabaseClientAsync();
-            return await supabaseClient.Auth.SignIn(email, password);
+          Console.WriteLine($"  → Too many attempts - please wait a few minutes");
+          }
+         
+         throw; // Re-throw to be caught by AuthController
+         }
+            }
+  catch (Supabase.Gotrue.Exceptions.GotrueException)
+  {
+    throw; // Already logged above
+         }
+   catch (Exception ex)
+    {
+             Console.WriteLine($"✗ UNEXPECTED EXCEPTION during sign in:");
+                Console.WriteLine($"  - Type: {ex.GetType().Name}");
+   Console.WriteLine($"  - Message: {ex.Message}");
+         Console.WriteLine($"  - Stack Trace: {ex.StackTrace}");
+                throw;
+         }
         }
     }
 }

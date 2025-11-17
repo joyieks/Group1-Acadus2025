@@ -84,5 +84,55 @@ namespace ASI.Basecode.Services.Services
                 return (0, 0, 0);
             }
         }
+
+        /// <summary>
+        /// Gets all programs from the database
+        /// </summary>
+        public async Task<List<ASI.Basecode.Data.Models.Program>> GetAllProgramsAsync()
+        {
+            try
+            {
+                var client = await _supabaseAuthService.GetSupabaseClientForAuthAsync();
+  
+                var programsQuery = await client
+                    .From<ASI.Basecode.Data.Models.Program>()
+                    .Get();
+
+                var programs = programsQuery?.Models ?? new List<ASI.Basecode.Data.Models.Program>();
+    
+                Console.WriteLine($"Retrieved {programs.Count} programs from database");
+                return programs.OrderBy(p => p.ProgramName).ToList();
+          }
+            catch (Exception ex)
+ {
+                Console.WriteLine($"Error getting programs: {ex.Message}");
+          return new List<ASI.Basecode.Data.Models.Program>();
+            }
+        }
+
+        /// <summary>
+        /// Gets all departments from the database
+        /// </summary>
+        public async Task<List<Department>> GetAllDepartmentsAsync()
+        {
+ try
+  {
+  var client = await _supabaseAuthService.GetSupabaseClientForAuthAsync();
+   
+          var departmentsQuery = await client
+        .From<Department>()
+         .Get();
+
+          var departments = departmentsQuery?.Models ?? new List<Department>();
+    
+                Console.WriteLine($"Retrieved {departments.Count} departments from database");
+ return departments.OrderBy(d => d.DepartmentName).ToList();
+   }
+         catch (Exception ex)
+{
+         Console.WriteLine($"Error getting departments: {ex.Message}");
+      return new List<Department>();
+    }
+        }
     }
 }

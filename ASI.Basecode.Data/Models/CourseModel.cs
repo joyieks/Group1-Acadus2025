@@ -38,7 +38,7 @@ namespace ASI.Basecode.Data.Models
         /// Gets or sets the number of credits for the course.
         /// </summary>
         [Column("credits")]
-        public long Credits { get; set; }
+        public long? Credits { get; set; }  // ? Made nullable to handle null values from database
 
         /// <summary>
         /// Gets or sets the course level (Undergraduate, Graduate, Doctorate).
@@ -50,13 +50,13 @@ namespace ASI.Basecode.Data.Models
         /// Gets or sets the semester ID for the course.
         /// </summary>
         [Column("semesterId")]
-        public long SemesterId { get; set; }
+     public long? SemesterId { get; set; }  // ? Made nullable to handle null values from database
 
         /// <summary>
         /// Gets or sets the maximum capacity for the course.
         /// </summary>
         [Column("capacity")]
-        public decimal MaxCapacity { get; set; }
+     public decimal? MaxCapacity { get; set; }  // ? Made nullable to handle null values from database
 
         /// <summary>
         /// Gets or sets the instructor ID for the course.
