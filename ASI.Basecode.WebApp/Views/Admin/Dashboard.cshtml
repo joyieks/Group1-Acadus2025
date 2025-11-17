@@ -64,50 +64,33 @@
                        </div>
 				
 				<div style="border-radius:8px; overflow:hidden; border:1px solid #e5e7eb;">
-					<!-- Activity Item 1 -->
-					<div style="background:#E8F9E8; padding:16px; border-bottom:1px solid #e5e7eb;">
-						<div style="font-weight:700; color:#111827; margin-bottom:4px;">Task item title</div>
-						<div style="color:#6b7280; font-size:14px; display:flex; justify-content:space-between;">
-							<span>User of action</span>
-							<span>MMMM DD, 00:00 XM</span>
+					@if (Model.RecentActivities != null && Model.RecentActivities.Any())
+					{
+						var rowIndex = 0;
+						@foreach (var activity in Model.RecentActivities)
+						{
+							var isHighlighted = rowIndex % 2 == 0;
+							var dateTime = activity.CreatedAt.Kind == DateTimeKind.Utc ? activity.CreatedAt.ToLocalTime() : activity.CreatedAt;
+							var formattedDate = dateTime.ToString("MMMM dd, hh:mm tt");
+							var borderStyle = rowIndex < Model.RecentActivities.Count - 1 ? "border-bottom:1px solid #e5e7eb;" : "";
+
+							<div style="@(isHighlighted ? "background:#E8F9E8;" : "") padding:16px; @borderStyle">
+								<div style="font-weight:700; color:#111827; margin-bottom:4px;">@activity.ActionDescription</div>
+								<div style="color:#6b7280; font-size:14px; display:flex; justify-content:space-between;">
+									<span>@activity.UserName</span>
+									<span>@formattedDate</span>
+								</div>
+							</div>
+
+							rowIndex++;
+						}
+					}
+					else
+					{
+						<div style="padding:32px; text-align:center; color:#6b7280;">
+							<p style="margin:0;">No recent activity</p>
 						</div>
-					</div>
-					
-					<!-- Activity Item 2 -->
-					<div style="padding:16px; border-bottom:1px solid #e5e7eb;">
-						<div style="font-weight:700; color:#111827; margin-bottom:4px;">Task item title</div>
-						<div style="color:#6b7280; font-size:14px; display:flex; justify-content:space-between;">
-							<span>User of action</span>
-							<span>MMMM DD, 00:00 XM</span>
-						</div>
-					</div>
-					
-					<!-- Activity Item 3 -->
-					<div style="background:#E8F9E8; padding:16px; border-bottom:1px solid #e5e7eb;">
-						<div style="font-weight:700; color:#111827; margin-bottom:4px;">Task item title</div>
-						<div style="color:#6b7280; font-size:14px; display:flex; justify-content:space-between;">
-							<span>User of action</span>
-							<span>MMMM DD, 00:00 XM</span>
-						</div>
-					</div>
-					
-					<!-- Activity Item 4 -->
-					<div style="padding:16px; border-bottom:1px solid #e5e7eb;">
-						<div style="font-weight:700; color:#111827; margin-bottom:4px;">Task item title</div>
-						<div style="color:#6b7280; font-size:14px; display:flex; justify-content:space-between;">
-							<span>User of action</span>
-							<span>MMMM DD, 00:00 XM</span>
-						</div>
-					</div>
-					
-					<!-- Activity Item 5 -->
-					<div style="background:#E8F9E8; padding:16px;">
-						<div style="font-weight:700; color:#111827; margin-bottom:4px;">Task item title</div>
-						<div style="color:#6b7280; font-size:14px; display:flex; justify-content:space-between;">
-							<span>User of action</span>
-							<span>MMMM DD, 00:00 XM</span>
-						</div>
-					</div>
+					}
 				</div>
 			</div>
 

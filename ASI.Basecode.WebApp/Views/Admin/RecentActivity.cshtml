@@ -1,5 +1,7 @@
+@model List<ASI.Basecode.Data.Models.AuditLogModel>
 @{
     Layout = null;
+    var currentRole = ViewBag.CurrentRole as string ?? "all";
 }
 
 <!DOCTYPE html>
@@ -75,125 +77,169 @@
         .activity-item.highlighted {
             background: #E8F9E8;
         }
+
+        .empty-state {
+            padding: 64px 32px;
+            text-align: center;
+        }
+
+        .empty-state-icon {
+            font-size: 48px;
+            color: #d1d5db;
+            margin-bottom: 16px;
+        }
+
+        .empty-state-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #111827;
+            margin-bottom: 8px;
+        }
+
+        .empty-state-message {
+            font-size: 14px;
+            color: #6b7280;
+        }
+
+        .role-tabs {
+            display: flex;
+            gap: 0;
+            border-bottom: 2px solid #d1fae5;
+            background: #E8F9E8;
+        }
+
+        .role-tab {
+            flex: 1;
+            padding: 12px 16px;
+            background: none;
+            border: none;
+            font-size: 14px;
+            font-weight: 600;
+            color: #6b7280;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+            text-align: center;
+            border-bottom: 3px solid transparent;
+        }
+
+        .role-tab:hover {
+            background: rgba(5, 150, 105, 0.1);
+            color: #059669;
+        }
+
+        .role-tab.active {
+            color: #059669;
+            border-bottom-color: #059669;
+            background: rgba(5, 150, 105, 0.05);
+        }
     </style>
 </head>
 <body>
-    <div class="modal-backdrop" onclick="if(event.target === this) window.history.back()">
+    <div class="modal-backdrop">
         <div class="modal-content" onclick="event.stopPropagation()">
             <!-- Header -->
-            <div style="background:#E8F9E8; padding:24px 32px; border-radius:16px 16px 0 0; display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #d1fae5;">
-                <h2 style="font-size:24px; font-weight:800; color:#111827; margin:0;">Recent Activity</h2>
-                <button onclick="window.history.back()" style="background:none; border:none; font-size:28px; color:#6b7280; cursor:pointer; width:32px; height:32px; border-radius:6px; transition:all 0.2s;">&times;</button>
+            <div style="background:#E8F9E8; padding:24px 32px 0; border-radius:16px 16px 0 0;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+                    <h2 style="font-size:24px; font-weight:800; color:#111827; margin:0;">Recent Activity</h2>
+                    <button id="closeBtn" style="background:none; border:none; font-size:28px; color:#6b7280; cursor:pointer; width:32px; height:32px; border-radius:6px; transition:all 0.2s;">&times;</button>
+                </div>
+
+                <!-- Role Filter Tabs -->
+                <div class="role-tabs">
+                    <a href="@Url.Action("RecentActivity", "Admin", new { role = "all" })" 
+                       class="role-tab @(currentRole == "all" ? "active" : "")">
+                        All
+                    </a>
+                    <a href="@Url.Action("RecentActivity", "Admin", new { role = "admin" })" 
+                       class="role-tab @(currentRole == "admin" ? "active" : "")">
+                        Admin
+                    </a>
+                    <a href="@Url.Action("RecentActivity", "Admin", new { role = "teacher" })" 
+                       class="role-tab @(currentRole == "teacher" ? "active" : "")">
+                        Teachers
+                    </a>
+                    <a href="@Url.Action("RecentActivity", "Admin", new { role = "student" })" 
+                       class="role-tab @(currentRole == "student" ? "active" : "")">
+                        Students
+                    </a>
+                </div>
             </div>
 
             <!-- Activity List -->
             <div style="padding:24px 32px;">
-                <div style="border-radius:8px; overflow:hidden; border:1px solid #e5e7eb;">
-                    <!-- Activity Item 1 -->
-                    <div class="activity-item highlighted">
-                        <div style="font-weight:700; color:#111827; margin-bottom:4px;">New student registration approved</div>
-                        <div style="color:#6b7280; font-size:14px; display:flex; justify-content:space-between;">
-                            <span>Admin User</span>
-                            <span>January 15, 2025, 10:30 AM</span>
-                        </div>
-                    </div>
+                @if (Model != null && Model.Any())
+                {
+                    <div style="border-radius:8px; overflow:hidden; border:1px solid #e5e7eb;">
+                        @{
+                            var rowIndex = 0;
+                        }
+                        @foreach (var activity in Model)
+                        {
+                            var isHighlighted = rowIndex % 2 == 0;
+                            var dateTime = activity.CreatedAt.Kind == DateTimeKind.Utc ? activity.CreatedAt.ToLocalTime() : activity.CreatedAt;
+                            var formattedDate = dateTime.ToString("MMMM dd, yyyy, hh:mm tt");
+                            var highlightedClass = isHighlighted ? "highlighted" : "";
 
-                    <!-- Activity Item 2 -->
-                    <div class="activity-item">
-                        <div style="font-weight:700; color:#111827; margin-bottom:4px;">Course assignment updated</div>
-                        <div style="color:#6b7280; font-size:14px; display:flex; justify-content:space-between;">
-                            <span>System Administrator</span>
-                            <span>January 15, 2025, 09:15 AM</span>
-                        </div>
-                    </div>
+                            <div class="activity-item @highlightedClass">
+                                <div style="font-weight:700; color:#111827; margin-bottom:4px;">@activity.ActionDescription</div>
+                                <div style="color:#6b7280; font-size:14px; display:flex; justify-content:space-between;">
+                                    <span>@activity.UserName</span>
+                                    <span>@formattedDate</span>
+                                </div>
+                            </div>
 
-                    <!-- Activity Item 3 -->
-                    <div class="activity-item highlighted">
-                        <div style="font-weight:700; color:#111827; margin-bottom:4px;">Teacher account created</div>
-                        <div style="color:#6b7280; font-size:14px; display:flex; justify-content:space-between;">
-                            <span>HR Department</span>
-                            <span>January 14, 2025, 04:45 PM</span>
+                            rowIndex++;
+                        }
+                    </div>
+                }
+                else
+                {
+                    <div class="empty-state">
+                        <div class="empty-state-icon">??</div>
+                        <div class="empty-state-title">No Recent Activity</div>
+                        <div class="empty-state-message">
+                            @if (currentRole == "all")
+                            {
+                                <text>There are no activities to display yet. Activities will appear here as users interact with the system.</text>
+                            }
+                            else
+                            {
+                                <text>No activities found for @(char.ToUpper(currentRole[0]) + currentRole.Substring(1)) users.</text>
+                            }
                         </div>
                     </div>
-
-                    <!-- Activity Item 4 -->
-                    <div class="activity-item">
-                        <div style="font-weight:700; color:#111827; margin-bottom:4px;">Student profile updated</div>
-                        <div style="color:#6b7280; font-size:14px; display:flex; justify-content:space-between;">
-                            <span>Registrar Office</span>
-                            <span>January 14, 2025, 02:20 PM</span>
-                        </div>
-                    </div>
-
-                    <!-- Activity Item 5 -->
-                    <div class="activity-item highlighted">
-                        <div style="font-weight:700; color:#111827; margin-bottom:4px;">New course created</div>
-                        <div style="color:#6b7280; font-size:14px; display:flex; justify-content:space-between;">
-                            <span>Academic Head</span>
-                            <span>January 14, 2025, 11:00 AM</span>
-                        </div>
-                    </div>
-
-                    <!-- Activity Item 6 -->
-                    <div class="activity-item">
-                        <div style="font-weight:700; color:#111827; margin-bottom:4px;">Department information updated</div>
-                        <div style="color:#6b7280; font-size:14px; display:flex; justify-content:space-between;">
-                            <span>Admin User</span>
-                            <span>January 13, 2025, 03:30 PM</span>
-                        </div>
-                    </div>
-
-                    <!-- Activity Item 7 -->
-                    <div class="activity-item highlighted">
-                        <div style="font-weight:700; color:#111827; margin-bottom:4px;">Student enrollment processed</div>
-                        <div style="color:#6b7280; font-size:14px; display:flex; justify-content:space-between;">
-                            <span>Registrar Office</span>
-                            <span>January 13, 2025, 01:15 PM</span>
-                        </div>
-                    </div>
-
-                    <!-- Activity Item 8 -->
-                    <div class="activity-item">
-                        <div style="font-weight:700; color:#111827; margin-bottom:4px;">Teacher schedule updated</div>
-                        <div style="color:#6b7280; font-size:14px; display:flex; justify-content:space-between;">
-                            <span>Academic Coordinator</span>
-                            <span>January 12, 2025, 04:00 PM</span>
-                        </div>
-                    </div>
-
-                    <!-- Activity Item 9 -->
-                    <div class="activity-item highlighted">
-                        <div style="font-weight:700; color:#111827; margin-bottom:4px;">Bulk user import completed</div>
-                        <div style="color:#6b7280; font-size:14px; display:flex; justify-content:space-between;">
-                            <span>System Administrator</span>
-                            <span>January 12, 2025, 10:30 AM</span>
-                        </div>
-                    </div>
-
-                    <!-- Activity Item 10 -->
-                    <div class="activity-item">
-                        <div style="font-weight:700; color:#111827; margin-bottom:4px;">User permissions modified</div>
-                        <div style="color:#6b7280; font-size:14px; display:flex; justify-content:space-between;">
-                            <span>Admin User</span>
-                            <span>January 11, 2025, 02:45 PM</span>
-                        </div>
-                    </div>
-                </div>
+                }
             </div>
 
             <!-- Footer -->
             <div style="padding:20px 32px; background:#f9fafb; border-top:1px solid #e5e7eb; border-radius:0 0 16px 16px; display:flex; justify-content:center;">
-                <button onclick="window.history.back()" style="padding:12px 32px; border-radius:6px; font-size:14px; font-weight:600; cursor:pointer; background:#059669; color:#ffffff; border:none;">Close</button>
+                <button id="closeFooterBtn" style="padding:12px 32px; border-radius:6px; font-size:14px; font-weight:600; cursor:pointer; background:#059669; color:#ffffff; border:none;">Close</button>
             </div>
         </div>
     </div>
 
     <script>
+        // Close modal and go back to dashboard
+        function closeModal() {
+            window.location.href = '@Url.Action("Dashboard", "Admin")';
+        }
+
         // Close on ESC key
         document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape') window.history.back();
+            if (e.key === 'Escape') closeModal();
         });
+
+        // Close when clicking backdrop
+        document.querySelector('.modal-backdrop').addEventListener('click', function(e) {
+            if (e.target === this) closeModal();
+        });
+
+        // Close button in header
+        document.getElementById('closeBtn').addEventListener('click', closeModal);
+
+        // Close button in footer
+        document.getElementById('closeFooterBtn').addEventListener('click', closeModal);
     </script>
 </body>
 </html>
-

@@ -30,15 +30,20 @@ namespace ASI.Basecode.WebApp.Models
         /// </summary>
         public string SearchTerm { get; set; }
 
-    /// <summary>
-    /// Displayed users including resolved roles (populated by controller)
-    /// </summary>
-    public List<UserWithRoleViewModel> DisplayedUsersWithRoles { get; set; } = new List<UserWithRoleViewModel>();
+        /// <summary>
+        /// Displayed users including resolved roles (populated by controller)
+        /// </summary>
+        public List<UserWithRoleViewModel> DisplayedUsersWithRoles { get; set; } = new List<UserWithRoleViewModel>();
 
         /// <summary>
         /// Active tab: "all", "students", or "instructors"
         /// </summary>
         public string ActiveTab { get; set; } = "all";
+
+        /// <summary>
+        /// Active status filter: "all", "active", or "inactive"
+        /// </summary>
+        public string ActiveStatus { get; set; } = "all";
 
         /// <summary>
         /// Total counts for KPI cards

@@ -57,6 +57,21 @@ namespace ASI.Basecode.Services.Interfaces
         /// <param name="limit">Maximum number of logs to retrieve (default: 10).</param>
         /// <returns>List of audit log entries.</returns>
         Task<List<ASI.Basecode.Data.Models.AuditLogModel>> GetRecentLogsByCourseAsync(long courseId, int limit = 10);
+
+        /// <summary>
+        /// Gets all recent audit logs (for Admin dashboard).
+        /// </summary>
+        /// <param name="limit">Maximum number of logs to retrieve (default: 10).</param>
+        /// <returns>List of all audit log entries ordered by most recent.</returns>
+        Task<List<ASI.Basecode.Data.Models.AuditLogModel>> GetAllRecentActivitiesAsync(int limit = 10);
+
+        /// <summary>
+        /// Gets recent audit logs filtered by user role.
+        /// </summary>
+        /// <param name="userRole">The role to filter by (e.g., "Admin", "Teacher", "Student").</param>
+        /// <param name="limit">Maximum number of logs to retrieve (default: 10).</param>
+        /// <returns>List of audit log entries for the specified role.</returns>
+        Task<List<ASI.Basecode.Data.Models.AuditLogModel>> GetRecentActivitiesByRoleAsync(string userRole, int limit = 10);
     }
 }
 
