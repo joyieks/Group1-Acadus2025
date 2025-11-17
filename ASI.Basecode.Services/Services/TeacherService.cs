@@ -4,7 +4,8 @@ using ASI.Basecode.Services.ServiceModels;
 using Microsoft.Extensions.Configuration;
 using Supabase;
 using System;
-using System.Linq;  // Added for FirstOrDefault
+using System.Linq;
+using System.Net.Http;
 using System.Threading.Tasks;
 
 namespace ASI.Basecode.Services.Services
@@ -13,12 +14,42 @@ namespace ASI.Basecode.Services.Services
     {
         private readonly ISupabaseAuthService _supabaseAuthService;
         private readonly IConfiguration _configuration;
+        private readonly IdGeneratorService _idGenerator;
         private Supabase.Client _supabaseClient;
+        private static HttpClient _httpClient; // ? NEW
 
-        public TeacherService(ISupabaseAuthService supabaseAuthService, IConfiguration configuration)
+        public TeacherService(
+            ISupabaseAuthService supabaseAuthService, 
+            IConfiguration configuration,
+            IdGeneratorService idGenerator)
         {
             _supabaseAuthService = supabaseAuthService;
             _configuration = configuration;
+            _idGenerator = idGenerator;
+        }
+
+        // ? NEW: Add HttpClient with SSL bypass for development
+        private HttpClient GetHttpClient()
+        {
+            if (_httpClient == null)
+            {
+                var isDevelopment = _configuration.GetValue<bool>("Development:IgnoreSSLErrors", true);
+
+                if (isDevelopment)
+                {
+                    var handler = new HttpClientHandler
+                    {
+                        ServerCertificateCustomValidationCallback = (message, cert, chain, errors) => true
+                    };
+                    _httpClient = new HttpClient(handler);
+                    Console.WriteLine("[TeacherService] ? Custom HttpClient created with SSL validation bypassed");
+                }
+                else
+                {
+                    _httpClient = new HttpClient();
+                }
+            }
+            return _httpClient;
         }
 
         private async Task<Supabase.Client> GetSupabaseClientAsync()
@@ -27,10 +58,30 @@ namespace ASI.Basecode.Services.Services
             {
                 var url = _configuration["Supabase:Url"];
                 var serviceRoleKey = _configuration["Supabase:ServiceRoleKey"];
-                
-                // Use service role key for server-side operations
-                _supabaseClient = new Supabase.Client(url, serviceRoleKey);
+                var isDevelopment = _configuration.GetValue<bool>("Development:IgnoreSSLErrors", true);
+
+                Console.WriteLine($"[TeacherService] Initializing Supabase Client");
+                Console.WriteLine($"  URL: {url}");
+                Console.WriteLine($"  Development Mode: {isDevelopment}");
+
+                var options = new SupabaseOptions
+                {
+                    AutoConnectRealtime = false,
+                    AutoRefreshToken = true
+                };
+
+                _supabaseClient = new Supabase.Client(url, serviceRoleKey, options);
+
+                // ? Inject custom HttpClient using reflection (like StudentService)
+                var httpClientProperty = _supabaseClient.GetType().GetProperty("HttpClient");
+                if (httpClientProperty != null && isDevelopment)
+                {
+                    httpClientProperty.SetValue(_supabaseClient, GetHttpClient());
+                    Console.WriteLine("  ? Custom HttpClient injected with SSL validation bypassed");
+                }
+
                 await _supabaseClient.InitializeAsync();
+                Console.WriteLine("[TeacherService] ? Supabase client initialized");
             }
             return _supabaseClient;
         }
@@ -43,18 +94,23 @@ namespace ASI.Basecode.Services.Services
 
                 // Generate a secure random password
                 var secureRandomPassword = Guid.NewGuid().ToString() + "Aa1!";
-                
+
                 Console.WriteLine($"Step 1: Creating Supabase Auth user...");
                 var supabaseUserId = await _supabaseAuthService.CreateUserAsync(
-                    model.Email, 
-                    secureRandomPassword, 
-                    model.FirstName, 
+                    model.Email,
+                    secureRandomPassword,
+                    model.FirstName,
                     model.LastName
                 );
 
                 Console.WriteLine($"? Step 1 Complete: Auth user created with ID: {supabaseUserId}");
 
                 var client = await GetSupabaseClientAsync();
+
+                // ? NEW: Step 1.5: Generate unique teacher display ID
+                Console.WriteLine($"Step 1.5: Generating unique teacher display ID...");
+                var teacherDisplayId = await _idGenerator.GenerateTeacherIdAsync();
+                Console.WriteLine($"? Step 1.5 Complete: Generated teacher display ID: {teacherDisplayId}");
 
                 // Step 2: Insert into users table (stores all personal information)
                 Console.WriteLine($"Step 2: Inserting into users table...");
@@ -67,6 +123,7 @@ namespace ASI.Basecode.Services.Services
                     Email = model.Email,
                     ContactNumber = model.ContactNumber,
                     UserTypeId = supabaseUserId, // Supabase Auth UUID
+                    UserDisplayId = teacherDisplayId, // ? NEW: Human-readable display ID
                     IsActive = true,
                     ProfilePictureUrl = null,
                     Address = null,
@@ -75,7 +132,7 @@ namespace ASI.Basecode.Services.Services
 
                 var insertedUserResponse = await client.From<SupabaseUserNew>().Insert(userRecord);
                 var insertedUser = insertedUserResponse.Model;
-                Console.WriteLine($"? Step 2 Complete: User record created with ID: {insertedUser.Id}");
+                Console.WriteLine($"? Step 2 Complete: User record created with ID: {insertedUser.Id} (DisplayId: {teacherDisplayId})");
 
                 // Step 3: Lookup department ID
                 Console.WriteLine($"Step 3: Looking up department ID...");
@@ -101,47 +158,48 @@ namespace ASI.Basecode.Services.Services
                 Console.WriteLine($"Step 4: Creating teacherProfile record...");
                 var teacher = new Teacher
                 {
-                    TeacherId = supabaseUserId,   // References users.userTypeId
+                    TeacherId = supabaseUserId,   // References users.userTypeId (UUID)
+                    TeacherDisplayId = teacherDisplayId, // ? NEW: Human-readable display ID
                     DepartmentId = departmentId,  // FK to departments table
                     CreatedAt = DateTime.UtcNow
                 };
 
                 var insertedTeacherResponse = await client.From<Teacher>().Insert(teacher);
                 var insertedTeacher = insertedTeacherResponse.Model;
-                Console.WriteLine($"? Step 4 Complete: TeacherProfile created with ID: {insertedTeacher.Id}");
+                Console.WriteLine($"? Step 4 Complete: TeacherProfile created with ID: {insertedTeacher.Id} (DisplayId: {teacherDisplayId})");
 
                 // Step 5: Lookup Teacher role and assign in user_roles table
-     Console.WriteLine($"Step 5: Looking up Teacher role and assigning in user_roles table...");
-        
-         // Lookup Teacher role by name to get ID
-   int teacherRoleId = 2; // Default to 2 if lookup fails
-    try
-     {
-         var roleQuery = await client.From<Role>()
-         .Where(x => x.RoleName == "Teacher")
-                .Get();
-           var roleRecord = roleQuery?.Models?.FirstOrDefault();
-  if (roleRecord != null)
-     {
-    teacherRoleId = roleRecord.Id;
-    Console.WriteLine($"  Role lookup: Found 'Teacher' role with ID {teacherRoleId}");
-         }
-  else
-      {
-          Console.WriteLine($"  Warning: Teacher role not found, using default ID 2");
-   }
-             }
-catch (Exception ex)
-   {
-     Console.WriteLine($"  Warning: Role lookup failed: {ex.Message}, using default ID 2");
-         }
+                Console.WriteLine($"Step 5: Looking up Teacher role and assigning in user_roles table...");
 
-     var userRole = new UserRole
-       {
-       UserId = supabaseUserId, // Supabase Auth UUID
-         RoleId = teacherRoleId, // Now an int referencing roles.id
-      CreatedAt = DateTime.UtcNow
-          };
+                // Lookup Teacher role by name to get ID
+                int teacherRoleId = 2; // Default to 2 if lookup fails
+                try
+                {
+                    var roleQuery = await client.From<Role>()
+                    .Where(x => x.RoleName == "Teacher")
+                           .Get();
+                    var roleRecord = roleQuery?.Models?.FirstOrDefault();
+                    if (roleRecord != null)
+                    {
+                        teacherRoleId = roleRecord.Id;
+                        Console.WriteLine($"  Role lookup: Found 'Teacher' role with ID {teacherRoleId}");
+                    }
+                    else
+                    {
+                        Console.WriteLine($"  Warning: Teacher role not found, using default ID 2");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"  Warning: Role lookup failed: {ex.Message}, using default ID 2");
+                }
+
+                var userRole = new UserRole
+                {
+                    UserId = supabaseUserId, // Supabase Auth UUID
+                    RoleId = teacherRoleId, // Now an int referencing roles.id
+                    CreatedAt = DateTime.UtcNow
+                };
 
                 await client.From<UserRole>().Insert(userRole);
                 Console.WriteLine($"? Step 5 Complete: Teacher role (ID {teacherRoleId}) assigned");
@@ -182,9 +240,9 @@ catch (Exception ex)
                         MiddleName = model.EmergencyMiddleName,
                         Suffix = model.EmergencySuffix,
                         ContactNumber = model.EmergencyContactNumber,
-Relationship = model.Relationship,  // Added - this field exists in the table
-  CreatedAt = DateTime.UtcNow
-  };
+                        Relationship = model.Relationship,  // Added - this field exists in the table
+                        CreatedAt = DateTime.UtcNow
+                    };
 
                     var insertedEmergencyContactResponse = await client.From<Contact>().Insert(emergencyContact);
                     var insertedEmergencyContact = insertedEmergencyContactResponse.Model;
@@ -197,15 +255,21 @@ Relationship = model.Relationship,  // Added - this field exists in the table
 
                 // Step 8: Send password setup email
                 Console.WriteLine($"Step 8: Sending password setup email...");
+                Console.WriteLine($"  Email address: {model.Email}");
                 try
                 {
                     await _supabaseAuthService.SendPasswordSetupEmailAsync(model.Email);
                     Console.WriteLine($"? Step 8 Complete: Password setup email sent to {model.Email}");
+                    Console.WriteLine($"  The teacher should receive an email with password setup instructions.");
                 }
                 catch (Exception emailEx)
                 {
-                    Console.WriteLine($"? Step 8 Warning: Failed to send password setup email: {emailEx.Message}");
-                    Console.WriteLine($"  Note: Teacher account is still created. Admin can resend email manually.");
+                    Console.WriteLine($"? Step 8 FAILED: Unable to send password setup email");
+                    Console.WriteLine($"  Error: {emailEx.Message}");
+                    Console.WriteLine($"  Stack Trace: {emailEx.StackTrace}");
+                    Console.WriteLine($"  ? WARNING: Teacher account was created but email was not sent!");
+                    Console.WriteLine($"  ? Admin must manually resend the password setup email from the user management page.");
+                    Console.WriteLine($"  ? Or use the 'Forgot Password' feature with email: {model.Email}");
                 }
 
                 Console.WriteLine($"\n??? TEACHER CREATION COMPLETE ???");
@@ -221,18 +285,11 @@ Relationship = model.Relationship,  // Added - this field exists in the table
                 Console.WriteLine($"  Error: {ex.Message}");
                 Console.WriteLine($"  Stack Trace: {ex.StackTrace}\n");
 
-                // Clean up auth user if teacher creation fails
-                try
-                {
-                    Console.WriteLine($"Attempting to clean up auth user...");
-                    await _supabaseAuthService.DeleteUserAsync(model.Email);
-                    Console.WriteLine($"? Auth user cleanup successful");
-                }
-                catch (Exception cleanupEx)
-                {
-                    Console.WriteLine($"? Auth user cleanup failed: {cleanupEx.Message}");
-                }
-                
+                // Note: Auth user is already created at this point
+                // Manual cleanup may be needed in Supabase Dashboard if teacher creation fails
+                Console.WriteLine($"?? WARNING: Auth user may have been created. Manual cleanup may be required.");
+                Console.WriteLine($"   Email: {model.Email}");
+
                 throw new Exception($"Error creating teacher: {ex.Message}", ex);
             }
         }
@@ -242,7 +299,7 @@ Relationship = model.Relationship,  // Added - this field exists in the table
             try
             {
                 var client = await GetSupabaseClientAsync();
-          
+
                 // Get teacherProfile first
                 var teacherProfile = await client.From<Teacher>()
                     .Where(x => x.Id == teacherProfileId)
@@ -270,7 +327,7 @@ Relationship = model.Relationship,  // Added - this field exists in the table
                 var response = await client.From<SupabaseUserNew>()
                     .Where(x => x.Email == email)
                     .Single();
-                
+
                 return response;
             }
             catch (Exception ex)
@@ -284,7 +341,7 @@ Relationship = model.Relationship,  // Added - this field exists in the table
             try
             {
                 var client = await GetSupabaseClientAsync();
-          
+
                 // Get the user record
                 var existingUser = await GetTeacherByEmailAsync(model.Email);
                 if (existingUser == null)
@@ -333,34 +390,5 @@ Relationship = model.Relationship,  // Added - this field exists in the table
             }
         }
 
-        public async Task<bool> DeleteTeacherAsync(int id)
-        {
-            try
-            {
-                var client = await GetSupabaseClientAsync();
-     
-                // Get teacherProfile first
-                var teacherProfile = await client.From<Teacher>()
-                    .Where(x => x.Id == id)
-                    .Single();
-
-                if (teacherProfile == null)
-                {
-                    return false;
-                }
-
-                // Delete from Supabase Auth
-                await _supabaseAuthService.DeleteUserAsync(teacherProfile.TeacherId);
-                
-                // Delete teacherProfile (cascade should handle related records)
-                await client.From<Teacher>().Where(x => x.Id == id).Delete();
-         
-                return true;
-            }
-   catch (Exception ex)
-{
-       throw new Exception($"Error deleting teacher: {ex.Message}", ex);
-        }
-        }
     }
 }

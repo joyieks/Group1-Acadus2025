@@ -16,6 +16,10 @@ namespace ASI.Basecode.Data.Models
         [Column("departmentId")]
         public int? DepartmentId { get; set; }  // Changed from string to int to match departments table
 
+        // ? NEW: Human-readable teacher display ID
+        [Column("teacherDisplayId")]
+        public string TeacherDisplayId { get; set; }  // FAC-202511001
+
         [Column("created_at")]
         public DateTime CreatedAt { get; set; }
     }

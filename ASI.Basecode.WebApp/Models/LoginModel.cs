@@ -1,4 +1,4 @@
-namespace Acadus___Alliance_Project_2025.Models
+namespace ASI.Basecode.WebApp.Models
 {
     /// <summary>
     /// Simple DTO for login form input (email and password).

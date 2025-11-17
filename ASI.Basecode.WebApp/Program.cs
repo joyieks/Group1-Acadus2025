@@ -69,16 +69,11 @@ builder.Logging
     .AddConsole()
     .AddDebug();
 
-// Add MVC support
-builder.Services.AddControllersWithViews();
-
 // Register your DbContext (internally supports Supabase)
 builder.Services.AddDbContext<AsiBasecodeDBContext>();
 
 // Register IConfiguration so your context's constructor can read appsettings.json
 builder.Services.AddSingleton<IConfiguration>(builder.Configuration);
-
-
 
 // Configure HttpClient with SSL bypass for development
 if (builder.Environment.EnvironmentName == "Development")
@@ -112,6 +107,10 @@ builder.Services.AddSingleton(provider =>
 builder.Services.AddScoped<IStudentCourseService, StudentCourseService>();
 builder.Services.AddScoped<IStudentCourseRepository, StudentCourseRepository>();
 
+
+builder.Services.AddScoped<ITeacherCourseService, TeacherCourseService>();
+builder.Services.AddScoped<ITeacherCourseRepository, TeacherCourseRepository>();
+
 var configurer = new StartupConfigurer(builder.Configuration);
 configurer.ConfigureServices(builder.Services);
 
@@ -126,7 +125,7 @@ app.MapControllerRoute(
 app.MapControllerRoute(
     name: "fallback",
     pattern: "{*url}",
-    defaults: new { controller = "Home", action = "Index" });
+defaults: new { controller = "Home", action = "Index" });
 
 app.MapControllers();
 app.MapRazorPages();

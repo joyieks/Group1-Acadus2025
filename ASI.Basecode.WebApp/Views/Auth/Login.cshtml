@@ -1,101 +1,188 @@
-@model Acadus___Alliance_Project_2025.Models.LoginModel
+@model ASI.Basecode.WebApp.Models.LoginModel
 @{
-    Layout = "~/Views/Shared/_LandingLayout.cshtml";
+ Layout = "~/Views/Shared/_LandingLayout.cshtml";
     ViewData["Title"] = "Login";
 }
 
 @section FullWidth { }
 @section Styles {
     <style>
-        .container { max-width: 100% !important; padding-left: 0 !important; padding-right: 0 !important; }
+ .container { max-width: 100% !important; padding-left: 0 !important; padding-right: 0 !important; }
         .image-container {
-            position: relative;
-            width: 100%;
-            height: 100%;
-        }
+          position: relative;
+  width: 100%;
+     height: 100%;
+    }
         .background-image {
             width: 100%;
-            height: 100%;
-            object-fit: cover;
-            position: absolute;
-        }
+   height: 100%;
+object-fit: cover;
+   position: absolute;
+      }
         .green-overlay {
-            position: absolute;
-            top: 0;
+ position: absolute;
+   top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background-color: #337D58;
+ background-color: #337D58;
             opacity: 0.7;
+        }
+        .error-message {
+            background-color: #fee;
+            border-left: 4px solid #dc3545;
+            padding: 12px 16px;
+    border-radius: 8px;
+      margin-bottom: 20px;
+         animation: slideIn 0.3s ease-out;
+        }
+        @@keyframes slideIn {
+     from {
+ opacity: 0;
+                transform: translateY(-10px);
+      }
+            to {
+         opacity: 1;
+         transform: translateY(0);
+      }
+   }
+        .password-toggle {
+   cursor: pointer;
+            transition: color 0.2s;
+        }
+        .password-toggle:hover {
+     color: #337D58;
         }
     </style>
 }
 
 <div class="min-h-screen flex bg-darker-shade">
     <div class="w-1/2 bg-white flex items-center justify-center px-16">
-        <div class="w-full max-w-md">
-            <h1 class="text-5xl font-extrabold text-black mb-2 font-poppins text-center">LOGIN</h1>
+<div class="w-full max-w-md">
+          <h1 class="text-5xl font-extrabold text-black mb-2 font-poppins text-center">LOGIN</h1>
             <p class="text-black mb-8 font-geologica text-center">Input your email and password</p>
+            
+            @* Display validation errors *@
+         @if (!ViewData.ModelState.IsValid && ViewData.ModelState[""].Errors.Any())
+            {
+     <div class="error-message">
+            <div class="flex items-start">
+        <svg class="w-5 h-5 text-red-600 mr-2 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+   <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+  </svg>
+     <div>
+<p class="font-semibold text-red-800 font-geologica">Login Failed</p>
+        @foreach (var error in ViewData.ModelState[""].Errors)
+         {
+        <p class="text-sm text-red-700 font-geologica">@error.ErrorMessage</p>
+  }
+            </div>
+       </div>
+         </div>
+  }
+
             <form method="post" class="space-y-6">
                 @Html.AntiForgeryToken()
-                <div>
-                    <label for="email" class="block text-black font-medium mb-2 font-geologica">Email:</label>
-                    <div class="relative">
-                        <input type="email" id="email" name="Email" asp-for="Email" placeholder="sampleemail@email.com" class="peer w-full px-4 py-3 pl-24 border-2 rounded-full focus:outline-none transition-all duration-300 font-geologica border-gray-300 focus:border-mid-color placeholder-gray-400 bg-white" required>
-                        <div class="absolute left-6 top-1/2 transform -translate-y-1/2 text-gray-400 peer-focus:hidden">
-                            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                                <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z"></path>
-                                <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a 2 2 0 002-2V8.118z"></path>
-                            </svg>
-                        </div>
-                    </div>
+     <div>
+         <label for="email" class="block text-black font-medium mb-2 font-geologica">Email:</label>
+          <div class="relative">
+   <input type="email" id="email" name="Email" asp-for="Email" placeholder="sampleemail@email.com" class="peer w-full px-4 py-3 pl-12 border-2 rounded-full focus:outline-none transition-all duration-300 font-geologica border-gray-300 focus:border-mid-color placeholder-gray-400 bg-white" required>
+            <div class="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 peer-focus:text-mid-color transition-colors">
+            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+          <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z"></path>
+          <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a 2 2 0 002-2V8.118z"></path>
+             </svg>
+     </div>
+  <span asp-validation-for="Email" class="text-red-500 text-sm mt-1"></span>
+               </div>
+              </div>
+        <div>
+         <label for="password" class="block text-black font-medium mb-2 font-geologica">Password:</label>
+      <div class="relative">
+                 <input type="password" id="password" name="Password" asp-for="Password" placeholder="Password here" class="peer w-full px-4 py-3 pl-12 pr-12 border-2 rounded-full focus:outline-none transition-all duration-300 font-geolica border-gray-300 focus:border-mid-color placeholder-gray-400 bg-white" required>
+   <div class="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 peer-focus:text-mid-color transition-colors">
+ <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+   <path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd"></path>
+            </svg>
+    </div>
+    <!-- Show/Hide Password Toggle -->
+        <button type="button" id="togglePassword" class="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-mid-color transition-colors password-toggle focus:outline-none" aria-label="Toggle password visibility">
+       <!-- Eye Icon (Show Password) -->
+           <svg id="eyeIcon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+         </svg>
+        <!-- Eye Slash Icon (Hide Password) - Hidden by default -->
+          <svg id="eyeSlashIcon" class="w-5 h-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+</svg>
+  </button>
+           <span asp-validation-for="Password" class="text-red-500 text-sm mt-1"></span>
+            </div>
+      </div>
+     
+        <!-- Remember Me Checkbox -->
+       <div class="flex items-center justify-between">
+         <label class="flex items-center">
+        <input type="checkbox" asp-for="RememberMe" class="w-4 h-4 text-mid-color border-gray-300 rounded focus:ring-mid-color focus:ring-2">
+           <span class="ml-2 text-sm text-gray-700 font-geologica">Remember me</span>
+            </label>
+  <a href="/Account/ForgotPassword" class="text-darker-shade hover:text-mid-color transition-colors duration-300 font-geolica underline text-sm">Forgot password?</a>
                 </div>
-                <div>
-                    <label for="password" class="block text-black font-medium mb-2 font-geologica">Password:</label>
-                    <div class="relative">
-                        <input type="password" id="password" name="Password" asp-for="Password" placeholder="Password here" class="peer w-full px-4 py-3 pl-24 border-2 rounded-full focus:outline-none transition-all duration-300 font-geologica border-gray-300 focus:border-mid-color placeholder-gray-400 bg-white" required>
-                        <div class="absolute left-6 top-1/2 transform -translate-y-1/2 text-gray-400 peer-focus:hidden">
-                            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                                <path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd"></path>
-                            </svg>
-                        </div>
-                    </div>
+        
+       <div class="flex justify-center">
+          <button type="submit" class="bg-gradient-to-r from-darker-shade to-mid-color text-white font-bold py-3 px-16 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 font-poppins hover:scale-105">Login</button>
                 </div>
-                <div class="text-right">
-       <a href="/Account/ForgotPassword" class="text-darker-shade hover:text-mid-color transition-colors duration-300 font-geologica underline">Forgot password?</a>
-                </div>
-                <div class="flex justify-center">
-                    <button type="submit" class="bg-gradient-to-r from-darker-shade to-mid-color text-white font-bold py-3 px-16 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 font-poppins">Login</button>
-                </div>
-            </form>
+       </form>
         </div>
     </div>
     <div class="w-1/2 bg-darker-shade flex items-center justify-center">
-        <div class="image-container">
-            <img src="~/img/StudentStudying.jpg" alt="Student studying" class="background-image" />
-            <div class="green-overlay"></div>
+      <div class="image-container">
+      <img src="~/img/StudentStudying.jpg" alt="Student studying" class="background-image" />
+         <div class="green-overlay"></div>
         </div>
     </div>
-    </div>
+</div>
 
 @section Scripts {
     <script>
+        // Show/Hide Password Toggle
         (function() {
-            function toggleIcon(input) {
-                var hasValue = input.value && input.value.length > 0;
-                var icon = input.parentElement.querySelector('div');
-                if (icon) icon.style.display = (hasValue ? 'none' : 'block');
-            }
-            ['email','password'].forEach(function(id){
-                var el = document.getElementById(id);
-                if(!el) return;
-                toggleIcon(el);
-                el.addEventListener('input', function(){ toggleIcon(el); });
-                el.addEventListener('focus', function(){ toggleIcon(el); });
-                el.addEventListener('blur', function(){ toggleIcon(el); });
-            });
+ const togglePassword = document.getElementById('togglePassword');
+    const passwordInput = document.getElementById('password');
+      const eyeIcon = document.getElementById('eyeIcon');
+            const eyeSlashIcon = document.getElementById('eyeSlashIcon');
+
+            if (togglePassword && passwordInput) {
+    togglePassword.addEventListener('click', function() {
+      // Toggle password visibility
+              const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+ passwordInput.setAttribute('type', type);
+  
+                    // Toggle icon visibility
+        eyeIcon.classList.toggle('hidden');
+      eyeSlashIcon.classList.toggle('hidden');
+                });
+ }
+
+            // Icon visibility on input
+     function toggleIcon(input) {
+         var hasValue = input.value && input.value.length > 0;
+           var icon = input.parentElement.querySelector('div');
+  if (icon) icon.style.display = (hasValue ? 'none' : 'block');
+}
+            
+            ['email'].forEach(function(id){
+     var el = document.getElementById(id);
+  if(!el) return;
+     toggleIcon(el);
+      el.addEventListener('input', function(){ toggleIcon(el); });
+        el.addEventListener('focus', function(){ toggleIcon(el); });
+         el.addEventListener('blur', function(){ toggleIcon(el); });
+       });
         })();
     </script>
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
 }
 
 

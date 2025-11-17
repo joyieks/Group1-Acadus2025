@@ -13,8 +13,16 @@ namespace ASI.Basecode.WebApp
         /// </summary>
         private void ConfigureAuthorization()
         {
-            // Authentication is already configured in Startup.cs
-            // This method is kept for backward compatibility but all auth setup is in Startup.cs
+
+            // REMOVED DUPLICATE: Authentication is already configured in Startup.cs ConfigureServices()
+            // The AddAuthentication().AddCookie() was causing "Scheme already exists: Cookies" error
+
+            // Authorization policies are already configured in Startup.cs, so this method can be empty
+            // or removed entirely. Keeping it empty for now to avoid breaking changes.
+
+            // Note: If you want to add additional authorization logic,
+            // it should NOT include AddAuthentication() or AddCookie() calls.
+
         }
     }
 }

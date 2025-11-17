@@ -10,11 +10,13 @@ using System.Diagnostics;
 using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
+using static ASI.Basecode.Data.Models.StudentDashboardViewModel; 
 using System.Security.Claims;
 
 namespace ASI.Basecode.WebApp.Controllers
 {
     [Authorize(Roles = "Student")]
+
     public class StudentController : Controller
     {
         private readonly ISupabaseAuthService _supabaseAuthService;
@@ -134,15 +136,20 @@ namespace ASI.Basecode.WebApp.Controllers
                 data.Feedbacks = paginated.Cast<StudentCourseDetailsViewModel.FeedbackItem>().ToList();
             else
                 data.Activities = paginated.Cast<StudentCourseDetailsViewModel.ActivityItem>().ToList();
+            {
 
-            return View(data);
+                return View(data);
+
+            }
         }
+
+
 
         private string GetCourseTitleById(string courseId)
         {
             return courseId switch
             {
-                "cs101" => "Introduction to Computer Science",
+           "cs101" => "Introduction to Computer Science",
                 "math201" => "Discrete Mathematics",
                 "eng102" => "Technical Writing",
                 "php41" => "Free Elective - PHP",

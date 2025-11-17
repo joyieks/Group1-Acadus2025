@@ -37,4 +37,9 @@
     <ProjectReference Include="..\ASI.Basecode.Services\ASI.Basecode.Services.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Authentication\" />
+    <Folder Include="Mvc\" />
+  </ItemGroup>
+
 </Project>

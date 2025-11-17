@@ -1,5 +1,4 @@
-﻿using ASI.Basecode.WebApp.Models;
-using Microsoft.Extensions.Configuration;
+﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
 namespace ASI.Basecode.WebApp.Extensions.Configuration
@@ -73,23 +72,6 @@ namespace ASI.Basecode.WebApp.Extensions.Configuration
         {
             return configuration.GetSection("Common")
                                 .GetValue<string>("LogFileSize");
-        }
-
-        /// <summary>
-        /// Gets the token authentication
-        /// </summary>
-        /// <param name="configuration">Configuration</param>
-        /// <returns>Token authentication values</returns>
-        public static TokenAuthentication GetTokenAuthentication(this IConfiguration configuration)
-        {
-            return new TokenAuthentication()
-            {
-                SecretKey = configuration.GetSection("TokenAuthentication:SecretKey").Value,
-                Audience = configuration.GetSection("TokenAuthentication:Audience").Value,
-                TokenPath = configuration.GetSection("TokenAuthentication:TokenPath").Value,
-                CookieName = configuration.GetSection("TokenAuthentication:CookieName").Value,
-                ExpirationMinutes = int.Parse(configuration.GetSection("TokenAuthentication:ExpirationMinutes").Value)
-            };
         }
     }
 }

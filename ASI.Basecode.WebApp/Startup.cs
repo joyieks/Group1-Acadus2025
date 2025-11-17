@@ -86,11 +86,27 @@ namespace ASI.Basecode.WebApp
                 options.LoginPath = "/Auth/Login";
                 options.LogoutPath = "/Auth/Logout";
                 options.AccessDeniedPath = "/Auth/AccessDenied";
-                options.ExpireTimeSpan = TimeSpan.FromHours(8);
-                options.SlidingExpiration = true;
+                
+                // ✅ FIX: Cookie configuration for development
+                // Option 1: Session cookie (expires when browser closes)
+                // Uncomment the following lines for development to prevent persistent login
+                // options.ExpireTimeSpan = TimeSpan.FromMinutes(60); // Shorter expiration
+                // options.Cookie.MaxAge = null; // Session cookie (expires when browser closes)
+                
+                // Option 2: Persistent cookie (current production setting)
+                options.ExpireTimeSpan = TimeSpan.FromHours(8); // Cookie expires after 8 hours
+                options.SlidingExpiration = true; // Renew cookie on each request
+                
                 options.Cookie.HttpOnly = true;
                 options.Cookie.SecurePolicy = Microsoft.AspNetCore.Http.CookieSecurePolicy.SameAsRequest;
                 options.Cookie.SameSite = Microsoft.AspNetCore.Http.SameSiteMode.Lax;
+                
+                // ✅ NOTE: To force logout when stopping debugger during development,
+                // you can either:
+                // 1. Always click logout before stopping the debugger
+                // 2. Use incognito/private browsing for testing
+                // 3. Clear browser cookies manually
+                // 4. Set Cookie.MaxAge = null above to use session cookies
             });
 
             // Add Authorization with Role-based policies

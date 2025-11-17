@@ -86,15 +86,24 @@
                 <!-- Department Section -->
                 <section style="margin-bottom:32px;">
                     <h2 style="font-size:18px; font-weight:700; color:#111827; margin:0 0 20px 0; padding-bottom:12px; border-bottom:2px solid #E8C7FF;">Department</h2>
-                    
-                    <div style="display:grid; grid-template-columns:repeat(1, 1fr); gap:20px; margin-bottom:20px;">
-                        <div>
-                            <label style="display:block; font-weight:600; color:#374151; margin-bottom:8px; font-size:14px;">Department <span style="color:#dc2626;">*</span></label>
-                            <input type="text" asp-for="DepartmentId" placeholder="e.g., College of Engineering" style="width:100%; padding:12px; border:1px solid #d1d5db; border-radius:8px; font-size:14px;"/>
-                            <span asp-validation-for="DepartmentId" style="color:#dc2626; font-size:12px; display:block; margin-top:4px;"></span>
-                        </div>
-                    </div>
-                </section>
+                
+                 <div style="display:grid; grid-template-columns:repeat(1, 1fr); gap:20px; margin-bottom:20px;">
+        <div>
+            <label style="display:block; font-weight:600; color:#374151; margin-bottom:8px; font-size:14px;">Department <span style="color:#dc2626;">*</span></label>
+          <select asp-for="DepartmentId" style="width:100%; padding:12px; border:1px solid #d1d5db; border-radius:8px; font-size:14px;">
+       <option value="">-- Select Department --</option>
+               @if (ViewBag.Departments != null)
+    {
+           foreach (var dept in ViewBag.Departments)
+           {
+      <option value="@dept.Id">@dept.DepartmentName (@dept.DepartmentCode)</option>
+        }
+            }
+             </select>
+     <span asp-validation-for="DepartmentId" style="color:#dc2626; font-size:12px; display:block; margin-top:4px;"></span>
+                 </div>
+                   </div>
+        </section>
 
                 <!-- Address Information Section -->
                 <section style="margin-bottom:32px;">
