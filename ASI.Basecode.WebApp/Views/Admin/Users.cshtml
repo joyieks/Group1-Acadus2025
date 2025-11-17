@@ -42,30 +42,50 @@
 <!-- White section with search and table -->
 <section style="background:#ffffff; padding: 24px 0;">
 	<div class="container" style="max-width: 1200px; margin: 0 auto; padding: 0 16px;">
-		<!-- Search bar and Add buttons aligned left -->
-		<div style="display:flex; justify-content:flex-start; align-items:center; margin-bottom:24px; gap:12px; flex-wrap:wrap;">
-			<form method="get" asp-action="Users" style="display:flex; flex:1 1 400px; max-width:600px; gap:12px; min-width:260px;">
-				<input type="hidden" name="tab" value="@Model?.ActiveTab" />
-				<input type="hidden" name="status" value="@Model?.ActiveStatus" />
-				<input type="text" name="search" placeholder="Search by name or email" 
-					   value="@Model?.SearchTerm"
-					   style="flex:1; padding:10px 16px; border:1px solid #d1d5db; border-radius:8px; font-size:14px; background:#ffffff;">
-				<button type="submit" style="background:#059669; color:#fff; border:none; border-radius:8px; padding:10px 24px; font-weight:600; cursor:pointer;">Search</button>
-				@if (!string.IsNullOrWhiteSpace(Model?.SearchTerm))
-				{
-					<a asp-action="Users" asp-route-tab="@Model.ActiveTab" asp-route-status="@Model.ActiveStatus" style="background:#6b7280; color:#fff; border:none; border-radius:8px; padding:10px 24px; font-weight:600; cursor:pointer; text-decoration:none;">Clear</a>
-				}
-			</form>
-			
-			<!-- Status Filter Dropdown -->
-			<select id="statusFilter" onchange="filterByStatus()" style="padding:10px 16px; border:1px solid #d1d5db; border-radius:8px; font-size:14px; background:#ffffff; cursor:pointer;">
-				<option value="all" selected="@(Model?.ActiveStatus == "all" || string.IsNullOrEmpty(Model?.ActiveStatus))">All Status</option>
-				<option value="active" selected="@(Model?.ActiveStatus == "active")">Active Only</option>
-				<option value="inactive" selected="@(Model?.ActiveStatus == "inactive")">Inactive Only</option>
-			</select>
+		
+		@* Success modal markup (renders only if TempData["UserSuccessMessage"] is set) *@
+		@if (TempData["UserSuccessMessage"] != null)
+		{
+			<div id="successModalBackdrop" style="position:fixed; inset:0; background:rgba(0,0,0,0.35); backdrop-filter:blur(3px); z-index:10000;"></div>
+			<div id="successModal" style="position:fixed; left:50%; top:20%; transform:translateX(-50%); z-index:10001; max-width:520px; width:90%; background:#fff; border-radius:12px; box-shadow:0 8px 30px rgba(0,0,0,0.2);">
+				<div style="padding:20px; border-bottom:1px solid #eef2f7;">
+					<h3 style="margin:0; font-size:18px; font-weight:800; color:#111827;">Success</h3>
+					<p style="margin:8px 0 0 0; color:#4b5563; font-size:14px;">@TempData["UserSuccessMessage"]</p>
+				</div>
+				<div style="display:flex; justify-content:flex-end; gap:12px; padding:16px;">
+					<a href="@Url.Action("Users", "Admin")" style="padding:10px 18px; border-radius:8px; border:1px solid #d1d5db; background:#fff; color:#374151; text-decoration:none;">Close</a>
+				</div>
+			</div>
+		}
+		<!-- Search bar and Add buttons -->
+		<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px; gap:12px; flex-wrap:wrap;">
+			<div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
+				<form method="get" asp-action="Users" style="display:flex; align-items:center; gap:12px; flex:1 1 500px; max-width:700px; min-width:350px;">
+					<input type="hidden" name="tab" value="@Model?.ActiveTab" />
+					<input type="hidden" name="status" value="@Model?.ActiveStatus" />
+					<input type="text" name="search" placeholder="Search by name or ID number" 
+						   value="@Model?.SearchTerm"
+						   style="flex:1; min-width:280px; padding:10px 16px; border:1px solid #d1d5db; border-radius:8px; font-size:14px; background:#ffffff;">
+					<button type="submit" style="background:#059669; color:#fff; border:none; border-radius:8px; padding:10px 24px; font-weight:600; cursor:pointer; white-space:nowrap;">Search</button>
+					
+					<!-- Status Filter Dropdown - positioned beside Search button -->
+					<select id="statusFilter" onchange="filterByStatus()" style="padding:10px 16px; border:1px solid #d1d5db; border-radius:8px; font-size:14px; background:#ffffff; cursor:pointer;">
+						<option value="all" selected="@(Model?.ActiveStatus == "all" || string.IsNullOrEmpty(Model?.ActiveStatus))">All Status</option>
+						<option value="active" selected="@(Model?.ActiveStatus == "active")">Active Only</option>
+						<option value="inactive" selected="@(Model?.ActiveStatus == "inactive")">Inactive Only</option>
+					</select>
+					
+					@if (!string.IsNullOrWhiteSpace(Model?.SearchTerm))
+					{
+						<a asp-action="Users" asp-route-tab="@Model.ActiveTab" asp-route-status="@Model.ActiveStatus" style="background:#6b7280; color:#fff; border:none; border-radius:8px; padding:10px 24px; font-weight:600; cursor:pointer; text-decoration:none;">Clear</a>
+					}
+				</form>
+			</div>
 
-			<a id="addStudentBtn" asp-controller="Admin" asp-action="AddStudent" style="display:none; background:#059669; color:#fff; border:none; border-radius:8px; padding:10px 24px; font-weight:600; cursor:pointer; text-decoration:none; min-width:140px; text-align:center;">Add Student</a>
-			<a id="addTeacherBtn" asp-controller="Admin" asp-action="AddTeacher" style="display:none; background:#059669; color:#fff; border:none; border-radius:8px; padding:10px 24px; font-weight:600; cursor:pointer; text-decoration:none; min-width:140px; text-align:center;">Add Teacher</a>
+			<div style="display:flex; align-items:center; gap:12px;">
+				<a id="addStudentBtn" asp-controller="Admin" asp-action="AddStudent" style="display:none; background:#059669; color:#fff; border:none; border-radius:8px; padding:10px 24px; font-weight:600; cursor:pointer; text-decoration:none; min-width:140px; text-align:center;">Add Student</a>
+				<a id="addTeacherBtn" asp-controller="Admin" asp-action="AddTeacher" style="display:none; background:#059669; color:#fff; border:none; border-radius:8px; padding:10px 24px; font-weight:600; cursor:pointer; text-decoration:none; min-width:140px; text-align:center;">Add Teacher</a>
+			</div>
 		</div>
 
 		<!-- Tabs -->

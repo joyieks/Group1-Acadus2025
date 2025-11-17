@@ -49,15 +49,15 @@ namespace ASI.Basecode.Data.Repositories
 
         public async Task<List<ActivityModel>> GetActivitiesByCourseIdAsync(long courseId)
         {
-            // Get all activities for the course (filter IsArchived in memory to avoid column not found error)
+            // Get all activities for the course (filter IsVisible in memory)
             var res = await _supabaseClient
                 .From<ActivityModel>()
                 .Filter("courseId", Supabase.Postgrest.Constants.Operator.Equals, courseId)
                 .Get();
 
-            // Filter out archived activities and non-visible activities in memory
+            // Filter out non-visible activities in memory
             var activities = res.Models
-                .Where(a => !a.IsArchived && a.IsVisible == false)  // Filter in memory
+                .Where(a => a.IsVisible == false)  // Filter in memory
                 .OrderBy(a => a.DueDate)
                 .ToList();
 

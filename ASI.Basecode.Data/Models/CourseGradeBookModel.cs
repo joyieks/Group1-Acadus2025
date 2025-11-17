@@ -20,6 +20,7 @@ namespace ASI.Basecode.Data.Models
         public class StudentGradeItem
         {
             public string StudentId { get; set; }
+            public string StudentDisplayId { get; set; }  // The actual ID number from database
             public string Name { get; set; }
             public double AveragePercentage { get; set; }
             public string GradeLetter { get; set; }
@@ -38,6 +39,7 @@ namespace ASI.Basecode.Data.Models
         {
             
             public string StudentId { get; set; }
+            public string StudentDisplayId { get; set; }  // The actual ID number from database
             public string Name { get; set; }
             public double TotalRawScore { get; set; }
             public double TotalMaxScore { get; set; }

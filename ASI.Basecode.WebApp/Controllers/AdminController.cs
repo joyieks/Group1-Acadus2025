@@ -77,12 +77,16 @@ namespace ASI.Basecode.WebApp.Controllers
                 Console.WriteLine($"=== AdminController.Users ===");
                 Console.WriteLine($"Tab: {tab}, Search: {search ?? "none"}, Status: {status}");
 
-                // Fetch all users first
-                List<SupabaseUserNew> allUsers = await _userService.GetAllUsersAsync();
+                // Fetch all users first and deduplicate by UserTypeId
+                List<SupabaseUserNew> allUsersRaw = await _userService.GetAllUsersAsync();
+                List<SupabaseUserNew> allUsers = allUsersRaw
+                    .GroupBy(u => u.UserTypeId)
+                    .Select(g => g.First())
+                    .ToList();
                 
-                Console.WriteLine($"Fetched {allUsers.Count} total users from database");
+                Console.WriteLine($"Fetched {allUsersRaw.Count} total users from database, {allUsers.Count} unique users after deduplication");
 
-                // Apply search filter if provided
+                // Apply search filter if provided (search by name and ID number)
                 if (!string.IsNullOrWhiteSpace(search))
                 {
                     var searchLower = search.ToLower();
@@ -90,7 +94,7 @@ namespace ASI.Basecode.WebApp.Controllers
                         .Where(u =>
                             (u.FirstName != null && u.FirstName.ToLower().Contains(searchLower)) ||
                             (u.LastName != null && u.LastName.ToLower().Contains(searchLower)) ||
-                            (u.Email != null && u.Email.ToLower().Contains(searchLower)))
+                            (u.UserDisplayId != null && u.UserDisplayId.ToLower().Contains(searchLower)))
                         .ToList();
                     Console.WriteLine($"After search filter: {allUsers.Count} users");
                 }
@@ -106,9 +110,14 @@ namespace ASI.Basecode.WebApp.Controllers
                 }
                 Console.WriteLine($"After status filter ({status}): {allUsers.Count} users");
 
-                // Resolve roles for ALL users first
+                // Resolve roles for ALL users first (deduplicate users first to avoid processing same user multiple times)
+                var uniqueUsers = allUsers
+                    .GroupBy(u => u.UserTypeId)
+                    .Select(g => g.First())
+                    .ToList();
+                
                 var allUsersWithRoles = new List<UserWithRoleViewModel>();
-                foreach (var u in allUsers)
+                foreach (var u in uniqueUsers)
                 {
                     // FIX: Use UserTypeId (Supabase Auth UUID) not Id (database integer)
                     var rolesForUser = await _userService.GetUserRolesAsync(u.UserTypeId);
@@ -121,12 +130,14 @@ namespace ASI.Basecode.WebApp.Controllers
 
                 Console.WriteLine($"Resolved roles for {allUsersWithRoles.Count} users");
 
-                // Now filter by role for students and instructors
+                // Now filter by role for students and instructors (with deduplication)
                 var students = allUsersWithRoles
                     .Where(entry => entry.Roles.Any(r => r.RoleName != null && 
                            (r.RoleName.Equals("Student", StringComparison.OrdinalIgnoreCase) ||
                             r.RoleName.Equals("Students", StringComparison.OrdinalIgnoreCase))))
                     .Select(entry => entry.User)
+                    .GroupBy(u => u.UserTypeId)  // Group by UserTypeId to remove duplicates
+                    .Select(g => g.First())     // Take first occurrence of each user
                     .ToList();
 
                 var instructors = allUsersWithRoles
@@ -136,6 +147,8 @@ namespace ASI.Basecode.WebApp.Controllers
                             r.RoleName.Equals("Teachers", StringComparison.OrdinalIgnoreCase) ||
                             r.RoleName.Equals("Instructors", StringComparison.OrdinalIgnoreCase))))
                     .Select(entry => entry.User)
+                    .GroupBy(u => u.UserTypeId)  // Group by UserTypeId to remove duplicates
+                    .Select(g => g.First())       // Take first occurrence of each user
                     .ToList();
 
                 Console.WriteLine($"Filtered by role - Students: {students.Count}, Instructors: {instructors.Count}");
@@ -294,7 +307,7 @@ namespace ASI.Basecode.WebApp.Controllers
                         details: $"Email: {model.Email}, Program: {model.ProgramId}, Department: {model.DepartmentId}"
                     );
 
-                    TempData["SuccessMessage"] = $"Student {model.FirstName} {model.LastName} has been successfully created!";
+                    TempData["UserSuccessMessage"] = $"Student {model.FirstName} {model.LastName} has been successfully created!";
                     return RedirectToAction("Users");
                 }
                 else
@@ -416,7 +429,7 @@ ViewBag.Departments = new List<Department>();
           details: $"Email: {model.Email}, Department: {model.DepartmentId}"
       );
 
-      TempData["SuccessMessage"] = $"Teacher {model.FirstName} {model.LastName} has been successfully created!";
+      TempData["UserSuccessMessage"] = $"Teacher {model.FirstName} {model.LastName} has been successfully created!";
     return RedirectToAction("Users");
  }
       else
@@ -679,7 +692,7 @@ try
 
                 // TODO: Update address and emergency contact if needed
 
-                TempData["SuccessMessage"] = $"User {model.FirstName} {model.LastName} has been updated successfully!";
+                TempData["UserSuccessMessage"] = $"User {model.FirstName} {model.LastName} has been updated successfully!";
                 return RedirectToAction("ViewUser", new { id = id });
             }
             catch (Exception ex)
@@ -688,6 +701,45 @@ try
                 Console.WriteLine($"Stack Trace: {ex.StackTrace}");
                 ModelState.AddModelError(string.Empty, $"Error updating user: {ex.Message}");
                 return View(model);
+            }
+        }
+
+        /// <summary>
+        /// API endpoint to get all recent activities for admin (with optional role filter)
+        /// </summary>
+        [HttpGet]
+        public async Task<IActionResult> GetAllRecentActivitiesApi(string role = "all")
+        {
+            try
+            {
+                List<AuditLogModel> activities;
+                
+                // Filter by role if specified
+                if (role == "all" || string.IsNullOrWhiteSpace(role))
+                {
+                    activities = await _auditLogService.GetAllRecentActivitiesAsync(limit: 100);
+                }
+                else
+                {
+                    // Capitalize first letter for consistent role names
+                    var roleFilter = char.ToUpper(role[0]) + role.Substring(1).ToLower();
+                    activities = await _auditLogService.GetRecentActivitiesByRoleAsync(roleFilter, limit: 100);
+                }
+                
+                var activitiesData = activities.Select(a => new
+                {
+                    actionDescription = a.ActionDescription,
+                    userName = a.UserName,
+                    createdAt = a.CreatedAt.Kind == DateTimeKind.Utc ? a.CreatedAt.ToLocalTime() : a.CreatedAt,
+                    formattedDate = (a.CreatedAt.Kind == DateTimeKind.Utc ? a.CreatedAt.ToLocalTime() : a.CreatedAt).ToString("MMMM dd, yyyy, hh:mm tt")
+                }).ToList();
+
+                return Json(new { success = true, activities = activitiesData, role = role });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error fetching all recent activities: {ex.Message}");
+                return Json(new { success = false, message = ex.Message });
             }
         }
 
@@ -868,7 +920,7 @@ try
                         details: $"Credits: {model.Credits}, Level: {model.Level}, Max Capacity: {model.MaxCapacity}"
                     );
 
-                    TempData["SuccessMessage"] = $"Course '{model.Name}' has been created successfully!";
+                    TempData["CourseSuccessMessage"] = $"Course '{model.Name}' has been created successfully!";
                     return RedirectToAction("Courses");
                 }
                 else

@@ -596,10 +596,39 @@ private string GetCardColor(int index)
         //}
 
         /// <summary>
-        /// Archives a course activity.
+        /// API endpoint to get all recent activities for the current teacher
         /// </summary>
-        /// <param name="activityId">The activity ID.</param>
-        /// <returns>JSON result indicating success or failure.</returns>
+        [HttpGet]
+        public async Task<IActionResult> GetAllRecentActivities()
+        {
+            try
+            {
+                var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? User.FindFirstValue("sub");
+                
+                if (string.IsNullOrWhiteSpace(currentUserId))
+                {
+                    return Json(new { success = false, message = "User not authenticated" });
+                }
+
+                // Get all activities for the teacher (limit to 100)
+                var activities = await _auditLogService.GetRecentLogsByUserAsync(currentUserId, limit: 100);
+                
+                var activitiesData = activities.Select(a => new
+                {
+                    actionDescription = a.ActionDescription,
+                    createdAt = a.CreatedAt.Kind == DateTimeKind.Utc ? a.CreatedAt.ToLocalTime() : a.CreatedAt,
+                    formattedDate = (a.CreatedAt.Kind == DateTimeKind.Utc ? a.CreatedAt.ToLocalTime() : a.CreatedAt).ToString("MMMM dd, yyyy, hh:mm tt")
+                }).ToList();
+
+                return Json(new { success = true, activities = activitiesData });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error fetching all recent activities: {ex.Message}");
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
+
         [HttpPost]
         public async Task<IActionResult> ArchiveActivity(int activityId)
         {
