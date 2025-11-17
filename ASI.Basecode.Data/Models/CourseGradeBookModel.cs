@@ -11,7 +11,7 @@ namespace ASI.Basecode.Data.Models
         public long CourseId { get; set; }
         public string CourseCode { get; set; }
         public string CourseTitle { get; set; }
-        public long SemesterInfo { get; set; }
+        public long? SemesterInfo { get; set; }  // Made nullable to handle null semesterId
         public string CardColor { get; set; }
 
         public List<StudentGradeItem> Students { get; set; } = new();
