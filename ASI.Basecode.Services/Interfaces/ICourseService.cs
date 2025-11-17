@@ -53,6 +53,11 @@ namespace ASI.Basecode.Services.Interfaces
         Task<List<CourseModel>> SearchCoursesAsync(string searchTerm);
 
         /// <summary>
+        /// Generates a unique course code based on year level.
+        /// </summary>
+        Task<string> GenerateCourseCodeAsync(string level);
+
+        /// <summary>
         /// Creates a new course with validation.
         /// </summary>
         Task<(bool Success, string Message, int? CourseId)> CreateCourseAsync(

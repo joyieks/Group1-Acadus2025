@@ -299,7 +299,80 @@ namespace ASI.Basecode.Services.Services
         }
 
         /// <summary>
-        /// Creates a new course with validation.
+        /// Generates a unique course code based on year level.
+        /// Format: [Year Level Prefix][3-digit Index]
+        /// 1st Year: 141, 2nd Year: 242, 3rd Year: 626, 4th Year: 919
+        /// </summary>
+        public async Task<string> GenerateCourseCodeAsync(string level)
+        {
+            try
+            {
+                // Map year level to prefix
+                var levelPrefixMap = new Dictionary<string, string>
+                {
+                    { "1st Year", "141" },
+                    { "2nd Year", "242" },
+                    { "3rd Year", "626" },
+                    { "4th Year", "919" }
+                };
+
+                if (!levelPrefixMap.ContainsKey(level))
+                {
+                    throw new ArgumentException($"Invalid year level: {level}");
+                }
+
+                var prefix = levelPrefixMap[level];
+                var client = await _supabaseAuthService.GetSupabaseClientForAuthAsync();
+
+                // Get all courses with codes starting with this prefix
+                var allCourses = await client
+                    .From<CourseModel>()
+                    .Get();
+
+                var courses = allCourses?.Models ?? new List<CourseModel>();
+                
+                // Filter courses that start with the prefix and extract their indices
+                var indices = new List<int>();
+                foreach (var course in courses)
+                {
+                    if (!string.IsNullOrEmpty(course.Code) && course.Code.StartsWith(prefix) && course.Code.Length == 6)
+                    {
+                        // Extract the 3-digit index (last 3 characters)
+                        if (int.TryParse(course.Code.Substring(3), out int index))
+                        {
+                            indices.Add(index);
+                        }
+                    }
+                }
+
+                // Find the next available index
+                int nextIndex = 1;
+                if (indices.Count > 0)
+                {
+                    nextIndex = indices.Max() + 1;
+                }
+
+                // Ensure index doesn't exceed 999 (3 digits max)
+                if (nextIndex > 999)
+                {
+                    throw new Exception($"Maximum course limit reached for {level}. Cannot generate more course codes.");
+                }
+
+                // Generate code: prefix + 3-digit index (padded with zeros)
+                var generatedCode = $"{prefix}{nextIndex:D3}";
+
+                Console.WriteLine($"Generated course code: {generatedCode} for {level} (index: {nextIndex})");
+                return generatedCode;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error generating course code: {ex.Message}");
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// Creates a new course with validation and auto-generated course code.
         /// </summary>
         public async Task<(bool Success, string Message, int? CourseId)> CreateCourseAsync(
             string code,
@@ -314,6 +387,13 @@ namespace ASI.Basecode.Services.Services
         {
             try
             {
+                // Auto-generate course code if not provided or empty
+                if (string.IsNullOrWhiteSpace(code))
+                {
+                    code = await GenerateCourseCodeAsync(level);
+                    Console.WriteLine($"Auto-generated course code: {code}");
+                }
+
                 // Validation
                 if (string.IsNullOrWhiteSpace(code) || code.Length < 2 || code.Length > 50)
                 {
@@ -345,9 +425,9 @@ namespace ASI.Basecode.Services.Services
                     return (false, "Valid semester is required", null);
                 }
 
-                if (maxCapacity < 1 || maxCapacity > 500)
+                if (maxCapacity < 1 || maxCapacity > 50)
                 {
-                    return (false, "Maximum capacity must be between 1 and 500", null);
+                    return (false, "Maximum capacity must be between 1 and 50", null);
                 }
 
                 if (string.IsNullOrWhiteSpace(instructorId))

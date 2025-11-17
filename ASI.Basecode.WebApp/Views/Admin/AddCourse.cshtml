@@ -42,9 +42,9 @@
                     
                     <div style="display:grid; grid-template-columns:repeat(2, 1fr); gap:20px; margin-bottom:20px;">
                         <div>
-                            <label style="display:block; font-weight:600; color:#374151; margin-bottom:8px; font-size:14px;">Course Code <span style="color:#dc2626;">*</span></label>
-                            <input type="text" asp-for="Code" placeholder="e.g., CS101" style="width:100%; padding:12px; border:1px solid #d1d5db; border-radius:8px; font-size:14px;"/>
-                            <span asp-validation-for="Code" style="color:#dc2626; font-size:12px; display:block; margin-top:4px;"></span>
+                            <label style="display:block; font-weight:600; color:#374151; margin-bottom:8px; font-size:14px;">Course Code <span style="font-weight:400; color:#6b7280; font-size:12px;">(Auto-generated)</span></label>
+                            <input type="text" asp-for="Code" id="courseCodeInput" readonly placeholder="Will be generated automatically" style="width:100%; padding:12px; border:1px solid #d1d5db; border-radius:8px; font-size:14px; background-color:#f3f4f6; cursor:not-allowed;" value=""/>
+                            <small style="color:#6b7280; font-size:12px; display:block; margin-top:4px;">Course code will be generated automatically based on Year Level</small>
                         </div>
                         <div>
                             <label style="display:block; font-weight:600; color:#374151; margin-bottom:8px; font-size:14px;">Course Name <span style="color:#dc2626;">*</span></label>
@@ -63,17 +63,27 @@
 
                     <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:20px; margin-bottom:20px;">
                         <div>
-                            <label style="display:block; font-weight:600; color:#374151; margin-bottom:8px; font-size:14px;">Credits <span style="color:#dc2626;">*</span></label>
+                            <label style="display:block; font-weight:600; color:#374151; margin-bottom:8px; font-size:14px;">Units <span style="color:#dc2626;">*</span></label>
                             <input type="number" asp-for="Credits" placeholder="3" min="1" max="6" style="width:100%; padding:12px; border:1px solid #d1d5db; border-radius:8px; font-size:14px;"/>
                             <span asp-validation-for="Credits" style="color:#dc2626; font-size:12px; display:block; margin-top:4px;"></span>
                         </div>
                         <div>
-                            <label style="display:block; font-weight:600; color:#374151; margin-bottom:8px; font-size:14px;">Level <span style="color:#dc2626;">*</span></label>
+                            <label style="display:block; font-weight:600; color:#374151; margin-bottom:8px; font-size:14px;">Year Level <span style="color:#dc2626;">*</span></label>
                             <select asp-for="Level" style="width:100%; padding:12px; border:1px solid #d1d5db; border-radius:8px; font-size:14px;">
-                                <option value="">-- Select a Level --</option>
-                                @foreach (var level in Model.Levels)
+                                <option value="">-- Select a Year Level --</option>
+                                @if (Model.Levels != null && Model.Levels.Count > 0)
                                 {
-                                    <option value="@level.Value">@level.Label</option>
+                                @foreach (var level in Model.Levels)
+                                    {
+                                        <option value="@level.Value">@level.Label</option>
+                                    }
+                                }
+                                else
+                                {
+                                    <option value="1st Year">1st Year</option>
+                                    <option value="2nd Year">2nd Year</option>
+                                    <option value="3rd Year">3rd Year</option>
+                                    <option value="4th Year">4th Year</option>
                                 }
                             </select>
                             <span asp-validation-for="Level" style="color:#dc2626; font-size:12px; display:block; margin-top:4px;"></span>
@@ -94,7 +104,7 @@
                     <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:20px; margin-bottom:20px;">
                         <div>
                             <label style="display:block; font-weight:600; color:#374151; margin-bottom:8px; font-size:14px;">Maximum Capacity <span style="color:#dc2626;">*</span></label>
-                            <input type="number" asp-for="MaxCapacity" placeholder="30" min="1" max="500" step="1" style="width:100%; padding:12px; border:1px solid #d1d5db; border-radius:8px; font-size:14px;"/>
+                            <input type="number" asp-for="MaxCapacity" placeholder="30" min="1" max="50" step="1" style="width:100%; padding:12px; border:1px solid #d1d5db; border-radius:8px; font-size:14px;"/>
                             <span asp-validation-for="MaxCapacity" style="color:#dc2626; font-size:12px; display:block; margin-top:4px;"></span>
                         </div>
                         <div>
@@ -157,14 +167,51 @@
         const confirmSummary = document.getElementById('confirmSummary');
         const confirmCancel = document.getElementById('confirmCancel');
         const confirmProceed = document.getElementById('confirmProceed');
+        const courseCodeInput = document.getElementById('courseCodeInput');
+        const levelSelect = form.querySelector('select[name="Level"]');
+
+        // Generate course code when year level changes
+        if (levelSelect && courseCodeInput) {
+            levelSelect.addEventListener('change', async function() {
+                const selectedLevel = this.value;
+                if (selectedLevel) {
+                    // Show loading state
+                    courseCodeInput.value = 'Generating...';
+                    courseCodeInput.style.color = '#6b7280';
+                    
+                    try {
+                        // Call API to generate course code
+                        const response = await fetch(`/Admin/GenerateCourseCode?level=${encodeURIComponent(selectedLevel)}`);
+                        const data = await response.json();
+                        
+                        if (data.success) {
+                            courseCodeInput.value = data.code;
+                            courseCodeInput.style.color = '#111827';
+                        } else {
+                            courseCodeInput.value = '';
+                            courseCodeInput.placeholder = 'Error generating code';
+                            console.error('Error generating code:', data.message);
+                        }
+                    } catch (error) {
+                        courseCodeInput.value = '';
+                        courseCodeInput.placeholder = 'Error generating code';
+                        console.error('Error:', error);
+                    }
+                } else {
+                    courseCodeInput.value = '';
+                    courseCodeInput.placeholder = 'Will be generated automatically';
+                    courseCodeInput.style.color = '#111827';
+                }
+            });
+        }
 
         function showConfirm() {
             // Build a small summary from important fields
-            const code = form.querySelector('[asp-for="Code"]').value || '';
-            const name = form.querySelector('[asp-for="Name"]').value || '';
-            const level = form.querySelector('[asp-for="Level"]').value || '';
-            const sem = form.querySelector('[asp-for="SemesterId"]').value || '';
-            confirmSummary.textContent = `Course: ${name} (${code}) — Level: ${level} — Semester ID: ${sem}`;
+            const name = form.querySelector('input[name="Name"]').value || '';
+            const level = form.querySelector('select[name="Level"]').value || '';
+            const sem = form.querySelector('select[name="SemesterId"]').value || '';
+            const codePreview = courseCodeInput ? courseCodeInput.value : 'Auto-generated';
+            confirmSummary.textContent = `Course: ${name} (Code: ${codePreview}) — Level: ${level} — Semester ID: ${sem}`;
             confirmModal.style.display = 'block';
             confirmBackdrop.style.display = 'block';
         }
