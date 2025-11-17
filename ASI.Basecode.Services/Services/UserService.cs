@@ -18,16 +18,16 @@ namespace ASI.Basecode.Services.Services
         private readonly IUserRepository _repository;
         private readonly IMapper _mapper;
         private readonly ISupabaseAuthService _supabaseAuthService;
-        private readonly IStudentService _studentService; // ✨ Inject IStudentService
-        private readonly ITeacherService _teacherService; // ✨ Inject ITeacherService
+        private readonly IStudentService _studentService; 
+        private readonly ITeacherService _teacherService; 
 
         public UserService(ISupabaseAuthService supabaseAuthService, IMapper mapper = null, IUserRepository repository = null, IStudentService studentService = null, ITeacherService teacherService = null)
         {
             _mapper = mapper;
             _repository = repository;
             _supabaseAuthService = supabaseAuthService;
-            _studentService = studentService; // ✨ Initialize
-            _teacherService = teacherService; // ✨ Initialize
+            _studentService = studentService;
+            _teacherService = teacherService; 
         }
 
         public LoginResult AuthenticateUser(string userId, string password, ref User user)
