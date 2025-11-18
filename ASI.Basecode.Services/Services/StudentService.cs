@@ -20,13 +20,13 @@ namespace ASI.Basecode.Services.Services
         private static HttpClient _httpClient;
 
         public StudentService(
-        ISupabaseAuthService supabaseAuthService, 
+        ISupabaseAuthService supabaseAuthService,
             IConfiguration configuration,
             IdGeneratorService idGenerator) // ✅ NEW
         {
-      _supabaseAuthService = supabaseAuthService;
-      _configuration = configuration;
-     _idGenerator = idGenerator; // ✅ NEW
+            _supabaseAuthService = supabaseAuthService;
+            _configuration = configuration;
+            _idGenerator = idGenerator; // ✅ NEW
         }
 
         private HttpClient GetHttpClient()
@@ -104,37 +104,37 @@ namespace ASI.Basecode.Services.Services
 
                 Console.WriteLine($"✓ Step 1 Complete: Auth user created with ID: {supabaseUserId}");
 
- var client = await GetSupabaseClientAsync();
+                var client = await GetSupabaseClientAsync();
 
- // ✅ Step 1.5: Generate unique student display ID
-        Console.WriteLine($"Step 1.5: Generating unique student display ID...");
-   var studentDisplayId = await _idGenerator.GenerateStudentIdAsync();
-      Console.WriteLine($"✓ Step 1.5 Complete: Generated student display ID: {studentDisplayId}");
+                // ✅ Step 1.5: Generate unique student display ID
+                Console.WriteLine($"Step 1.5: Generating unique student display ID...");
+                var studentDisplayId = await _idGenerator.GenerateStudentIdAsync();
+                Console.WriteLine($"✓ Step 1.5 Complete: Generated student display ID: {studentDisplayId}");
 
-            // Step 2: Insert into users table (stores all personal information)
-     Console.WriteLine($"Step 2: Inserting into users table...");
-          var userRecord = new SupabaseUserNew
-  {
-   FirstName = model.FirstName,
-    LastName = model.LastName,
-   MiddleName = model.MiddleName,
-    Suffix = model.Suffix,
-        Email = model.Email,
- ContactNumber = model.ContactNumber,
-    UserTypeId = supabaseUserId, // Supabase Auth UUID
-UserDisplayId = studentDisplayId, // ✅ UPDATED: Human-readable display ID
-   IsActive = true,
-    ProfilePictureUrl = null,
-   Address = null,
-        EmergencyContact = null
-       };
+                // Step 2: Insert into users table (stores all personal information)
+                Console.WriteLine($"Step 2: Inserting into users table...");
+                var userRecord = new SupabaseUserNew
+                {
+                    FirstName = model.FirstName,
+                    LastName = model.LastName,
+                    MiddleName = model.MiddleName,
+                    Suffix = model.Suffix,
+                    Email = model.Email,
+                    ContactNumber = model.ContactNumber,
+                    UserTypeId = supabaseUserId, // Supabase Auth UUID
+                    UserDisplayId = studentDisplayId, // ✅ UPDATED: Human-readable display ID
+                    IsActive = true,
+                    ProfilePictureUrl = null,
+                    Address = null,
+                    EmergencyContact = null
+                };
 
-    var insertedUserResponse = await client.From<SupabaseUserNew>().Insert(userRecord);
- var insertedUser = insertedUserResponse.Model;
-        Console.WriteLine($"✓ Step 2 Complete: User record created with ID: {insertedUser.Id} (DisplayId: {studentDisplayId})");
+                var insertedUserResponse = await client.From<SupabaseUserNew>().Insert(userRecord);
+                var insertedUser = insertedUserResponse.Model;
+                Console.WriteLine($"✓ Step 2 Complete: User record created with ID: {insertedUser.Id} (DisplayId: {studentDisplayId})");
 
-    // Step 3: Parse program and department IDs from model
-     Console.WriteLine($"Step 3: Parsing program and department IDs...");
+                // Step 3: Parse program and department IDs from model
+                Console.WriteLine($"Step 3: Parsing program and department IDs...");
                 int? programId = null;
                 int? departmentId = null;
 
@@ -228,7 +228,7 @@ UserDisplayId = studentDisplayId, // ✅ UPDATED: Human-readable display ID
                 {
                     var roleQuery = await client.From<Role>()
                      .Where(x => x.RoleName == "Student")
-    .Get();
+                     .Get();
                     var roleRecord = roleQuery?.Models?.FirstOrDefault();
                     if (roleRecord != null)
                     {
@@ -329,7 +329,7 @@ UserDisplayId = studentDisplayId, // ✅ UPDATED: Human-readable display ID
                 Console.WriteLine($"\n✗✗✗ STUDENT CREATION FAILED ✗✗✗");
                 Console.WriteLine($"  Error: {ex.Message}");
                 Console.WriteLine($"Stack Trace: {ex.StackTrace}\n");
-         
+
                 // Return false to indicate failure
                 return false;
             }
@@ -515,4 +515,4 @@ UserDisplayId = studentDisplayId, // ✅ UPDATED: Human-readable display ID
             }
         }
     }
-}      
+}

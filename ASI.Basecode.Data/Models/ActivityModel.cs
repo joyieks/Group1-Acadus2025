@@ -28,8 +28,8 @@ namespace ASI.Basecode.Data.Models
         [Column("created_at")]
         public DateTime CreatedAt { get; set; }
 
-        [Column("isArchived")]
-        public bool IsArchived { get; set; }
+        [Column("isVisible")]
+        public bool IsVisible { get; set; }
 
         [Column("archived_at")]
         public DateTime? ArchivedAt { get; set; }

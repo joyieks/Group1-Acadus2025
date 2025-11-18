@@ -23,7 +23,7 @@ namespace ASI.Basecode.Data.Repositories
             var res = await _supabaseClient
                 .From<ActivityModel>()
                 .Where(a => a.CourseId == courseId)
-                .Where(a => a.IsArchived == false)
+                .Where(a => a.IsVisible == true)
                 .Get();
 
             return res.Models

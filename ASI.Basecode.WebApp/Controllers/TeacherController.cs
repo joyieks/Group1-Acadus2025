@@ -351,7 +351,7 @@ private string GetCardColor(int index)
                     return Json(new { success = false, message = "Activity not found." });
                 }
 
-                activity.IsArchived = true;
+                activity.IsVisible = true;
                 activity.ArchivedAt = DateTime.UtcNow;
                 await activity.Update<ActivityModel>();
 

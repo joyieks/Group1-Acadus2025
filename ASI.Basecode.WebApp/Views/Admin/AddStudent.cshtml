@@ -1,371 +1,322 @@
-@using ASI.Basecode.WebApp.Models
-@model StudentCreateViewModel
-
+@model ASI.Basecode.Services.ServiceModels.StudentCreateDto
 @{
     Layout = "~/Views/Shared/_AuthenticatedLayout.cshtml";
     ViewData["Title"] = "Add Student";
 }
 
-<!-- Backdrop Blur Overlay -->
-<div class="modal-backdrop" onclick="window.history.back()"></div>
+<script src="https://cdn.tailwindcss.com"></script>
 
-<!-- Modal Content -->
-<div class="modal-container">
-    <div class="modal-content">
-        <!-- Header -->
-        <div style="display:flex; justify-content:space-between; align-items:center; padding:24px 32px; background:#E0E7FF; border-radius:16px 16px 0 0;">
-            <h1 style="font-size:24px; font-weight:800; color:#111827; margin:0;">Add New Student</h1>
-            <button type="button" onclick="window.history.back()" style="background:none; border:none; cursor:pointer; color:#6b7280; font-size:24px; padding:0; width:32px; height:32px; display:flex; align-items:center; justify-content:center; border-radius:50%; transition:all 0.2s;" onmouseover="this.style.background='rgba(0,0,0,0.1)'" onmouseout="this.style.background='none'">
-                ×
-            </button>
-        </div>
+<!-- Header Section -->
+<section class="bg-green-100 py-8 text-center">
+	<div class="max-w-4xl mx-auto px-4">
+		<h1 class="text-2xl font-bold text-gray-900 mb-2">ADD A STUDENT</h1>
+		<p class="text-gray-600 text-sm">Complete the form below to register a new student</p>
+	</div>
+</section>
 
-        <!-- Form Content -->
-        <div style="max-height:70vh; overflow-y:auto; padding:32px;">
-            @if (ViewData.ModelState.Values.SelectMany(v => v.Errors).Count() > 0)
-            {
-                <div style="background:#fee2e2; border:1px solid #fecaca; border-radius:8px; padding:16px; margin-bottom:20px; color:#991b1b;">
-                    <h4 style="margin:0 0 8px 0; font-weight:600;">Error</h4>
-                    @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
-                    {
-                        <p style="margin:4px 0; font-size:14px;">@error.ErrorMessage</p>
-                    }
-                </div>
-            }
+<!-- Main Content Section -->
+<section class="bg-white py-8 lg:py-10">
+	<div class="max-w-2xl mx-auto px-4">
+		@if (TempData["SuccessMessage"] != null)
+		{
+			<div class="bg-green-100 text-green-700 px-4 py-3 rounded-md mb-4 border border-green-300">
+				@TempData["SuccessMessage"]
+			</div>
+		}
+		
+		@if (!ViewData.ModelState.IsValid)
+		{
+			<div class="bg-red-50 text-red-600 px-4 py-3 rounded-md mb-4 border border-red-200">
+				@Html.ValidationSummary(true, "", new { @class = "m-0" })
+			</div>
+		}
+		
+		<form method="post" asp-action="AddStudent" asp-controller="Admin" class="max-w-4xl mx-auto">
+			@Html.AntiForgeryToken()
+			
+			<!-- Personal Information Section -->
+			<section class="bg-white p-6 mb-6">
+				<h2 class="text-lg font-bold text-gray-900 mb-6">Section 1: Personal Information</h2>
+				
+				<div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+					<!-- First name -->
+					<div>
+						<label asp-for="FirstName" class="block mb-2 text-sm font-semibold text-gray-900">
+							@Html.DisplayNameFor(m => m.FirstName) <span class="text-red-600">*</span>
+						</label>
+						<input asp-for="FirstName" type="text" required 
+							   class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-green-500">
+						<span asp-validation-for="FirstName" class="text-red-600 text-xs"></span>
+					</div>
+					
+					<!-- Last name -->
+					<div>
+						<label asp-for="LastName" class="block mb-2 text-sm font-semibold text-gray-900">
+							@Html.DisplayNameFor(m => m.LastName) <span class="text-red-600">*</span>
+						</label>
+						<input asp-for="LastName" type="text" required 
+							   class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-green-500">
+						<span asp-validation-for="LastName" class="text-red-600 text-xs"></span>
+					</div>
+					
+					<!-- Middle name -->
+					<div>
+						<label asp-for="MiddleName" class="block mb-2 text-sm font-semibold text-gray-900">
+							@Html.DisplayNameFor(m => m.MiddleName)
+						</label>
+						<input asp-for="MiddleName" type="text" 
+							   class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-green-500">
+						<span asp-validation-for="MiddleName" class="text-red-600 text-xs"></span>
+					</div>
+					
+					<!-- Suffix -->
+					<div>
+						<label asp-for="Suffix" class="block mb-2 text-sm font-semibold text-gray-900">
+							@Html.DisplayNameFor(m => m.Suffix)
+						</label>
+						<input asp-for="Suffix" type="text" 
+							   class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-green-500">
+						<span asp-validation-for="Suffix" class="text-red-600 text-xs"></span>
+					</div>
+					
+					<!-- Contact Number -->
+					<div>
+						<label asp-for="ContactNumber" class="block mb-2 text-sm font-semibold text-gray-900">
+							@Html.DisplayNameFor(m => m.ContactNumber) <span class="text-red-600">*</span>
+						</label>
+						<input asp-for="ContactNumber" type="tel" required 
+							   class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-green-500">
+						<span asp-validation-for="ContactNumber" class="text-red-600 text-xs"></span>
+					</div>
+					
+					<!-- Email -->
+					<div>
+						<label asp-for="Email" class="block mb-2 text-sm font-semibold text-gray-900">
+							@Html.DisplayNameFor(m => m.Email) <span class="text-red-600">*</span>
+						</label>
+						<input asp-for="Email" type="email" required 
+							   class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-green-500">
+						<span asp-validation-for="Email" class="text-red-600 text-xs"></span>
+					</div>
+				</div>
+			</section>
+			
+			<!-- Student Specific Information Section -->
+			<div class="bg-green-100 p-6 mb-6 max-w-4xl">
+				<h2 class="text-lg font-bold text-gray-900 mb-6">Section 2: Student Specific Information</h2>
+				
+				<div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+					<!-- Year Level -->
+					<div>
+						<label asp-for="YearLevel" class="block mb-2 text-sm font-semibold text-gray-900">
+							@Html.DisplayNameFor(m => m.YearLevel) <span class="text-red-600">*</span>
+						</label>
+						<select asp-for="YearLevel" required 
+								class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm bg-white focus:outline-none focus:ring-2 focus:ring-green-500">
+							<option value="">Select Year Level</option>
+							<option value="1">1</option>
+							<option value="2">2</option>
+							<option value="3">3</option>
+							<option value="4">4</option>
+						</select>
+						<span asp-validation-for="YearLevel" class="text-red-600 text-xs"></span>
+					</div>
+					
+					<!-- Program/Course -->
+					<div>
+						<label asp-for="ProgramId" class="block mb-2 text-sm font-semibold text-gray-900">
+							@Html.DisplayNameFor(m => m.ProgramId) <span class="text-red-600">*</span>
+						</label>
+						<select asp-for="ProgramId" required 
+								class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm bg-white focus:outline-none focus:ring-2 focus:ring-green-500">
+							<option value="">Select Program/Course</option>
+							<option value="BS Computer Science">BS Computer Science</option>
+							<option value="BS Information Technology">BS Information Technology</option>
+							<option value="BS Engineering">BS Engineering</option>
+							<option value="BS Business Administration">BS Business Administration</option>
+							<option value="BS Accountancy">BS Accountancy</option>
+							<option value="BS Psychology">BS Psychology</option>
+							<option value="BS Nursing">BS Nursing</option>
+							<option value="BS Education">BS Education</option>
+						</select>
+						<span asp-validation-for="ProgramId" class="text-red-600 text-xs"></span>
+					</div>
+					
+					<!-- Department (Read-only) -->
+					<div class="md:col-span-2">
+						<label asp-for="DepartmentId" class="block mb-2 text-sm font-semibold text-gray-900">
+							@Html.DisplayNameFor(m => m.DepartmentId) <span class="text-red-600">*</span>
+						</label>
+						<input asp-for="DepartmentId" type="text" value="College of Computer Studies" readonly 
+							   class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm bg-gray-100 text-gray-600 focus:outline-none cursor-not-allowed">
+						<span asp-validation-for="DepartmentId" class="text-red-600 text-xs"></span>
+					</div>
+				</div>
+			</div>
+			
+			<!-- Address Information Section -->
+			<div class="bg-white p-6 mb-6">
+				<h2 class="text-lg font-bold text-gray-900 mb-6">Section 3: Address Information</h2>
+				
+				<!-- Full Width Address Fields -->
+				<div class="space-y-5 mb-6">
+					<!-- House/Apt number -->
+					<div>
+						<label asp-for="HouseNumber" class="block mb-2 text-sm font-semibold text-gray-900">
+							@Html.DisplayNameFor(m => m.HouseNumber)
+						</label>
+						<input asp-for="HouseNumber" type="text" 
+							   class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm bg-white focus:outline-none focus:ring-2 focus:ring-green-500">
+						<span asp-validation-for="HouseNumber" class="text-red-600 text-xs"></span>
+					</div>
+					
+					<!-- Street name -->
+					<div>
+						<label asp-for="StreetName" class="block mb-2 text-sm font-semibold text-gray-900">
+							@Html.DisplayNameFor(m => m.StreetName) <span class="text-red-600">*</span>
+						</label>
+						<input asp-for="StreetName" type="text" required 
+							   class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm bg-white focus:outline-none focus:ring-2 focus:ring-green-500">
+						<span asp-validation-for="StreetName" class="text-red-600 text-xs"></span>
+					</div>
+					
+					<!-- Subdivision/Bldg. -->
+					<div>
+						<label asp-for="Subdivision" class="block mb-2 text-sm font-semibold text-gray-900">
+							@Html.DisplayNameFor(m => m.Subdivision)
+						</label>
+						<input asp-for="Subdivision" type="text" 
+							   class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm bg-white focus:outline-none focus:ring-2 focus:ring-green-500">
+						<span asp-validation-for="Subdivision" class="text-red-600 text-xs"></span>
+					</div>
+				</div>
+				
+				<!-- Grid Layout for City/Province/etc -->
+				<div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+					<!-- Barangay -->
+					<div>
+						<label asp-for="Barangay" class="block mb-2 text-sm font-semibold text-gray-900">
+							@Html.DisplayNameFor(m => m.Barangay) <span class="text-red-600">*</span>
+						</label>
+						<input asp-for="Barangay" type="text" required 
+							   class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm bg-white focus:outline-none focus:ring-2 focus:ring-green-500">
+						<span asp-validation-for="Barangay" class="text-red-600 text-xs"></span>
+					</div>
+					
+					<!-- City -->
+					<div>
+						<label asp-for="City" class="block mb-2 text-sm font-semibold text-gray-900">
+							@Html.DisplayNameFor(m => m.City) <span class="text-red-600">*</span>
+						</label>
+						<input asp-for="City" type="text" required 
+							   class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm bg-white focus:outline-none focus:ring-2 focus:ring-green-500">
+						<span asp-validation-for="City" class="text-red-600 text-xs"></span>
+					</div>
+					
+					<!-- Province -->
+					<div>
+						<label asp-for="Province" class="block mb-2 text-sm font-semibold text-gray-900">
+							@Html.DisplayNameFor(m => m.Province) <span class="text-red-600">*</span>
+						</label>
+						<input asp-for="Province" type="text" required 
+							   class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm bg-white focus:outline-none focus:ring-2 focus:ring-green-500">
+						<span asp-validation-for="Province" class="text-red-600 text-xs"></span>
+					</div>
+					
+					<!-- Zip Code -->
+					<div>
+						<label asp-for="ZipCode" class="block mb-2 text-sm font-semibold text-gray-900">
+							@Html.DisplayNameFor(m => m.ZipCode) <span class="text-red-600">*</span>
+						</label>
+						<input asp-for="ZipCode" type="text" required 
+							   class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm bg-white focus:outline-none focus:ring-2 focus:ring-green-500">
+						<span asp-validation-for="ZipCode" class="text-red-600 text-xs"></span>
+					</div>
+				</div>
+			</div>
+			
+			<!-- Emergency Contact Information Section -->
+			<div class="bg-green-100 p-6 mb-6 border border-gray-200 rounded-lg">
+				<h2 class="text-lg font-bold text-gray-900 mb-6">Section 4: Emergency Contact Information</h2>
+				
+				<div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+					<!-- First name -->
+					<div>
+						<label asp-for="EmergencyContactFirstName" class="block mb-2 text-sm font-semibold text-gray-900">
+							@Html.DisplayNameFor(m => m.EmergencyContactFirstName) <span class="text-red-600">*</span>
+						</label>
+						<input asp-for="EmergencyContactFirstName" type="text" required 
+							   class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm bg-white focus:outline-none focus:ring-2 focus:ring-green-500">
+						<span asp-validation-for="EmergencyContactFirstName" class="text-red-600 text-xs"></span>
+					</div>
+					
+					<!-- Last name -->
+					<div>
+						<label asp-for="EmergencyContactLastName" class="block mb-2 text-sm font-semibold text-gray-900">
+							@Html.DisplayNameFor(m => m.EmergencyContactLastName) <span class="text-red-600">*</span>
+						</label>
+						<input asp-for="EmergencyContactLastName" type="text" required 
+							   class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm bg-white focus:outline-none focus:ring-2 focus:ring-green-500">
+						<span asp-validation-for="EmergencyContactLastName" class="text-red-600 text-xs"></span>
+					</div>
+					
+					<!-- Middle name -->
+					<div>
+						<label asp-for="EmergencyContactMiddleName" class="block mb-2 text-sm font-semibold text-gray-900">
+							@Html.DisplayNameFor(m => m.EmergencyContactMiddleName)
+						</label>
+						<input asp-for="EmergencyContactMiddleName" type="text" 
+							   class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm bg-white focus:outline-none focus:ring-2 focus:ring-green-500">
+						<span asp-validation-for="EmergencyContactMiddleName" class="text-red-600 text-xs"></span>
+					</div>
+					
+					<!-- Suffix -->
+					<div>
+						<label asp-for="EmergencyContactSuffix" class="block mb-2 text-sm font-semibold text-gray-900">
+							@Html.DisplayNameFor(m => m.EmergencyContactSuffix)
+						</label>
+						<input asp-for="EmergencyContactSuffix" type="text" 
+							   class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm bg-white focus:outline-none focus:ring-2 focus:ring-green-500">
+						<span asp-validation-for="EmergencyContactSuffix" class="text-red-600 text-xs"></span>
+					</div>
+					
+					<!-- Contact Number -->
+					<div>
+						<label asp-for="EmergencyContactNumber" class="block mb-2 text-sm font-semibold text-gray-900">
+							@Html.DisplayNameFor(m => m.EmergencyContactNumber) <span class="text-red-600">*</span>
+						</label>
+						<input asp-for="EmergencyContactNumber" type="tel" required 
+							   class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm bg-white focus:outline-none focus:ring-2 focus:ring-green-500">
+						<span asp-validation-for="EmergencyContactNumber" class="text-red-600 text-xs"></span>
+					</div>
+					
+					<!-- Relationship to student -->
+					<div>
+						<label asp-for="EmergencyContactRelationship" class="block mb-2 text-sm font-semibold text-gray-900">
+							@Html.DisplayNameFor(m => m.EmergencyContactRelationship) <span class="text-red-600">*</span>
+						</label>
+						<input asp-for="EmergencyContactRelationship" type="text" required 
+							   class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm bg-white focus:outline-none focus:ring-2 focus:ring-green-500">
+						<span asp-validation-for="EmergencyContactRelationship" class="text-red-600 text-xs"></span>
+					</div>
+				</div>
+			</div>
+			
+			<!-- Action Buttons -->
+			<div class="flex justify-center gap-4">
+				<button type="button" onclick="window.location.href='/Admin/Users'" 
+						class="bg-white text-gray-600 border border-gray-300 px-8 py-2 rounded-md cursor-pointer text-sm font-semibold hover:bg-gray-50 transition">
+					Cancel
+				</button>
+				<button type="submit" 
+						class="bg-green-600 text-white border-none px-8 py-2 rounded-md cursor-pointer text-sm font-semibold hover:bg-green-700 transition">
+					Register Student
+				</button>
+			</div>
+		</form>
+	</div>
+</section>
 
-            <form asp-controller="Admin" asp-action="AddStudent" method="post">
-                @Html.AntiForgeryToken()
-                
-                <!-- Personal Information Section -->
-                <section style="margin-bottom:32px;">
-                    <h2 style="font-size:18px; font-weight:700; color:#111827; margin:0 0 20px 0; padding-bottom:12px; border-bottom:2px solid #E0E7FF;">Personal Information</h2>
-                    
-                    <div style="display:grid; grid-template-columns:repeat(2, 1fr); gap:20px; margin-bottom:20px;">
-                        <div>
-                            <label style="display:block; font-weight:600; color:#374151; margin-bottom:8px; font-size:14px;">First Name <span style="color:#dc2626;">*</span></label>
-                            <input type="text" asp-for="FirstName" placeholder="e.g., Juan" style="width:100%; padding:12px; border:1px solid #d1d5db; border-radius:8px; font-size:14px;"/>
-                            <span asp-validation-for="FirstName" style="color:#dc2626; font-size:12px; display:block; margin-top:4px;"></span>
-                        </div>
-                        <div>
-                            <label style="display:block; font-weight:600; color:#374151; margin-bottom:8px; font-size:14px;">Last Name <span style="color:#dc2626;">*</span></label>
-                            <input type="text" asp-for="LastName" placeholder="e.g., Cruz" style="width:100%; padding:12px; border:1px solid #d1d5db; border-radius:8px; font-size:14px;"/>
-                            <span asp-validation-for="LastName" style="color:#dc2626; font-size:12px; display:block; margin-top:4px;"></span>
-                        </div>
-                    </div>
-
-                    <div style="display:grid; grid-template-columns:repeat(2, 1fr); gap:20px; margin-bottom:20px;">
-                        <div>
-                            <label style="display:block; font-weight:600; color:#374151; margin-bottom:8px; font-size:14px;">Middle Name</label>
-                            <input type="text" asp-for="MiddleName" placeholder="e.g., Santos" style="width:100%; padding:12px; border:1px solid #d1d5db; border-radius:8px; font-size:14px;"/>
-                        </div>
-                        <div>
-                            <label style="display:block; font-weight:600; color:#374151; margin-bottom:8px; font-size:14px;">Suffix</label>
-                            <input type="text" asp-for="Suffix" placeholder="e.g., Jr., Sr." style="width:100%; padding:12px; border:1px solid #d1d5db; border-radius:8px; font-size:14px;"/>
-                        </div>
-                    </div>
-                </section>
-
-                <!-- Contact Information Section -->
-                <section style="margin-bottom:32px;">
-                    <h2 style="font-size:18px; font-weight:700; color:#111827; margin:0 0 20px 0; padding-bottom:12px; border-bottom:2px solid #E0E7FF;">Contact Information</h2>
-                    
-                    <div style="display:grid; grid-template-columns:repeat(2, 1fr); gap:20px; margin-bottom:20px;">
-                        <div>
-                            <label style="display:block; font-weight:600; color:#374151; margin-bottom:8px; font-size:14px;">Email <span style="color:#dc2626;">*</span></label>
-                            <input type="email" asp-for="Email" placeholder="e.g., juan.cruz@university.edu" style="width:100%; padding:12px; border:1px solid #d1d5db; border-radius:8px; font-size:14px;"/>
-                            <span asp-validation-for="Email" style="color:#dc2626; font-size:12px; display:block; margin-top:4px;"></span>
-                        </div>
-                        <div>
-                            <label style="display:block; font-weight:600; color:#374151; margin-bottom:8px; font-size:14px;">Contact Number <span style="color:#dc2626;">*</span></label>
-                            <input type="tel" asp-for="ContactNumber" placeholder="e.g., +63-9XX-XXX-XXXX" style="width:100%; padding:12px; border:1px solid #d1d5db; border-radius:8px; font-size:14px;"/>
-                            <span asp-validation-for="ContactNumber" style="color:#dc2626; font-size:12px; display:block; margin-top:4px;"></span>
-                        </div>
-                    </div>
-                </section>
-
-                <!-- Student Profile Section -->
-                <section style="margin-bottom:32px;">
-                    <h2 style="font-size:18px; font-weight:700; color:#111827; margin:0 0 20px 0; padding-bottom:12px; border-bottom:2px solid #E0E7FF;">Student Profile</h2>
-                    
-                    <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:20px; margin-bottom:20px;">
-                        <div>
-                            <label style="display:block; font-weight:600; color:#374151; margin-bottom:8px; font-size:14px;">Year Level <span style="color:#dc2626;">*</span></label>
-                            <select asp-for="YearLevel" style="width:100%; padding:12px; border:1px solid #d1d5db; border-radius:8px; font-size:14px;">
-                                <option value="">-- Select Year Level --</option>
-                                <option value="1">1st Year</option>
-                                <option value="2">2nd Year</option>
-                                <option value="3">3rd Year</option>
-                                <option value="4">4th Year</option>
-                            </select>
-                            <span asp-validation-for="YearLevel" style="color:#dc2626; font-size:12px; display:block; margin-top:4px;"></span>
-                        </div>
-                        <div>
-                            <label style="display:block; font-weight:600; color:#374151; margin-bottom:8px; font-size:14px;">Program <span style="color:#dc2626;">*</span></label>
-                            <select asp-for="ProgramId" style="width:100%; padding:12px; border:1px solid #d1d5db; border-radius:8px; font-size:14px;">
-                                <option value="">-- Select Program --</option>
-                                @if (ViewBag.Programs != null)
-                                {
-                                    foreach (var program in ViewBag.Programs)
-                                    {
-                                        <option value="@program.Id">@program.ProgramName (@program.ProgramCode)</option>
-                                    }
-                                }
-                            </select>
-                            <span asp-validation-for="ProgramId" style="color:#dc2626; font-size:12px; display:block; margin-top:4px;"></span>
-                        </div>
-                        <div>
-                            <label style="display:block; font-weight:600; color:#374151; margin-bottom:8px; font-size:14px;">Department <span style="color:#dc2626;">*</span></label>
-                            <select asp-for="DepartmentId" style="width:100%; padding:12px; border:1px solid #d1d5db; border-radius:8px; font-size:14px;">
-                                <option value="">-- Select Department --</option>
-                                @if (ViewBag.Departments != null)
-                                {
-                                    foreach (var dept in ViewBag.Departments)
-                                    {
-                                        <option value="@dept.Id">@dept.DepartmentName (@dept.DepartmentCode)</option>
-                                    }
-                                }
-                            </select>
-                            <span asp-validation-for="DepartmentId" style="color:#dc2626; font-size:12px; display:block; margin-top:4px;"></span>
-                        </div>
-                    </div>
-                </section>
-
-                <!-- Address Information Section -->
-                <section style="margin-bottom:32px;">
-                    <h2 style="font-size:18px; font-weight:700; color:#111827; margin:0 0 20px 0; padding-bottom:12px; border-bottom:2px solid #E0E7FF;">Address</h2>
-                    
-                    <div style="display:grid; grid-template-columns:repeat(2, 1fr); gap:20px; margin-bottom:20px;">
-                        <div>
-                            <label style="display:block; font-weight:600; color:#374151; margin-bottom:8px; font-size:14px;">House Number</label>
-                            <input type="text" asp-for="HouseNumber" placeholder="e.g., 123" style="width:100%; padding:12px; border:1px solid #d1d5db; border-radius:8px; font-size:14px;"/>
-                        </div>
-                        <div>
-                            <label style="display:block; font-weight:600; color:#374151; margin-bottom:8px; font-size:14px;">Street Name</label>
-                            <input type="text" asp-for="StreetName" placeholder="e.g., Rizal Street" style="width:100%; padding:12px; border:1px solid #d1d5db; border-radius:8px; font-size:14px;"/>
-                        </div>
-                    </div>
-
-                    <div style="display:grid; grid-template-columns:repeat(2, 1fr); gap:20px; margin-bottom:20px;">
-                        <div>
-                            <label style="display:block; font-weight:600; color:#374151; margin-bottom:8px; font-size:14px;">Subdivision</label>
-                            <input type="text" asp-for="Subdivision" placeholder="e.g., Sampaloc Subdivision" style="width:100%; padding:12px; border:1px solid #d1d5db; border-radius:8px; font-size:14px;"/>
-                        </div>
-                        <div>
-                            <label style="display:block; font-weight:600; color:#374151; margin-bottom:8px; font-size:14px;">Barangay <span style="color:#dc2626;">*</span></label>
-                            <input type="text" asp-for="Barangay" placeholder="e.g., San Jose" style="width:100%; padding:12px; border:1px solid #d1d5db; border-radius:8px; font-size:14px;"/>
-                            <span asp-validation-for="Barangay" style="color:#dc2626; font-size:12px; display:block; margin-top:4px;"></span>
-                        </div>
-                    </div>
-
-                    <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:20px; margin-bottom:20px;">
-                        <div>
-                            <label style="display:block; font-weight:600; color:#374151; margin-bottom:8px; font-size:14px;">City <span style="color:#dc2626;">*</span></label>
-                            <input type="text" asp-for="City" placeholder="e.g., Manila" style="width:100%; padding:12px; border:1px solid #d1d5db; border-radius:8px; font-size:14px;"/>
-                            <span asp-validation-for="City" style="color:#dc2626; font-size:12px; display:block; margin-top:4px;"></span>
-                        </div>
-                        <div>
-                            <label style="display:block; font-weight:600; color:#374151; margin-bottom:8px; font-size:14px;">Province <span style="color:#dc2626;">*</span></label>
-                            <input type="text" asp-for="Province" placeholder="e.g., Metro Manila" style="width:100%; padding:12px; border:1px solid #d1d5db; border-radius:8px; font-size:14px;"/>
-                            <span asp-validation-for="Province" style="color:#dc2626; font-size:12px; display:block; margin-top:4px;"></span>
-                        </div>
-                        <div>
-                            <label style="display:block; font-weight:600; color:#374151; margin-bottom:8px; font-size:14px;">Zip Code</label>
-                            <input type="text" asp-for="ZipCode" placeholder="e.g., 1016" style="width:100%; padding:12px; border:1px solid #d1d5db; border-radius:8px; font-size:14px;"/>
-                        </div>
-                    </div>
-                </section>
-
-                <!-- Emergency Contact Section -->
-                <section style="margin-bottom:32px;">
-                    <h2 style="font-size:18px; font-weight:700; color:#111827; margin:0 0 20px 0; padding-bottom:12px; border-bottom:2px solid #E0E7FF;">Emergency Contact <span style="font-size:14px; font-weight:400; color:#6b7280;">(Optional)</span></h2>
-                    
-                    <div style="display:grid; grid-template-columns:repeat(2, 1fr); gap:20px; margin-bottom:20px;">
-                        <div>
-                            <label style="display:block; font-weight:600; color:#374151; margin-bottom:8px; font-size:14px;">First Name</label>
-                            <input type="text" asp-for="EmergencyContactFirstName" placeholder="e.g., Maria" style="width:100%; padding:12px; border:1px solid #d1d5db; border-radius:8px; font-size:14px;"/>
-                        </div>
-                        <div>
-                            <label style="display:block; font-weight:600; color:#374151; margin-bottom:8px; font-size:14px;">Last Name</label>
-                            <input type="text" asp-for="EmergencyContactLastName" placeholder="e.g., Cruz" style="width:100%; padding:12px; border:1px solid #d1d5db; border-radius:8px; font-size:14px;"/>
-                        </div>
-                    </div>
-
-                    <div style="display:grid; grid-template-columns:repeat(2, 1fr); gap:20px; margin-bottom:20px;">
-                        <div>
-                            <label style="display:block; font-weight:600; color:#374151; margin-bottom:8px; font-size:14px;">Middle Name</label>
-                            <input type="text" asp-for="EmergencyContactMiddleName" placeholder="e.g., Santos" style="width:100%; padding:12px; border:1px solid #d1d5db; border-radius:8px; font-size:14px;"/>
-                        </div>
-                        <div>
-                            <label style="display:block; font-weight:600; color:#374151; margin-bottom:8px; font-size:14px;">Suffix</label>
-                            <input type="text" asp-for="EmergencyContactSuffix" placeholder="e.g., Jr." style="width:100%; padding:12px; border:1px solid #d1d5db; border-radius:8px; font-size:14px;"/>
-                        </div>
-                    </div>
-
-                    <div style="display:grid; grid-template-columns:repeat(2, 1fr); gap:20px; margin-bottom:20px;">
-                        <div>
-                            <label style="display:block; font-weight:600; color:#374151; margin-bottom:8px; font-size:14px;">Contact Number</label>
-                            <input type="tel" asp-for="EmergencyContactNumber" placeholder="e.g., +63-9XX-XXX-XXXX" style="width:100%; padding:12px; border:1px solid #d1d5db; border-radius:8px; font-size:14px;"/>
-                        </div>
-                        <div>
-                            <label style="display:block; font-weight:600; color:#374151; margin-bottom:8px; font-size:14px;">Relationship</label>
-                            <select asp-for="EmergencyContactRelationship" style="width:100%; padding:12px; border:1px solid #d1d5db; border-radius:8px; font-size:14px;">
-                                <option value="">-- Select --</option>
-                                <option value="Parent">Parent</option>
-                                <option value="Sibling">Sibling</option>
-                                <option value="Guardian">Guardian</option>
-                                <option value="Relative">Relative</option>
-                                <option value="Other">Other</option>
-                            </select>
-                        </div>
-                    </div>
-                </section>
-
-                <!-- Form Actions -->
-                <div style="display:flex; justify-content:flex-end; gap:12px;">
-                    <button type="button" onclick="window.history.back()" style="padding:12px 32px; border-radius:6px; font-size:14px; font-weight:600; cursor:pointer; background:#ffffff; color:#374151; border:2px solid #d1d5db;">
-                        Cancel
-                    </button>
-                    <button type="submit" style="padding:12px 32px; border-radius:6px; font-size:14px; font-weight:600; cursor:pointer; background:#4f46e5; color:#ffffff; border:none; box-shadow:0 2px 4px rgba(0,70,229,0.2);">
-                        Create Student
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
-<!-- Confirmation Modal (hidden by default) -->
-<div id="confirmModalBackdrop" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.35); backdrop-filter:blur(3px); z-index:10000;" aria-hidden="true"></div>
-<div id="confirmModal" style="display:none; position:fixed; left:50%; top:50%; transform:translate(-50%,-50%); z-index:10001; max-width:520px; width:90%; background:#fff; border-radius:12px; box-shadow:0 8px 30px rgba(0,0,0,0.2);">
-    <div style="padding:20px; border-bottom:1px solid #eef2f7;">
-        <h3 style="margin:0; font-size:18px; font-weight:800; color:#111827;">Confirm Add Student</h3>
-        <p id="confirmSummary" style="margin:8px 0 0 0; color:#4b5563; font-size:14px;">Please confirm you want to add this student.</p>
-    </div>
-    <div style="display:flex; justify-content:flex-end; gap:12px; padding:16px;">
-        <button id="confirmCancel" type="button" style="padding:10px 18px; border-radius:8px; border:1px solid #d1d5db; background:#fff; cursor:pointer;">Cancel</button>
-        <button id="confirmProceed" type="button" style="padding:10px 18px; border-radius:8px; border:none; background:#4f46e5; color:#fff; font-weight:700; cursor:pointer;">Yes, Add Student</button>
-    </div>
-</div>
-
-<script>
-    (function(){
-        const form = document.querySelector('form[asp-controller="Admin"][asp-action="AddStudent"]');
-        if (!form) return;
-
-        const submitButton = form.querySelector('button[type="submit"]');
-        const confirmModal = document.getElementById('confirmModal');
-        const confirmBackdrop = document.getElementById('confirmModalBackdrop');
-        const confirmSummary = document.getElementById('confirmSummary');
-        const confirmCancel = document.getElementById('confirmCancel');
-        const confirmProceed = document.getElementById('confirmProceed');
-
-        function showConfirm() {
-            // Build a summary from student fields
-            const firstName = form.querySelector('[asp-for="FirstName"]').value || '';
-            const lastName = form.querySelector('[asp-for="LastName"]').value || '';
-            const email = form.querySelector('[asp-for="Email"]').value || '';
-            const yearLevel = form.querySelector('[asp-for="YearLevel"]').value || '';
-            confirmSummary.textContent = `${firstName} ${lastName} (${email}) — Year: ${yearLevel}`;
-            confirmModal.style.display = 'block';
-            confirmBackdrop.style.display = 'block';
-        }
-
-        function hideConfirm() {
-            confirmModal.style.display = 'none';
-            confirmBackdrop.style.display = 'none';
-        }
-
-        // Intercept submit
-        submitButton.addEventListener('click', function (e) {
-            // If HTML5 form validation fails, don't show the modal
-            if (!form.checkValidity()) return; 
-            e.preventDefault();
-            showConfirm();
-        });
-
-        confirmCancel.addEventListener('click', function(){ hideConfirm(); });
-        confirmBackdrop.addEventListener('click', function(){ hideConfirm(); });
-
-        // When user confirms, submit the form programmatically
-        confirmProceed.addEventListener('click', function(){
-            // remove listeners to avoid re-intercept on actual submit
-            hideConfirm();
-            form.submit();
-        });
-    })();
-</script>
-
-<style>
-    .modal-backdrop {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(0, 0, 0, 0.3);
-        backdrop-filter: blur(4px);
-        z-index: 9998;
-    }
-
-    .modal-container {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        z-index: 9999;
-        padding: 20px;
-        pointer-events: none;
-    }
-
-    .modal-content {
-        background: white;
-        border-radius: 16px;
-        max-width: 900px;
-        width: 100%;
-        max-height: 90vh;
-        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-        pointer-events: auto;
-        animation: modalSlideIn 0.3s ease-out;
-        display: flex;
-        flex-direction: column;
-    }
-
-    @@keyframes modalSlideIn {
-        from {
-            opacity: 0;
-            transform: translateY(-20px) scale(0.95);
-        }
-        to {
-            opacity: 1;
-            transform: translateY(0) scale(1);
-        }
-    }
-
-    input[type="text"],
-    input[type="email"],
-    input[type="tel"],
-    input[type="number"],
-    select {
-        transition: border-color 0.2s ease;
-    }
-
-    input[type="text"]:focus,
-    input[type="email"]:focus,
-    input[type="tel"]:focus,
-    input[type="number"]:focus,
-    select:focus {
-        outline: none;
-        border-color: #4f46e5;
-        box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
-    }
-
-    input[type="text"]:invalid:not(:placeholder-shown),
-    input[type="email"]:invalid:not(:placeholder-shown) {
-        border-color: #dc2626;
-    }
-</style>
-
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

@@ -5,10 +5,10 @@ using ASI.Basecode.Services.ServiceModels;
 using System.Threading.Tasks;
 using ASI.Basecode.WebApp.Models;
 using System.Collections.Generic;
-using System.Security.Claims;
 using ASI.Basecode.Data.Models;
 using System;
 using System.Linq;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 
 
 namespace ASI.Basecode.WebApp.Controllers
@@ -24,7 +24,13 @@ namespace ASI.Basecode.WebApp.Controllers
         private readonly ICourseService _courseService;
         private readonly IUserService _userService;
 
-        public AdminController(IStudentService studentService, ITeacherService teacherService, ISupabaseAuthService supabaseAuthService, IAdminService adminService, ICourseService courseService, IUserService userService)
+        public AdminController(
+            IStudentService studentService,
+            ITeacherService teacherService,
+            ISupabaseAuthService supabaseAuthService,
+            IAdminService adminService,
+            ICourseService courseService,
+            IUserService userService)
         {
             _studentService = studentService;
             _teacherService = teacherService;
@@ -38,20 +44,20 @@ namespace ASI.Basecode.WebApp.Controllers
         public async Task<IActionResult> Dashboard()
         {
             var (totalStudents, totalInstructors, totalCourses) = await _adminService.GetDashboardStatisticsAsync();
-            
+
             Console.WriteLine($"=== AdminController.Dashboard ===");
             Console.WriteLine($"Received from service - Students: {totalStudents}, Instructors: {totalInstructors}, Courses: {totalCourses}");
-            
+
             var viewModel = new AdminDashboardViewModel
             {
                 TotalStudents = totalStudents,
                 TotalInstructors = totalInstructors,
                 TotalCourses = totalCourses
             };
-            
+
             Console.WriteLine($"ViewModel created - Students: {viewModel.TotalStudents}, Instructors: {viewModel.TotalInstructors}, Courses: {viewModel.TotalCourses}");
             Console.WriteLine($"=== End Dashboard ===");
-            
+
             return View(viewModel);
         }
 
@@ -61,7 +67,7 @@ namespace ASI.Basecode.WebApp.Controllers
             try
             {
                 var (totalStudents, totalInstructors, totalCourses) = await _adminService.GetDashboardStatisticsAsync();
-                
+
                 Console.WriteLine($"=== AdminController.Users ===");
                 Console.WriteLine($"Tab: {tab}, Search: {search ?? "none"}");
 
@@ -133,155 +139,62 @@ namespace ASI.Basecode.WebApp.Controllers
             }
         }
 
+        // GET: Display the empty form
         [HttpGet]
-        public async Task<IActionResult> AddStudent()
+        public IActionResult AddStudent()
         {
-            // ? Load programs and departments from database for dropdowns
-     try
-     {
-     var programs = await _adminService.GetAllProgramsAsync();
-       var departments = await _adminService.GetAllDepartmentsAsync();
-
-      ViewBag.Programs = programs;
-          ViewBag.Departments = departments;
-      
-       Console.WriteLine($"Loaded {programs.Count} programs and {departments.Count} departments for Add Student form");
-            }
-     catch (Exception ex)
-    {
-      Console.WriteLine($"Error loading programs/departments: {ex.Message}");
-   ViewBag.Programs = new List<ASI.Basecode.Data.Models.Program>();
-        ViewBag.Departments = new List<Department>();
-   }
-
-      return View(new StudentCreateViewModel());
+            return View(new StudentCreateDto());
         }
 
+        // POST: Handle form submission
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> AddStudent(StudentCreateViewModel model)
+        public async Task<IActionResult> AddStudent(StudentCreateDto model)
         {
-            if (!ModelState.IsValid)
-            {
-                // ? FIX: Reload dropdown data when validation fails
-       try
-  {
-        var programs = await _adminService.GetAllProgramsAsync();
-         var departments = await _adminService.GetAllDepartmentsAsync();
-
-    ViewBag.Programs = programs;
-          ViewBag.Departments = departments;
-           }
-  catch (Exception ex)
-      {
-         Console.WriteLine($"Error reloading dropdowns: {ex.Message}");
-        ViewBag.Programs = new List<ASI.Basecode.Data.Models.Program>();
-     ViewBag.Departments = new List<Department>();
-  }
-
-       return View(model);
-     }
+            if (!ModelState.IsValid) return View(model);
 
             try
-    {
-     // Map ViewModel to DTO
-  var studentDto = new StudentCreateDto
             {
-   FirstName = model.FirstName,
-         MiddleName = model.MiddleName,
-       LastName = model.LastName,
-         Suffix = model.Suffix,
-        Email = model.Email,
-   ContactNumber = model.ContactNumber,
-   HouseNumber = model.HouseNumber,
-     StreetName = model.StreetName,
-    Subdivision = model.Subdivision,
-   Barangay = model.Barangay,
-       City = model.City,
- Province = model.Province,
-   ZipCode = model.ZipCode,
-        YearLevel = model.YearLevel,
-     ProgramId = model.ProgramId,
-   DepartmentId = model.DepartmentId,
-     EmergencyContactFirstName = model.EmergencyContactFirstName,
-  EmergencyContactMiddleName = model.EmergencyContactMiddleName,
-  EmergencyContactLastName = model.EmergencyContactLastName,
-  EmergencyContactSuffix = model.EmergencyContactSuffix,
-     EmergencyContactNumber = model.EmergencyContactNumber,
-     EmergencyContactRelationship = model.EmergencyContactRelationship
- };
+                var success = await _userService.CreateStudentAsync(model);
 
-      var success = await _userService.CreateStudentAsync(studentDto);
-       
-     if (success)
-    {
-                    TempData["SuccessMessage"] = $"Student {model.FirstName} {model.LastName} has been successfully created!";
-                    return RedirectToAction("Users");
-                }
-                else
+                if (!success)
                 {
                     ModelState.AddModelError(string.Empty, "Failed to create student. Please try again.");
-      
-     // ? FIX: Reload dropdown data before returning view
-    try
-   {
-      var programs = await _adminService.GetAllProgramsAsync();
- var departments = await _adminService.GetAllDepartmentsAsync();
- ViewBag.Programs = programs;
-    ViewBag.Departments = departments;
-   }
- catch (Exception reloadEx)
- {
-Console.WriteLine($"Error reloading dropdowns: {reloadEx.Message}");
-    ViewBag.Programs = new List<ASI.Basecode.Data.Models.Program>();
-ViewBag.Departments = new List<Department>();
-      }
+                    return View(model);
+                }
 
- return View(model);
-}
-  }
-            catch (System.Exception ex)
-   {
-  ModelState.AddModelError(string.Empty, $"Error creating student: {ex.Message}");
-     
- // ? FIX: Reload dropdown data before returning view
-     try
-    {
-     var programs = await _adminService.GetAllProgramsAsync();
-      var departments = await _adminService.GetAllDepartmentsAsync();
-       ViewBag.Programs = programs;
-    ViewBag.Departments = departments;
-     }
- catch (Exception reloadEx)
-     {
-   Console.WriteLine($"Error reloading dropdowns: {reloadEx.Message}");
-        ViewBag.Programs = new List<ASI.Basecode.Data.Models.Program>();
-  ViewBag.Departments = new List<Department>();
-    }
+                TempData["SuccessMessage"] = $"Student {model.FirstName} {model.LastName} created successfully!";
+                return RedirectToAction("Users");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error loading programs/departments: {ex.Message}");
+                ViewBag.Programs = new List<ASI.Basecode.Data.Models.Program>();
+                ViewBag.Departments = new List<Department>();
+            }
 
-     return View(model);
- }
+            return View(new StudentCreateDto());
         }
 
         [HttpGet]
         public async Task<IActionResult> AddTeacher()
         {
             // ? Load departments from database for dropdown
-        try
-        {
-            var departments = await _adminService.GetAllDepartmentsAsync();
+            try
+            {
+                var departments = await _adminService.GetAllDepartmentsAsync();
 
-            ViewBag.Departments = departments;
+                ViewBag.Departments = departments;
 
-             Console.WriteLine($"Loaded {departments.Count} departments for Add Teacher form");
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Error loading departments: {ex.Message}");
-            ViewBag.Departments = new List<Department>();
-        }
+                Console.WriteLine($"Loaded {departments.Count} departments for Add Teacher form");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error loading departments: {ex.Message}");
+                ViewBag.Departments = new List<Department>();
+            }
 
-          return View(new TeacherCreateViewModel());
+            return View(new TeacherCreateViewModel());
         }
 
         [HttpPost]
@@ -291,85 +204,85 @@ ViewBag.Departments = new List<Department>();
             if (!ModelState.IsValid)
             {
                 // ? FIX: Reload dropdown data when validation fails
-     try
-   {
-       var departments = await _adminService.GetAllDepartmentsAsync();
-   ViewBag.Departments = departments;
-    }
-       catch (Exception ex)
-{
-        Console.WriteLine($"Error reloading departments: {ex.Message}");
- ViewBag.Departments = new List<Department>();
-  }
+                try
+                {
+                    var departments = await _adminService.GetAllDepartmentsAsync();
+                    ViewBag.Departments = departments;
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error reloading departments: {ex.Message}");
+                    ViewBag.Departments = new List<Department>();
+                }
 
-      return View(model);
-        }
+                return View(model);
+            }
 
             try
-          {
-      // Map ViewModel to DTO
-           var teacherDto = new TeacherCreateDto
-    {
-           FirstName = model.FirstName,
-        MiddleName = model.MiddleName,
-     LastName = model.LastName,
-        Suffix = model.Suffix,
-     Email = model.Email,
-        ContactNumber = model.ContactNumber,
-      HouseNumber = model.HouseNumber,
-      StreetName = model.StreetName,
-     Subdivision = model.Subdivision,
-    Barangay = model.Barangay,
-     City = model.City,
-         Province = model.Province,
-       ZipCode = model.ZipCode,
-     DepartmentId = model.DepartmentId
-    };
+            {
+                // Map ViewModel to DTO
+                var teacherDto = new TeacherCreateDto
+                {
+                    FirstName = model.FirstName,
+                    MiddleName = model.MiddleName,
+                    LastName = model.LastName,
+                    Suffix = model.Suffix,
+                    Email = model.Email,
+                    ContactNumber = model.ContactNumber,
+                    HouseNumber = model.HouseNumber,
+                    StreetName = model.StreetName,
+                    Subdivision = model.Subdivision,
+                    Barangay = model.Barangay,
+                    City = model.City,
+                    Province = model.Province,
+                    ZipCode = model.ZipCode,
+                    DepartmentId = model.DepartmentId
+                };
 
-    var success = await _userService.CreateTeacherAsync(teacherDto);
-  
-       if (success)
-    {
-      TempData["SuccessMessage"] = $"Teacher {model.FirstName} {model.LastName} has been successfully created!";
-    return RedirectToAction("Users");
- }
-      else
-    {
-   ModelState.AddModelError(string.Empty, "Failed to create teacher. Please try again.");
-        
-    // ? FIX: Reload dropdown data before returning view
-  try
-  {
-       var departments = await _adminService.GetAllDepartmentsAsync();
-   ViewBag.Departments = departments;
-   }
- catch (Exception reloadEx)
-  {
-    Console.WriteLine($"Error reloading departments: {reloadEx.Message}");
-ViewBag.Departments = new List<Department>();
-    }
+                var success = await _userService.CreateTeacherAsync(teacherDto);
 
-return View(model);
-  }
-         }
-        catch (System.Exception ex)
-       {
+                if (success)
+                {
+                    TempData["SuccessMessage"] = $"Teacher {model.FirstName} {model.LastName} has been successfully created!";
+                    return RedirectToAction("Users");
+                }
+                else
+                {
+                    ModelState.AddModelError(string.Empty, "Failed to create teacher. Please try again.");
+
+                    // ? FIX: Reload dropdown data before returning view
+                    try
+                    {
+                        var departments = await _adminService.GetAllDepartmentsAsync();
+                        ViewBag.Departments = departments;
+                    }
+                    catch (Exception reloadEx)
+                    {
+                        Console.WriteLine($"Error reloading departments: {reloadEx.Message}");
+                        ViewBag.Departments = new List<Department>();
+                    }
+
+                    return View(model);
+                }
+            }
+            catch (System.Exception ex)
+            {
                 ModelState.AddModelError(string.Empty, $"Error creating teacher: {ex.Message}");
-      
-    // ? FIX: Reload dropdown data before returning view
-try
-     {
-    var departments = await _adminService.GetAllDepartmentsAsync();
-     ViewBag.Departments = departments;
-   }
- catch (Exception reloadEx)
- {
-     Console.WriteLine($"Error reloading departments: {reloadEx.Message}");
-  ViewBag.Departments = new List<Department>();
-  }
 
-    return View(model);
-      }
+                // ? FIX: Reload dropdown data before returning view
+                try
+                {
+                    var departments = await _adminService.GetAllDepartmentsAsync();
+                    ViewBag.Departments = departments;
+                }
+                catch (Exception reloadEx)
+                {
+                    Console.WriteLine($"Error reloading departments: {reloadEx.Message}");
+                    ViewBag.Departments = new List<Department>();
+                }
+
+                return View(model);
+            }
         }
 
         [HttpGet]
@@ -472,7 +385,7 @@ try
             {
                 var model = new CourseCreateViewModel();
                 model.Code = string.Empty; // Ensure Code is empty for auto-generation
-                
+
                 // Populate instructor dropdown
                 var instructors = await _courseService.GetActiveInstructorsAsync();
                 model.Instructors = instructors
@@ -515,7 +428,7 @@ try
             {
                 // Remove Code validation errors since it's auto-generated
                 ModelState.Remove(nameof(model.Code));
-                
+
                 if (!ModelState.IsValid)
                 {
                     // Repopulate dropdowns on validation failure
@@ -564,7 +477,7 @@ try
                 else
                 {
                     ModelState.AddModelError(string.Empty, message);
-                    
+
                     // Repopulate dropdowns
                     var instructors = await _courseService.GetActiveInstructorsAsync();
                     model.Instructors = instructors
@@ -592,7 +505,7 @@ try
                 Console.WriteLine($"Error creating course: {ex.Message}");
                 Console.WriteLine($"Stack Trace: {ex.StackTrace}");
                 ModelState.AddModelError(string.Empty, $"Error creating course: {ex.Message}");
-                
+
                 // Repopulate dropdowns on exception
                 var instructors = await _courseService.GetActiveInstructorsAsync();
                 model.Instructors = instructors
@@ -611,23 +524,201 @@ try
                     new LevelOption { Value = "3rd Year", Label = "3rd Year" },
                     new LevelOption { Value = "4th Year", Label = "4th Year" }
                 };
-                
+
                 return View(model);
             }
         }
 
         [HttpGet]
-        public IActionResult ViewCourse(string id)
+        public async Task<IActionResult> ViewCourse(string id, string search)
         {
-            // TODO: Load course data by id
-            return View();
+            try
+            {
+                // Parse the ID to int
+                if (!int.TryParse(id, out int courseId)) return NotFound();
+
+                // Fetch the course data from the service
+                var course = await _courseService.GetCourseByIdAsync(courseId);
+
+                if (course == null) return NotFound();
+
+                // Fetch enrolled students for this course
+                var enrollments = await _courseService.GetCourseEnrollmentsByCourseIdAsync(courseId);
+                Console.WriteLine($"Retrieved {enrollments.Count} enrollments for course {courseId}");
+
+                // Build the enrolled students list with user details
+                var enrolledStudents = new List<CourseEnrolledStudentViewModel>();
+
+                foreach (var enrollment in enrollments)
+                {
+                    try
+                    {
+                        // Get user details (display ID, name)
+                        var user = await _studentService.GetStudentBySupabaseIdAsync(enrollment.StudentId);
+                        
+                        if (user != null)
+                        {
+                            var fullName = $"{user.FirstName} {user.LastName}".Trim();
+                            
+                            enrolledStudents.Add(new CourseEnrolledStudentViewModel
+                            {
+                                IdNumber = user.UserDisplayId ?? "N/A",
+                                FullName = fullName,
+                                Status = enrollment.Status,
+                                StudentId = enrollment.StudentId
+                            });
+                            
+                            Console.WriteLine($"  - Student: {fullName} ({user.UserDisplayId}) - Status: {enrollment.Status}");
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"  - Error fetching user details for enrollment {enrollment.StudentId}: {ex.Message}");
+                    }
+                }
+
+                // Apply search filter if provided
+                if (!string.IsNullOrWhiteSpace(search))
+                {
+                    Console.WriteLine($"Filtering enrolled students by search term: '{search}'");
+                    enrolledStudents = enrolledStudents
+                        .Where(s => s.FullName.IndexOf(search, StringComparison.OrdinalIgnoreCase) >= 0 ||
+                                    s.IdNumber.IndexOf(search, StringComparison.OrdinalIgnoreCase) >= 0)
+                        .ToList();
+                    Console.WriteLine($"Filtered results: {enrolledStudents.Count} students");
+                    ViewData["SearchTerm"] = search;
+                }
+
+                // Create the view model
+                var viewModel = new ViewCourseViewModel
+                {
+                    Course = course,
+                    EnrolledStudents = enrolledStudents
+                };
+
+                Console.WriteLine($"Passing ViewCourseViewModel to view with {enrolledStudents.Count} enrolled students");
+                return View(viewModel);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error retrieving course: {ex.Message}");
+                Console.WriteLine($"Stack trace: {ex.StackTrace}");
+                return NotFound();
+            }
         }
 
         [HttpGet]
-        public IActionResult EditCourse(string id)
+        public async Task<IActionResult> EditCourse(string id)
         {
-            // TODO: Load course data by id
-            return View();
+            try
+            {
+                // Parse the ID to int
+                if (!int.TryParse(id, out int courseId))
+                    return BadRequest("Invalid course ID");
+
+                // Fetch the course data from the service
+                var course = await _courseService.GetCourseByIdAsync(courseId);
+
+                if (course == null)
+                    return NotFound("Course not found");
+
+                // Create view model and populate with course data
+                var model = new CourseEditViewModel
+                {
+                    CourseId = courseId,
+                    Code = course.Code,
+                    Name = course.Name,
+                    Description = course.Description,
+                    Credits = course.Credits ?? 0,
+                    Level = course.Level,
+                    SemesterId = course.SemesterId ?? 0,
+                    MaxCapacity = course.MaxCapacity ?? 0,
+                    InstructorId = course.TeacherId,
+                    Status = course.Status
+                };
+
+                // Populate instructor dropdown
+                var instructors = await _courseService.GetActiveInstructorsAsync();
+                model.Instructors = instructors
+                    .Select(i => new InstructorOption { UserTypeId = i.UserTypeId, FullName = i.FullName })
+                    .ToList();
+
+                // Populate semester dropdown
+                var semesters = await _courseService.GetAllSemestersAsync();
+                model.Semesters = semesters
+                    .Select(s => new SemesterOption { Id = s.Id, SemesterName = s.SemesterName })
+                    .ToList();
+
+                // Populate level dropdown
+                model.Levels = new List<LevelOption>
+                {
+                    new LevelOption { Value = "1st Year", Label = "1st Year" },
+                    new LevelOption { Value = "2nd Year", Label = "2nd Year" },
+                    new LevelOption { Value = "3rd Year", Label = "3rd Year" },
+                    new LevelOption { Value = "4th Year", Label = "4th Year" }
+                };
+
+                Console.WriteLine($"=== AdminController.EditCourse (GET) ===");
+                Console.WriteLine($"Loading course {courseId} for editing: {course.Name}");
+
+                // Return as partial view for modal
+                return PartialView("_EditCourseModal", model);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error loading EditCourse form: {ex.Message}");
+                Console.WriteLine($"Stack trace: {ex.StackTrace}");
+                return BadRequest("Error loading course edit form");
+            }
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> EditCourse(CourseEditViewModel model)
+        {
+            try
+            {
+                if (!ModelState.IsValid)
+                {
+                    // Collect all validation errors
+                    var errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage).ToList();
+                    var errorMessage = string.Join(", ", errors);
+                    
+                    Console.WriteLine($"Validation failed: {errorMessage}");
+                    return Json(new { success = false, message = $"Validation error: {errorMessage}" });
+                }
+
+                Console.WriteLine($"=== AdminController.EditCourse (POST) ===");
+                Console.WriteLine($"Updating course {model.CourseId}: {model.Name}");
+
+                // Call service to update the course
+                var (success, message) = await _courseService.UpdateCourseAsync(
+                    courseId: model.CourseId,
+                    name: model.Name,
+                    description: model.Description,
+                    credits: model.Credits,
+                    level: model.Level,
+                    semesterId: model.SemesterId,
+                    maxCapacity: model.MaxCapacity,
+                    instructorId: model.InstructorId,
+                    status: model.Status
+                );
+
+                if (!success)
+                {
+                    Console.WriteLine($"Course update failed: {message}");
+                    return Json(new { success = false, message = message });
+                }
+
+                Console.WriteLine($"Course updated successfully: {model.Name}");
+                return Json(new { success = true, message = "Course updated successfully", courseId = model.CourseId });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error updating course: {ex.Message}");
+                Console.WriteLine($"Stack trace: {ex.StackTrace}");
+                return Json(new { success = false, message = $"Error updating course: {ex.Message}" });
+            }
         }
 
         [HttpGet]
@@ -664,6 +755,119 @@ try
             {
                 Console.WriteLine($"Error getting admin ID from Supabase ID: {ex.Message}");
                 return null;
+            }
+        }
+
+        /// <summary>
+        /// Form post to search available students for a course
+        /// </summary>
+        [HttpPost]
+        public async Task<IActionResult> GetAvailableStudentsForCourse(int courseId, string search)
+        {
+            try
+            {
+                Console.WriteLine($"=== AdminController.GetAvailableStudentsForCourse ===");
+                Console.WriteLine($"Course ID: {courseId}, Search: '{search ?? ""}'");
+
+                var availableStudents = await _courseService.GetAvailableStudentsForCourseAsync(courseId, search ?? "");
+
+                Console.WriteLine($"Service returned {availableStudents?.Count ?? 0} raw students from database");
+
+                var result = availableStudents
+                    .Select(s => new
+                    {
+                        StudentId = s.UserTypeId,
+                        IdNumber = s.UserDisplayId ?? "N/A",
+                        FullName = $"{s.FirstName} {s.LastName}".Trim()
+                    })
+                    .ToList();
+
+                Console.WriteLine($"Processed into {result.Count} available students for display");
+                if (result.Count > 0)
+                {
+                    Console.WriteLine("Available students:");
+                    foreach (var student in result)
+                    {
+                        Console.WriteLine($"  - ID: {student.IdNumber}, Name: {student.FullName}, StudentId: {student.StudentId}");
+                    }
+                }
+                else
+                {
+                    Console.WriteLine("No available students found matching the search criteria");
+                }
+                
+                // Fetch course and enrolled students to rebuild the view
+                var course = await _courseService.GetCourseByIdAsync(courseId);
+                var enrollments = await _courseService.GetCourseEnrollmentsByCourseIdAsync(courseId);
+                
+                var enrolledStudents = new List<CourseEnrolledStudentViewModel>();
+                foreach (var enrollment in enrollments)
+                {
+                    var user = await _studentService.GetStudentBySupabaseIdAsync(enrollment.StudentId);
+                    if (user != null)
+                    {
+                        enrolledStudents.Add(new CourseEnrolledStudentViewModel
+                        {
+                            IdNumber = user.UserDisplayId ?? "N/A",
+                            FullName = $"{user.FirstName} {user.LastName}".Trim(),
+                            Status = enrollment.Status,
+                            StudentId = enrollment.StudentId
+                        });
+                    }
+                }
+
+                var viewModel = new ViewCourseViewModel
+                {
+                    Course = course,
+                    EnrolledStudents = enrolledStudents
+                };
+
+                ViewData["AvailableStudents"] = result;
+                return View("ViewCourse", viewModel);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error getting available students: {ex.Message}");
+                Console.WriteLine($"Stack Trace: {ex.StackTrace}");
+                TempData["Error"] = $"Error searching students: {ex.Message}";
+                return RedirectToAction("ViewCourse", new { id = courseId });
+            }
+        }
+
+        /// <summary>
+        /// Form post to enroll a student in a course
+        /// </summary>
+        [HttpPost]
+        public async Task<IActionResult> EnrollStudentInCourse(int courseId, string studentId)
+        {
+            try
+            {
+                Console.WriteLine($"=== AdminController.EnrollStudentInCourse ===");
+                Console.WriteLine($"Course ID: {courseId}, Student ID: {studentId}");
+
+                var (success, message) = await _courseService.EnrollStudentInCourseAsync(courseId, studentId);
+
+                Console.WriteLine($"Service enrollment result - Success: {success}, Message: '{message}'");
+
+                if (success)
+                {
+                    Console.WriteLine($"Student enrolled successfully - Course: {courseId}, Student: {studentId}");
+                    TempData["Success"] = message;
+                }
+                else
+                {
+                    Console.WriteLine($"Enrollment failed - Course: {courseId}, Student: {studentId}, Reason: {message}");
+                    TempData["Error"] = message;
+                }
+
+                return RedirectToAction("ViewCourse", new { id = courseId });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error enrolling student: {ex.Message}");
+                Console.WriteLine($"Stack Trace: {ex.StackTrace}");
+                TempData["Error"] = $"Error: {ex.Message}";
+                return RedirectToAction("ViewCourse", new { id = courseId });
             }
         }
     }

@@ -477,5 +477,263 @@ namespace ASI.Basecode.Services.Services
                 return (false, $"Error creating course: {ex.Message}", null);
             }
         }
+
+        /// <summary>
+        /// Retrieves all active enrollments for a specific course with student details.
+        /// </summary>
+        public async Task<List<EnrollmentModel>> GetCourseEnrollmentsByCourseIdAsync(long courseId)
+        {
+            try
+            {
+                var client = await _supabaseAuthService.GetSupabaseClientForAuthAsync();
+
+                // Get all active enrollments for this course
+                var enrollmentsQuery = await client
+                    .From<EnrollmentModel>()
+                    .Where(e => e.CourseId == courseId && e.Status == "Active")
+                    .Get();
+
+                var enrollments = enrollmentsQuery?.Models ?? new List<EnrollmentModel>();
+
+                Console.WriteLine($"Retrieved {enrollments.Count} active enrollments for course {courseId}");
+                return enrollments;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error retrieving enrollments for course {courseId}: {ex.Message}");
+                Console.WriteLine($"Stack Trace: {ex.StackTrace}");
+                return new List<EnrollmentModel>();
+            }
+        }
+
+        /// <summary>
+        /// Updates an existing course with validation.
+        /// </summary>
+        public async Task<(bool Success, string Message)> UpdateCourseAsync(
+            int courseId,
+            string name,
+            string description,
+            long credits,
+            string level,
+            long semesterId,
+            decimal maxCapacity,
+            string instructorId,
+            string status = "Active")
+        {
+            try
+            {
+                Console.WriteLine($"Starting course update for course ID: {courseId}");
+
+                // Validate input
+                if (courseId <= 0)
+                {
+                    return (false, "Invalid course ID");
+                }
+
+                if (string.IsNullOrWhiteSpace(name) || name.Length < 3 || name.Length > 255)
+                {
+                    return (false, "Course name must be between 3 and 255 characters");
+                }
+
+                if (string.IsNullOrWhiteSpace(description) || description.Length < 10 || description.Length > 1000)
+                {
+                    return (false, "Course description must be between 10 and 1000 characters");
+                }
+
+                if (credits < 1 || credits > 6)
+                {
+                    return (false, "Credits must be between 1 and 6");
+                }
+
+                if (string.IsNullOrWhiteSpace(level))
+                {
+                    return (false, "Course level is required");
+                }
+
+                if (semesterId <= 0)
+                {
+                    return (false, "Valid semester is required");
+                }
+
+                if (maxCapacity < 1 || maxCapacity > 50)
+                {
+                    return (false, "Maximum capacity must be between 1 and 50");
+                }
+
+                if (string.IsNullOrWhiteSpace(instructorId))
+                {
+                    return (false, "Instructor is required");
+                }
+
+                var client = await _supabaseAuthService.GetSupabaseClientForAuthAsync();
+
+                // Verify course exists
+                var existingCourse = await GetCourseByIdAsync(courseId);
+                if (existingCourse == null)
+                {
+                    return (false, $"Course with ID {courseId} not found");
+                }
+
+                // Update the course
+                var updatedCourse = new CourseModel
+                {
+                    Id = courseId,
+                    Code = existingCourse.Code, // Keep original code
+                    Name = name,
+                    Description = description,
+                    Credits = credits,
+                    Level = level,
+                    SemesterId = semesterId,
+                    MaxCapacity = maxCapacity,
+                    TeacherId = instructorId,
+                    Status = status
+                };
+
+                var result = await client
+                    .From<CourseModel>()
+                    .Update(updatedCourse);
+
+                Console.WriteLine($"Course updated successfully: {name}");
+                return (true, "Course updated successfully");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error updating course: {ex.Message}");
+                Console.WriteLine($"Stack Trace: {ex.StackTrace}");
+                return (false, $"Error updating course: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// Gets all students not enrolled in a specific course.
+        /// Filters by checking course_enrollment for this courseId using userTypeId.
+        /// </summary>
+        public async Task<List<SupabaseUserNew>> GetAvailableStudentsForCourseAsync(long courseId, string searchTerm = "")
+        {
+            try
+            {
+                var client = await _supabaseAuthService.GetSupabaseClientForAuthAsync();
+
+                // Get all students (active users)
+                var allStudentsQuery = await client
+                    .From<SupabaseUserNew>()
+                    .Where(u => u.IsActive == true)
+                    .Get();
+
+                var students = allStudentsQuery?.Models ?? new List<SupabaseUserNew>();
+                Console.WriteLine($"Retrieved {students.Count} total active students");
+
+                // Get current enrollments for this course
+                var enrollmentsQuery = await client
+                    .From<EnrollmentModel>()
+                    .Where(e => e.CourseId == courseId)
+                    .Get();
+
+                var enrolledStudentIds = enrollmentsQuery?.Models?.Select(e => e.StudentId).ToHashSet() ?? new HashSet<string>();
+                Console.WriteLine($"Course {courseId} has {enrolledStudentIds.Count} enrolled students");
+
+                // Filter out already enrolled students
+                var availableStudents = students
+                    .Where(s => !enrolledStudentIds.Contains(s.UserTypeId))
+                    .ToList();
+
+                // Apply search filter if provided
+                if (!string.IsNullOrWhiteSpace(searchTerm))
+                {
+                    var searchLower = searchTerm.ToLower();
+                    availableStudents = availableStudents
+                        .Where(s => 
+                            (s.UserDisplayId != null && s.UserDisplayId.ToLower().Contains(searchLower)) ||
+                            (s.FirstName != null && s.FirstName.ToLower().Contains(searchLower)) ||
+                            (s.LastName != null && s.LastName.ToLower().Contains(searchLower))
+                        )
+                        .ToList();
+                }
+
+                Console.WriteLine($"Available students for course {courseId}: {availableStudents.Count}");
+                return availableStudents;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error getting available students for course {courseId}: {ex.Message}");
+                Console.WriteLine($"Stack Trace: {ex.StackTrace}");
+                return new List<SupabaseUserNew>();
+            }
+        }
+
+        /// <summary>
+        /// Enrolls a student in a course with validation.
+        /// Checks for duplicates, max capacity, and student existence.
+        /// </summary>
+        public async Task<(bool Success, string Message)> EnrollStudentInCourseAsync(long courseId, string studentId)
+        {
+            try
+            {
+                var client = await _supabaseAuthService.GetSupabaseClientForAuthAsync();
+
+                // Validate course exists
+                var course = await GetCourseByIdAsync((int)courseId);
+                if (course == null)
+                {
+                    return (false, "Course not found");
+                }
+
+                // Check if student exists
+                var studentQuery = await client
+                    .From<SupabaseUserNew>()
+                    .Where(u => u.UserTypeId == studentId)
+                    .Single();
+
+                if (studentQuery == null)
+                {
+                    return (false, "Student not found");
+                }
+
+                // Check if student is already enrolled
+                var existingEnrollmentQuery = await client
+                    .From<EnrollmentModel>()
+                    .Where(e => e.CourseId == courseId && e.StudentId == studentId)
+                    .Single();
+
+                if (existingEnrollmentQuery != null)
+                {
+                    return (false, "Student is already enrolled in this course");
+                }
+
+                // Check max capacity
+                var currentEnrollmentsQuery = await client
+                    .From<EnrollmentModel>()
+                    .Where(e => e.CourseId == courseId)
+                    .Get();
+
+                var enrollmentCount = currentEnrollmentsQuery?.Models?.Count ?? 0;
+                if (enrollmentCount >= course.MaxCapacity)
+                {
+                    return (false, $"Course is at maximum capacity ({course.MaxCapacity} students)");
+                }
+
+                // Create new enrollment
+                var newEnrollment = new EnrollmentModel
+                {
+                    StudentId = studentId,
+                    CourseId = courseId,
+                    EnrolledAt = DateTime.UtcNow,
+                    Status = "active"
+                };
+
+                await client
+                    .From<EnrollmentModel>()
+                    .Insert(newEnrollment);
+
+                Console.WriteLine($"Student {studentId} enrolled in course {courseId}");
+                return (true, "Student enrolled successfully");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error enrolling student {studentId} in course {courseId}: {ex.Message}");
+                Console.WriteLine($"Stack Trace: {ex.StackTrace}");
+                return (false, $"Error enrolling student: {ex.Message}");
+            }
+        }
     }
 }

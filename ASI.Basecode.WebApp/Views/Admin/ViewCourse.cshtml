@@ -1,359 +1,413 @@
+@using ASI.Basecode.Data.Models
+@using ASI.Basecode.WebApp.Models
+@model ViewCourseViewModel
+
 @{
-    Layout = null;
+    Layout = "~/Views/Shared/_AuthenticatedLayout.cshtml";
+    ViewData["Title"] = "View Course";
 }
 
-<!DOCTYPE html>
-<html>
-<head>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>View Course</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+<script src="https://cdn.tailwindcss.com"></script>
 
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-        }
+<!-- Hero Section -->
+<section class="bg-green-100 flex items-center justify-center text-center relative py-10">
+    <a href="/Admin/Courses"
+        class="absolute top-5 left-5 bg-white text-green-600 border border-gray-300 rounded-lg px-4 py-2 font-semibold no-underline transition-colors hover:bg-gray-50 flex items-center gap-2">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <path d="M19 12H5"></path>
+            <path d="M12 19l-7-7 7-7"></path>
+        </svg>
+        Back to Courses
+    </a>
+    <div class="max-w-4xl mx-auto px-4">
+        <p class="mb-1 text-gray-600 text-xl">Course Management</p>
+        <h1 class="text-5xl font-bold mb-1 text-gray-900">View Course</h1>
+        <p class="mb-4 text-gray-600 text-lg">View detailed course information.</p>
+    </div>
+</section>
 
-        .modal-backdrop {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.5);
-            backdrop-filter: blur(8px);
-            -webkit-backdrop-filter: blur(8px);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 1000;
-            animation: fadeIn 0.3s ease;
-        }
+<section class="bg-white">
+    <div class="mx-auto px-4 py-8" style="max-width: 1600px;">
+        <div class="grid gap-6" style="grid-template-columns: repeat(8, minmax(0, 1fr));">
+            <!-- Left Column: General Information (3 columns) -->
+            <div class="col-span-3 bg-gray-50 border border-gray-200 rounded-lg p-6">
+                <h3 class="mb-5 font-bold text-lg text-gray-900">Course Information</h3>
 
-        @@keyframes fadeIn {
-            from {
-                opacity: 0;
-            }
-            to {
-                opacity: 1;
-            }
-        }
-
-        @@keyframes slideUp {
-            from {
-                transform: translateY(30px);
-                opacity: 0;
-            }
-            to {
-                transform: translateY(0);
-                opacity: 1;
-            }
-        }
-
-        .modal-content {
-            background: #ffffff;
-            border-radius: 16px;
-            width: 90%;
-            max-width: 700px;
-            max-height: 90vh;
-            overflow-y: auto;
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-            animation: slideUp 0.3s ease;
-        }
-
-        .modal-header {
-            background: #E8F9E8;
-            padding: 24px 32px;
-            border-radius: 16px 16px 0 0;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 2px solid #d1fae5;
-        }
-
-        .modal-title {
-            font-size: 24px;
-            font-weight: 800;
-            color: #111827;
-        }
-
-        .close-btn {
-            background: none;
-            border: none;
-            font-size: 28px;
-            color: #6b7280;
-            cursor: pointer;
-            width: 32px;
-            height: 32px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 6px;
-            transition: all 0.2s;
-        }
-
-        .close-btn:hover {
-            background: rgba(0, 0, 0, 0.05);
-            color: #111827;
-        }
-
-        .modal-body {
-            padding: 32px;
-        }
-
-        .section {
-            margin-bottom: 32px;
-        }
-
-        .section:last-child {
-            margin-bottom: 0;
-        }
-
-        .section-title {
-            font-size: 18px;
-            font-weight: 700;
-            color: #111827;
-            margin-bottom: 16px;
-            padding-bottom: 8px;
-            border-bottom: 2px solid #e5e7eb;
-        }
-
-        .info-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 20px;
-        }
-
-        .info-item {
-            display: flex;
-            flex-direction: column;
-        }
-
-        .info-item.full-width {
-            grid-column: 1 / -1;
-        }
-
-        .info-label {
-            font-size: 13px;
-            font-weight: 600;
-            color: #6b7280;
-            margin-bottom: 6px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        .info-value {
-            font-size: 15px;
-            color: #111827;
-            padding: 10px 12px;
-            background: #f9fafb;
-            border-radius: 6px;
-            border: 1px solid #e5e7eb;
-        }
-
-        .status-badge {
-            display: inline-block;
-            padding: 6px 16px;
-            border-radius: 12px;
-            font-size: 13px;
-            font-weight: 600;
-            width: fit-content;
-        }
-
-        .status-badge.active {
-            background: #86efac;
-            color: #065f46;
-        }
-
-        .status-badge.inactive {
-            background: #d1d5db;
-            color: #4b5563;
-        }
-
-        .modal-footer {
-            padding: 20px 32px;
-            background: #f9fafb;
-            border-top: 1px solid #e5e7eb;
-            border-radius: 0 0 16px 16px;
-            display: flex;
-            justify-content: flex-end;
-            gap: 12px;
-        }
-
-        .btn {
-            padding: 10px 24px;
-            border-radius: 8px;
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            border: none;
-            transition: all 0.2s;
-        }
-
-        .btn-secondary {
-            background: #ffffff;
-            color: #4b5563;
-            border: 1px solid #d1d5db;
-        }
-
-        .btn-secondary:hover {
-            background: #f3f4f6;
-        }
-
-        .btn-primary {
-            background: #059669;
-            color: #ffffff;
-        }
-
-        .btn-primary:hover {
-            background: #047857;
-        }
-
-        .btn-danger {
-            background: #dc2626;
-            color: #ffffff;
-        }
-
-        .btn-danger:hover {
-            background: #b91c1c;
-        }
-
-        @@media (max-width: 640px) {
-            .info-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .modal-body {
-                padding: 24px 20px;
-            }
-
-            .modal-header {
-                padding: 20px;
-            }
-
-            .modal-footer {
-                padding: 16px 20px;
-                flex-direction: column;
-            }
-
-            .btn {
-                width: 100%;
-            }
-        }
-    </style>
-</head>
-<body>
-    <div class="modal-backdrop" onclick="closeModal(event)">
-        <div class="modal-content" onclick="event.stopPropagation()">
-            <div class="modal-header">
-                <h2 class="modal-title">Course Details</h2>
-                <button class="close-btn" onclick="window.history.back()">&times;</button>
-            </div>
-
-            <div class="modal-body">
-                <!-- Course Information Section -->
-                <div class="section">
-                    <h3 class="section-title">Course Information</h3>
-                    <div class="info-grid">
-                        <div class="info-item">
-                            <span class="info-label">Course Code</span>
-                            <span class="info-value">92322</span>
-                        </div>
-                        <div class="info-item">
-                            <span class="info-label">Status</span>
-                            <span class="status-badge active">Active</span>
-                        </div>
-                        <div class="info-item full-width">
-                            <span class="info-label">Course Name</span>
-                            <span class="info-value">PHP Programming</span>
-                        </div>
-                        <div class="info-item full-width">
-                            <span class="info-label">Description</span>
-                            <span class="info-value">Introduction to PHP programming language covering basic to advanced concepts including web development, database integration, and modern PHP frameworks.</span>
-                        </div>
-                    </div>
+                <!-- Course Name (Full Width) -->
+                <div class="mb-5">
+                    <div class="text-2xl font-bold text-gray-900 mb-1">@Model?.Course?.Name</div>
                 </div>
 
-                <!-- Enrollment Information Section -->
-                <div class="section">
-                    <h3 class="section-title">Enrollment Information</h3>
-                    <div class="info-grid">
-                        <div class="info-item">
-                            <span class="info-label">Enrolled Students</span>
-                            <span class="info-value">35</span>
+                <!-- General Information -->
+                <div class="mb-5">
+                    <h4 class="text-base font-bold text-gray-900 mb-3 pb-2 border-b border-gray-200">General Information</h4>
+                    <div class="grid grid-cols-1 gap-3">
+                        <div>
+                            <span class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Course Code</span>
+                            <div class="text-sm text-gray-900 py-1.5">@Model?.Course?.Code</div>
                         </div>
-                        <div class="info-item">
-                            <span class="info-label">Max Capacity</span>
-                            <span class="info-value">40</span>
+                        <div>
+                            <span class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Status</span>
+                            <div class="text-sm text-gray-900 py-1.5">@Model?.Course?.Status</div>
                         </div>
-                        <div class="info-item">
-                            <span class="info-label">Department</span>
-                            <span class="info-value">Computer Science</span>
+                        <div>
+                            <span class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Course Description</span>
+                            <div class="text-sm text-gray-900 py-1.5">@Model?.Course?.Description</div>
                         </div>
-                        <div class="info-item">
-                            <span class="info-label">Year Level</span>
-                            <span class="info-value">3rd Year</span>
+                        <div>
+                            <span class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Units</span>
+                            <div class="text-sm text-gray-900 py-1.5">@Model?.Course?.Credits</div>
                         </div>
-                    </div>
-                </div>
-
-                <!-- Schedule Information Section -->
-                <div class="section">
-                    <h3 class="section-title">Schedule Information</h3>
-                    <div class="info-grid">
-                        <div class="info-item">
-                            <span class="info-label">Schedule</span>
-                            <span class="info-value">MWF 10:00 AM - 11:30 AM</span>
+                        <div>
+                            <span class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Year Level</span>
+                            <div class="text-sm text-gray-900 py-1.5">@Model?.Course?.Level</div>
                         </div>
-                        <div class="info-item">
-                            <span class="info-label">Room</span>
-                            <span class="info-value">CCS Lab 301</span>
+                        <div>
+                            <span class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Semester</span>
+                            <div class="text-sm text-gray-900 py-1.5">@Model?.Course?.SemesterId</div>
                         </div>
-                        <div class="info-item">
-                            <span class="info-label">Instructor</span>
-                            <span class="info-value">Prof. Juan Dela Cruz</span>
+                        <div>
+                            <span class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Maximum Capacity</span>
+                            <div class="text-sm text-gray-900 py-1.5">@Model?.Course?.MaxCapacity</div>
                         </div>
-                        <div class="info-item">
-                            <span class="info-label">Semester</span>
-                            <span class="info-value">1st Semester, AY 2024-2025</span>
+                        <div>
+                            <span class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Instructor</span>
+                            <div class="text-sm text-gray-900 py-1.5">@Model?.Course?.TeacherId</div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <div class="modal-footer">
-                <button class="btn btn-secondary" onclick="window.history.back()">Close</button>
-                <a href="@Url.Action("EditCourse", "Admin", new { id = "92322" })" class="btn btn-primary" style="text-decoration:none; display:inline-block;">Edit</a>
-                <button class="btn btn-danger" onclick="deactivateCourse()">Deactivate</button>
+            <!-- Right Column: Students Enrolled Table (5 columns) -->
+            <div class="col-span-5 bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="m-0 font-bold text-xl text-gray-900">Students Enrolled</h3>
+                </div>
+
+                <!-- Search and Action Bar -->
+                <div class="flex justify-between items-center gap-4 mb-6">
+                    <!-- Left: Search Bar -->
+                    <form method="get" class="flex gap-2 max-w-[600px]">
+                        <input type="text" 
+                               name="search" 
+                               value="@ViewData["SearchTerm"]"
+                               placeholder="Search by name or ID..." 
+                               class="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+                               style="background:#ffffff; color:#111827;">
+                        <button type="submit" 
+                                class="bg-green-600 text-white px-6 py-2 rounded-lg font-semibold text-sm hover:bg-green-700 transition-colors">
+                            Search
+                        </button>
+                    </form>
+
+                    <!-- Right: Action Buttons -->
+                    <div class="flex gap-2">
+                        <button type="button" onclick="openEditCourseModal()" class="bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold text-sm hover:bg-blue-700 transition-colors">
+                            Edit Course
+                        </button>
+                        <button type="button" onclick="document.getElementById('addStudentSection').style.display='block'" class="bg-green-600 text-white px-4 py-2 rounded-lg font-semibold text-sm hover:bg-green-700 transition-colors">
+                            Add to Course
+                        </button>
+                    </div>
+                </div>
+
+                <table id="enrolledStudentsTable" class="display" style="width:100%; border:1px solid #e5e7eb; border-radius:8px; overflow:hidden;">
+                    <thead style="background:#f9fafb;">
+                        <tr>
+                            <th style="padding:12px; text-align:left; font-weight:600; color:#111827;">ID Number</th>
+                            <th style="padding:12px; text-align:left; font-weight:600; color:#111827;">Name</th>
+                            <th style="padding:12px; text-align:left; font-weight:600; color:#111827;">Status</th>
+                            <th style="padding:12px; text-align:left; font-weight:600; color:#111827;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Model?.EnrolledStudents != null && Model.EnrolledStudents.Count > 0)
+                        {
+                            @foreach (var student in Model.EnrolledStudents)
+                            {
+                                <tr style="background:#E8F9E8;">
+                                    <td style="padding:16px; font-weight:700; color:#111827;">@student.IdNumber</td>
+                                    <td style="padding:16px; color:#6b7280;">@student.FullName</td>
+                                    <td style="padding:16px; color:#6b7280;">@student.Status</td>
+                                    <td style="padding:16px; color:#6b7280;">
+                                        <a href="#" style="color:#059669; text-decoration:none; font-weight:600; font-size:12px; margin-right:12px;">View</a>
+                                        <a href="#" style="color:#dc2626; text-decoration:none; font-weight:600; font-size:12px;">Remove</a>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr>
+                                <td colspan="4" style="padding:24px; text-align:center; color:#6b7280;">No students enrolled yet</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
             </div>
         </div>
+
+        <!-- Add Student Section (Below the table grid) -->
+        @{
+            // Show the section if we have search results or if it was previously opened
+            var showAddStudentSection = ViewData["AvailableStudents"] != null ? "block" : "none";
+        }
+        <div id="addStudentSection" style="margin-top:24px; padding:24px; background:#f9fafb; border:1px solid #e5e7eb; border-radius:12px; display:@showAddStudentSection;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+                <h3 style="margin:0; font-size:18px; font-weight:700; color:#111827;">Add Student to Course</h3>
+                <button type="button" onclick="document.getElementById('addStudentSection').style.display='none'" style="background:none; border:none; font-size:24px; cursor:pointer; color:#6b7280; font-weight:600;">×</button>
+            </div>
+
+            <!-- Search Form -->
+            <form method="post" action="/Admin/GetAvailableStudentsForCourse" style="margin-bottom:16px;" id="searchStudentForm">
+                <label style="display:block; margin-bottom:8px; font-size:14px; font-weight:600; color:#111827;">Search Student by ID</label>
+                <div style="display:flex; gap:8px;">
+                    <input type="hidden" name="courseId" value="@Model?.Course?.Id" />
+                    <input type="text" 
+                           id="studentSearchInput"
+                           name="search" 
+                           placeholder="Type student ID or name..." 
+                           style="flex:1; padding:10px 12px; border:1px solid #d1d5db; border-radius:8px; font-size:14px; background:#ffffff; color:#111827;">
+                    <button type="submit" id="searchStudentBtn" style="padding:10px 20px; background:#059669; color:white; border:none; border-radius:8px; font-weight:600; cursor:pointer; transition:background 0.2s;">Search</button>
+                </div>
+            </form>
+
+            <!-- Search Results (Populated by controller if search was performed) -->
+            @if (ViewData["AvailableStudents"] != null)
+            {
+                var students = ViewData["AvailableStudents"] as List<dynamic>;
+                <div style="border:1px solid #e5e7eb; border-radius:8px; max-height:400px; overflow-y:auto; background:#ffffff;">
+                    @if (students != null && students.Count > 0)
+                    {
+                        @foreach (var student in students)
+                        {
+                            <div style="padding:16px; border-bottom:1px solid #e5e7eb; display:flex; justify-content:space-between; align-items:center;">
+                                <div>
+                                    <p style="margin:0 0 4px 0; font-weight:600; font-size:15px; color:#111827;">@student.FullName</p>
+                                    <p style="margin:0; font-size:13px; color:#6b7280;">ID: @student.IdNumber</p>
+                                </div>
+                                <form method="post" action="/Admin/EnrollStudentInCourse" style="margin:0; display:inline;">
+                                    <input type="hidden" name="courseId" value="@Model?.Course?.Id" />
+                                    <input type="hidden" name="studentId" value="@student.StudentId" />
+                                    <button type="submit" style="padding:10px 20px; background:#059669; color:white; border:none; border-radius:6px; font-weight:600; font-size:13px; cursor:pointer; transition:background 0.2s;" onmouseover="this.style.background='#047857'" onmouseout="this.style.background='#059669'">Add Student</button>
+                                </form>
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <div style="padding:16px; text-align:center; color:#6b7280;">
+                            <p style="margin:0;">No available students found</p>
+                        </div>
+                    }
+                </div>
+            }
+            else
+            {
+                <div style="border:1px solid #e5e7eb; border-radius:8px; background:#ffffff; padding:16px; text-align:center; color:#6b7280;">
+                    <p style="margin:0;">Search for a student by ID or name to add them to the course</p>
+                </div>
+            }
+        </div>
     </div>
+</section>
 
+@section Scripts {
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    
+    <style>
+        /* Subtler table outlines */
+        #enrolledStudentsTable {
+            border: none !important;
+        }
+        #enrolledStudentsTable thead th {
+            border-bottom: 1px solid #f3f4f6 !important;
+        }
+        #enrolledStudentsTable tbody td {
+            border-bottom: 1px solid #f3f4f6 !important;
+        }
+
+        /* Pagination button styles to match design */
+        .dataTables_paginate .paginate_button {
+            background: transparent !important;
+            border: none !important;
+            border-radius: 8px !important;
+            padding: 10px !important;
+            color: #374151 !important;
+            cursor: pointer !important;
+            transition: background-color 0.2s !important;
+            margin: 0 2px !important;
+        }
+        .dataTables_paginate .paginate_button:hover {
+            background: #F2F7F2 !important;
+        }
+        .dataTables_paginate .paginate_button.current {
+            background: #E0F0E0 !important;
+            font-weight: bold !important;
+        }
+        .dataTables_paginate .paginate_button.disabled {
+            opacity: 0.5 !important;
+            cursor: not-allowed !important;
+        }
+    </style>
+    
     <script>
-        function closeModal(event) {
-            if (event.target.classList.contains('modal-backdrop')) {
-                window.history.back();
+        const courseId = '@Model?.Course?.Id';
+
+        function openEditCourseModal() {
+            if (!courseId) {
+                alert('Error: Could not determine course ID');
+                return;
             }
+
+            fetch(`/Admin/EditCourse?id=${courseId}`, {
+                method: 'GET',
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            })
+            .then(response => {
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                return response.text();
+            })
+            .then(html => {
+                const container = document.createElement('div');
+                container.innerHTML = html;
+                document.body.appendChild(container);
+            })
+            .catch(error => {
+                console.error('Error loading edit course modal:', error);
+                alert('Error loading edit course form');
+            });
         }
 
-        function deactivateCourse() {
-            if (confirm('Are you sure you want to deactivate this course?')) {
-                // TODO: Implement deactivate logic
-                alert('Deactivate functionality to be implemented');
-            }
+        function closeEditCourseModal() {
+            const backdrop = document.getElementById('editCourseModalBackdrop');
+            const container = document.querySelector('.modal-container');
+            if (backdrop) backdrop.remove();
+            if (container) container.remove();
         }
 
-        // Close modal on ESC key
-        document.addEventListener('keydown', function(event) {
-            if (event.key === 'Escape') {
-                window.history.back();
+        console.log('=== ViewCourse.cshtml Script Loading ===');
+        console.log('jQuery available:', typeof $ !== 'undefined');
+        console.log('Course ID from model:', courseId);
+
+        $(document).ready(function() {
+            console.log('=== Document Ready - Initializing ViewCourse ===');
+            
+            // Destroy existing DataTable if it exists
+            if ($.fn.DataTable.isDataTable('#enrolledStudentsTable')) {
+                $('#enrolledStudentsTable').DataTable().destroy();
             }
+            
+            // Initialize DataTable
+            $('#enrolledStudentsTable').DataTable({
+                paging: true,
+                pageLength: 5,
+                searching: false,
+                ordering: true,
+                info: false,
+                lengthChange: false,
+                deferRender: true,
+                "language": {
+                    "paginate": {
+                        "previous": "Prev",
+                        "next": "Next"
+                    }
+                }
+            });
+
+            console.log('DataTable initialized');
+            console.log('Search form exists:', $('#searchStudentForm').length > 0);
+
+            // Add click handler for search button for debugging
+            $(document).on('click', '#searchStudentBtn', function(e) {
+                console.log('=== Search button clicked ===');
+                console.log('Button element:', this);
+                console.log('Parent form:', $(this).closest('form').attr('id'));
+            });
+
+            // Add input change handler for debugging
+            $(document).on('input', '#studentSearchInput', function(e) {
+                console.log('Search input changed:', this.value);
+            });
+
+            // Add console logging for search form submission
+            // Use document-level delegation since form might be in hidden section
+            $(document).on('submit', '#searchStudentForm', function(e) {
+                // Prevent default briefly to show logs
+                e.preventDefault();
+                
+                console.log('╔══════════════════════════════════════════════════════════╗');
+                console.log('║    Browser: Student Search Form Submitted               ║');
+                console.log('╚══════════════════════════════════════════════════════════╝');
+                console.log('Event object:', e);
+                console.log('Form element:', this);
+                
+                const formData = new FormData(this);
+                const courseId = formData.get('courseId');
+                const search = formData.get('search');
+                
+                console.log('📝 Course ID:', courseId);
+                console.log('🔍 Search Term:', search || '(empty)');
+                console.log('🎯 Form action:', this.action);
+                console.log('📮 Form method:', this.method);
+                console.log('🚀 Submitting POST request to /Admin/GetAvailableStudentsForCourse');
+                
+                // Log all form data
+                console.log('📦 All form data:');
+                for (let pair of formData.entries()) {
+                    console.log('  -', pair[0] + ':', pair[1]);
+                }
+                
+                console.log('⏱️ Form will submit in 1 second to allow logs to be visible...');
+                console.log('═══════════════════════════════════════════════════════════');
+                
+                // Allow form to submit after a brief delay so logs are visible
+                const form = this;
+                setTimeout(function() {
+                    console.log('✅ Now submitting form...');
+                    form.submit();
+                }, 1000);
+            });
+
+            // Add console logging for enrollment form submissions
+            $(document).on('submit', 'form[action="/Admin/EnrollStudentInCourse"]', function(e) {
+                // Prevent default briefly to show logs
+                e.preventDefault();
+                
+                console.log('╔══════════════════════════════════════════════════════════╗');
+                console.log('║    Browser: Student Enrollment Form Submitted           ║');
+                console.log('╚══════════════════════════════════════════════════════════╝');
+                
+                const formData = new FormData(this);
+                const courseId = formData.get('courseId');
+                const studentId = formData.get('studentId');
+                
+                console.log('📝 Course ID:', courseId);
+                console.log('👤 Student ID:', studentId);
+                console.log('🎯 Form action:', this.action);
+                console.log('📮 Form method:', this.method);
+                console.log('🚀 Submitting POST request to /Admin/EnrollStudentInCourse');
+                
+                console.log('⏱️ Form will submit in 1 second to allow logs to be visible...');
+                console.log('═══════════════════════════════════════════════════════════');
+                
+                // Allow form to submit after a brief delay so logs are visible
+                const form = this;
+                setTimeout(function() {
+                    console.log('✅ Now submitting enrollment form...');
+                    form.submit();
+                }, 1000);
+            });
+
+            // Log when "Add to Course" button is clicked
+            $(document).on('click', 'button:contains("Add to Course")', function() {
+                console.log('=== "Add to Course" button clicked - showing add student section ===');
+            });
+
+            console.log('=== Event listeners attached ===');
         });
     </script>
-</body>
-</html>
-
+}
