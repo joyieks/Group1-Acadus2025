@@ -8,7 +8,7 @@ namespace ASI.Basecode.Data.Models
     public class SupabaseUserNew : BaseModel
     {
         [PrimaryKey("id", false)]
-        public int Id { get; set; }
+        public string Id { get; set; }
 
         [Column("firstName")]
         public string FirstName { get; set; }
@@ -38,7 +38,7 @@ namespace ASI.Basecode.Data.Models
         public string UserTypeId { get; set; }  // UUID from Supabase Auth
 
         [Column("isActive")]
-        public bool? IsActive { get; set; }
+        public bool IsActive { get; set; }
 
         [Column("profilePictureUrl")]
         public string ProfilePictureUrl { get; set; }

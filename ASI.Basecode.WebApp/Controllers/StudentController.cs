@@ -214,10 +214,10 @@ namespace ASI.Basecode.WebApp.Controllers
                       .Where(x => x.StudentId == supabaseUserId)
                     .Single();
                     
-                  model.Department = studentProfile?.DepartmentId?.ToString() ?? "N/A";
-                  model.Course = studentProfile?.ProgramId?.ToString() ?? "N/A";  // Fixed: use ProgramId
-  model.YearLevel = studentProfile?.YearLevel?.ToString() ?? "N/A";
-    model.Status = user.IsActive ?? false ? "Active" : "Inactive";
+                    model.Department = studentProfile?.DepartmentId?.ToString() ?? "N/A";
+                    model.Course = studentProfile?.ProgramId?.ToString() ?? "N/A";  // Fixed: use ProgramId
+                    model.YearLevel = studentProfile?.YearLevel?.ToString() ?? "N/A";
+                    model.Status = user.IsActive ? "Active" : "Inactive";
                 }
 
                // Address (primary)

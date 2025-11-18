@@ -2,6 +2,7 @@ using ASI.Basecode.Data;
 using ASI.Basecode.Data.Models;
 using ASI.Basecode.Services.Interfaces;  // ? For ISupabaseAuthService and ICourseService
 using ASI.Basecode.WebApp.Models;  // ? For TeacherCourseViewModel
+using ASI.Basecode.Services.ServiceModels;
 using ASI.Basecode.Services.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -11,12 +12,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
- namespace ASI.Basecode.WebApp.Controllers
+using ASI.Basecode.Service.ServiceModels;
 
+namespace ASI.Basecode.WebApp.Controllers
 {
-    /// <summary>
     /// Controller for teacher-related actions and dashboard statistics.
-    /// </summary>
     [Authorize(Roles = "Teacher")]
     public class TeacherController : Controller
     {
@@ -24,21 +24,22 @@ using System.Threading.Tasks;
         private readonly ISupabaseAuthService _supabaseAuthService;
         private readonly ICourseService _courseService;  // ? ADD ICourseService
         private readonly ITeacherCourseService _teacherCourseService;
+        private readonly ITeacherCourseActivityService _activityService;
 
 
-        /// <summary>
+
         /// Initializes a new instance of the <see cref="TeacherController"/> class.
-        /// </summary>
         /// <param name="configuration">Application configuration.</param>
         /// <param name="supabaseAuthService">Supabase authentication service.</param>
         /// <param name="courseService">Course service for database operations.</param>
 
-        public TeacherController(IConfiguration configuration, ISupabaseAuthService supabaseAuthService, ITeacherCourseService teacherCourseService, ICourseService courseService)
+        public TeacherController(IConfiguration configuration, ISupabaseAuthService supabaseAuthService, ITeacherCourseService teacherCourseService, ICourseService courseService, ITeacherCourseActivityService activityService)
         {
             _configuration = configuration;
             _supabaseAuthService = supabaseAuthService;
             _teacherCourseService = teacherCourseService;
-             _courseService = courseService; 
+            _courseService = courseService;
+            _activityService = activityService;
         }
 
         /// <summary>
@@ -100,73 +101,73 @@ using System.Threading.Tasks;
         [HttpGet]
         public async Task<IActionResult> Courses()
         {
-   try
-     {
-      // Get the current teacher's Supabase user ID from claims
-     var supabaseUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-    
-    if (string.IsNullOrWhiteSpace(supabaseUserId))
-       {
-        Console.WriteLine("ERROR: Teacher Supabase User ID not found in claims");
-   return View("Courses/Index", new List<TeacherCourseViewModel>());
-    }
+            try
+            {
+                // Get the current teacher's Supabase user ID from claims
+                var supabaseUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
-        Console.WriteLine($"=== LOADING COURSES FOR TEACHER ===");
-            Console.WriteLine($"Teacher Supabase User ID: {supabaseUserId}");
+                if (string.IsNullOrWhiteSpace(supabaseUserId))
+                {
+                    Console.WriteLine("ERROR: Teacher Supabase User ID not found in claims");
+                    return View("Courses/Index", new List<TeacherCourseViewModel>());
+                }
 
-     // Get courses taught by this teacher from database
-       var dbCourses = await _courseService.GetCoursesByInstructorAsync(supabaseUserId);
-       
-        Console.WriteLine($"Found {dbCourses.Count} courses for teacher");
+                Console.WriteLine($"=== LOADING COURSES FOR TEACHER ===");
+                Console.WriteLine($"Teacher Supabase User ID: {supabaseUserId}");
 
-        // Map database courses to view model
+                // Get courses taught by this teacher from database
+                var dbCourses = await _courseService.GetCoursesByInstructorAsync(supabaseUserId);
+
+                Console.WriteLine($"Found {dbCourses.Count} courses for teacher");
+
+                // Map database courses to view model
                 var courses = dbCourses.Select((course, index) => new TeacherCourseViewModel
-   {
-    Id = (int)course.Id,  // ? Cast from long to int
-      CourseCode = course.Code ?? "N/A",
-     CourseTitle = course.Name ?? "Untitled Course",
-         SemesterInfo = GetSemesterInfo(course.SemesterId),
-            CardColor = GetCardColor(index)  // Assign colors based on index
-    }).ToList();
+                {
+                    Id = (int)course.Id,  // ? Cast from long to int
+                    CourseCode = course.Code ?? "N/A",
+                    CourseTitle = course.Name ?? "Untitled Course",
+                    SemesterInfo = GetSemesterInfo(course.SemesterId),
+                    CardColor = GetCardColor(index)  // Assign colors based on index
+                }).ToList();
 
- if (courses.Count == 0)
-   {
-        Console.WriteLine("No courses found for this teacher");
-       ViewBag.Message = "You are not assigned to any courses yet. Please contact your administrator.";
-     }
+                if (courses.Count == 0)
+                {
+                    Console.WriteLine("No courses found for this teacher");
+                    ViewBag.Message = "You are not assigned to any courses yet. Please contact your administrator.";
+                }
 
-     return View("Courses/Index", courses.ToArray());
-   }
-      catch (Exception ex)
-          {
-    Console.WriteLine($"ERROR loading teacher courses: {ex.Message}");
-         Console.WriteLine($"Stack Trace: {ex.StackTrace}");
-    ViewBag.Error = "Unable to load courses. Please try again later.";
+                return View("Courses/Index", courses.ToArray());
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"ERROR loading teacher courses: {ex.Message}");
+                Console.WriteLine($"Stack Trace: {ex.StackTrace}");
+                ViewBag.Error = "Unable to load courses. Please try again later.";
                 return View("Courses/Index", new List<TeacherCourseViewModel>());
             }
         }
 
-      /// <summary>
+        /// <summary>
         /// Helper method to get semester information
         /// </summary>
- private string GetSemesterInfo(long? semesterId)
-      {
- if (!semesterId.HasValue)
-   return "No Semester Assigned";
+        private string GetSemesterInfo(long? semesterId)
+        {
+            if (!semesterId.HasValue)
+                return "No Semester Assigned";
 
-     // TODO: You can enhance this to fetch actual semester details from database
-      // For now, return a placeholder
-      return $"Semester ID: {semesterId}";
+            // TODO: You can enhance this to fetch actual semester details from database
+            // For now, return a placeholder
+            return $"Semester ID: {semesterId}";
         }
 
         /// <summary>
         /// Helper method to assign card colors based on index
-   /// </summary>
-private string GetCardColor(int index)
-{
+        /// </summary>
+        private string GetCardColor(int index)
+        {
             // Cycle through a set of green shades
-  var colors = new[]
-         {
+            var colors = new[]
+                   {
     "#E8F9E8",  // Light green
    "#D1FAE5",  // Lighter green
        "#A7F3D0",  // Medium green
@@ -175,8 +176,8 @@ private string GetCardColor(int index)
   "#10B981"   // Darkest green
         };
 
-   return colors[index % colors.Length];
- }
+            return colors[index % colors.Length];
+        }
         /// <summary>
         /// Displays the full course view.
         /// </summary>
@@ -186,6 +187,9 @@ private string GetCardColor(int index)
         {
             await AsiBasecodeDBContext.InitializeSupabaseAsync(_configuration);
             var client = AsiBasecodeDBContext.SupabaseClient;
+
+            var roles = User?.Claims?.Where(c => c.Type == ClaimTypes.Role).Select(c => c.Value) ?? Enumerable.Empty<string>();
+            Console.WriteLine($"[TeacherController.FullCourseView] Request.Path={Request?.Path}, id={id}, IsAuthenticated={User?.Identity?.IsAuthenticated}, Name={User?.Identity?.Name}, Roles={string.Join(',', roles)}");
 
             // Fetch the course from the database
             var courseResponse = await client.From<CourseModel>()
@@ -351,8 +355,8 @@ private string GetCardColor(int index)
                     return Json(new { success = false, message = "Activity not found." });
                 }
 
-                activity.IsArchived = true;
-                activity.ArchivedAt = DateTime.UtcNow;
+                activity.IsVisible = true;
+                activity.Invisible_At = DateTime.UtcNow;
                 await activity.Update<ActivityModel>();
 
                 return Json(new { success = true, message = "Activity archived successfully." });
@@ -503,7 +507,7 @@ private string GetCardColor(int index)
         //                GradedBy = teacherId
         //            };
         //            await client.From<GradeModel>().Insert(newGrade);
-                    
+
         //            // Mark activity as graded if not already
         //            var activityResponse = await client.From<ActivityModel>()
         //                .Filter("id", Supabase.Postgrest.Constants.Operator.Equals, activityId)
@@ -687,68 +691,6 @@ private string GetCardColor(int index)
             return RedirectToAction("CourseGradebook", new { id = courseId, selectedStudentId = studentId });
         }
 
-
-
-
-        [HttpGet]
-        public IActionResult CourseActivities(int id)
-        {
-            // Placeholder: Find course by id from sample data
-            var courses = new List<TeacherCourseViewModel>
-            {
-                new TeacherCourseViewModel
-                {
-                    Id = 1,
-                    CourseCode = "91299 - ELPHP41",
-                    CourseTitle = "FREE ELECTIVE - PHP",
-                    SemesterInfo = "1st Semester 2025 - 2026",
-                    CardColor = "#E8F9E8"
-                },
-                new TeacherCourseViewModel
-                {
-                    Id = 2,
-                    CourseCode = "91300 - CS101",
-                    CourseTitle = "INTRODUCTION TO COMPUTER SCIENCE",
-                    SemesterInfo = "1st Semester 2025 - 2026",
-                    CardColor = "#D1FAE5"
-                },
-                new TeacherCourseViewModel
-                {
-                    Id = 3,
-                    CourseCode = "91301 - MATH201",
-                    CourseTitle = "DISCRETE MATHEMATICS",
-                    SemesterInfo = "1st Semester 2025 - 2026",
-                    CardColor = "#A7F3D0"
-                },
-                new TeacherCourseViewModel
-                {
-                    Id = 4,
-                    CourseCode = "91302 - ENG102",
-                    CourseTitle = "TECHNICAL WRITING",
-                    SemesterInfo = "1st Semester 2025 - 2026",
-                    CardColor = "#6EE7B7"
-                },
-                new TeacherCourseViewModel
-                {
-                    Id = 5,
-                    CourseCode = "91303 - DATA301",
-                    CourseTitle = "DATA STRUCTURES",
-                    SemesterInfo = "2nd Semester 2025 - 2026",
-                    CardColor = "#34D399"
-                },
-                new TeacherCourseViewModel
-                {
-                    Id = 6,
-                    CourseCode = "91304 - WEBDEV401",
-                    CourseTitle = "WEB DEVELOPMENT",
-                    SemesterInfo = "2nd Semester 2025 - 2026",
-                    CardColor = "#10B981"
-                }
-            };
-            var course = courses.FirstOrDefault(c => c.Id == id) ?? new TeacherCourseViewModel { Id = id, CourseTitle = "Sample Course" };
-            return View("Courses/CourseActivities", course);
-        }
-
         /// <summary>
         /// Gets the teacher database ID from the Supabase user ID
         /// </summary>
@@ -771,5 +713,106 @@ private string GetCardColor(int index)
                 return null;
             }
         }
+
+        // COURSE ACTIVITY HERE
+        // GET /Teacher/CourseActivities?id={courseId}&activityId={activityId}
+        [HttpGet]
+        public async Task<IActionResult> CourseActivities(int id, int? activityId)
+        {
+            // Load all data for the course
+            var model = await _activityService.LoadCourseActivityPageAsync(id);
+
+            // Determine selected activity: prefer explicit activityId, otherwise pick the first activity if any.
+            var selectedActivity = activityId.HasValue
+                ? model.Activities.FirstOrDefault(a => a.Id == activityId.Value)
+                : model.Activities.FirstOrDefault();
+
+            ViewBag.SelectedActivity = selectedActivity;
+
+            // Use the resolved selected activity id for submission lookup (may be null if there are no activities)
+            int? selectedActivityId = selectedActivity?.Id;
+
+            // Build student performance table using the resolved activity id
+            var studentPerf = model.Students.Select(student =>
+            {
+                var sub = model.Submissions.FirstOrDefault(s =>
+                    s.StudentId == student.Id &&
+                    s.ActivityId == selectedActivityId
+                );
+
+                return new
+                {
+                    student.Id,
+                    student.FirstName,
+                    student.LastName,
+                    Grade = sub?.Score,
+                    Status = sub?.SubmissionStatus ?? "Not submitted"
+                };
+            }).ToList();
+
+            ViewBag.Students = studentPerf;
+
+            return View("Courses/CourseActivities", model);
+        }
+
+        // VIEW DETAILS
+        [HttpGet]
+        public async Task<IActionResult> ActivityDetails(int id)
+        {
+            var activity = await _activityService.GetActivityDetailsAsync(id);
+            return View(activity);
+        }
+
+
+        // CREATE ACTIVITY 
+        [HttpPost]
+        public async Task<IActionResult> CreateActivity(int id, TeacherActivityModel form)
+        {
+            // UI uses "Name" instead of "Title"
+            if (!string.IsNullOrEmpty(form.Title))
+                form.Title = form.Title;
+
+            form.CourseId = id;
+
+            await _activityService.CreateActivityAsync(form);
+
+            return RedirectToAction("CourseActivities", new { id });
+        }
+
+        // EDIT ACTIVITY 
+        [HttpGet]
+        public async Task<IActionResult> EditActivity(int id)
+        {
+            var activity = await _activityService.GetActivityDetailsAsync(id);
+
+            return View(activity);
+        }
+
+        [HttpPost]
+        //POST /Teacher/UpdateActivity?id={courseId}&activityId={activityId}
+        public async Task<IActionResult> UpdateActivity(int id, int activityId, TeacherActivityModel form)
+        {
+            // UI uses "Name"
+            if (!string.IsNullOrEmpty(form.Title))
+                form.Title = form.Title;
+
+            form.Id = activityId;
+            form.CourseId = id;
+
+            await _activityService.UpdateActivityAsync(form);
+
+            return RedirectToAction("CourseActivities", new { id, activityId });
+        }
+
+
+        [HttpPost]
+        //POST /Teacher/GradeActivity?id={courseId}
+        public async Task<IActionResult> GradeActivity(int id, TeacherActivitySubmissionModel form)
+        {
+            await _activityService.GradeActivityAsync(form);
+
+            return RedirectToAction("CourseActivities", new { id, activityId = form.ActivityId });
+        }
+
     }
 }

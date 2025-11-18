@@ -1,14 +1,16 @@
-using ASI.Basecode.Data.Models;
+﻿using ASI.Basecode.Data.Models;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 
-namespace ASI.Basecode.WebApp.Models
+namespace ASI.Basecode.Service.ServiceModels
 {
     /// <summary>
     /// View model for a teacher's course card.
     /// </summary>
-    public class TeacherCourseViewModel
+    public class TeacherCourseModel
     {
+        public int CourseId { get; set; }
+
         /// Gets or sets the course code.
         [Required]
         public string CourseCode { get; set; }
@@ -27,6 +29,11 @@ namespace ASI.Basecode.WebApp.Models
 
         /// Gets or sets the course ID.
         public int Id { get; set; }
+
+        //List of Activities for the course
+        public List<TeacherActivityModel> Activities { get; set; } = new List<TeacherActivityModel>();
+        public List<TeacherStudentModel> Students { get; set; }
+        public List<TeacherActivitySubmissionModel> Submissions { get; set; } = new();
 
     }
 }

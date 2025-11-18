@@ -111,6 +111,11 @@ builder.Services.AddScoped<IStudentCourseRepository, StudentCourseRepository>();
 builder.Services.AddScoped<ITeacherCourseService, TeacherCourseService>();
 builder.Services.AddScoped<ITeacherCourseRepository, TeacherCourseRepository>();
 
+//Teacher Activity Services
+builder.Services.AddScoped<ITeacherCourseActivityService, TeacherCourseActivityService>();
+builder.Services.AddScoped<ITeacherCourseActivityRepository, TeacherCourseActivityRepository>();
+
+
 var configurer = new StartupConfigurer(builder.Configuration);
 configurer.ConfigureServices(builder.Services);
 

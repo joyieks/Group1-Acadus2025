@@ -1,37 +1,47 @@
-@model ASI.Basecode.WebApp.Models.TeacherCourseViewModel
+@model ASI.Basecode.Service.ServiceModels.TeacherCourseModel
 @{
     Layout = "~/Views/Shared/_AuthenticatedLayout.cshtml";
     ViewData["Title"] = "Course Activities";
+    var selectedActivity = ViewBag.SelectedActivity as dynamic;
+    var students = ViewBag.Students as IEnumerable<dynamic>;
+
+    // compute a safe bool for visibility so dynamic->bool conversion is evaluated once
+    bool isVisible = false;
+    if (selectedActivity != null)
+    {
+        // handle bool or nullable bool safely
+        try { isVisible = (bool?)(selectedActivity.IsVisible) ?? false; } catch { isVisible = false; }
+    }
 }
 
 <!-- Hero Section -->
-<section class="hero-section" style="background:#E8F9E8; display:flex; align-items:center; justify-content:center; text-align:center; position:relative; padding: 40px 0;">
-    <a href="/Teacher/FullCourseView/@Model.Id" style="position:absolute; top:20px; left:20px; background:#ffffff; color:#059669; border:1px solid #d1d5db; border-radius:8px; padding:8px 16px; font-weight:600; text-decoration:none; transition:background 0.3s; display:flex; align-items:center; gap:8px;">
+<section class="bg-emerald-50 flex items-center justify-center text-center relative py-10">
+    <a href="/Teacher/FullCourseView/@Model.Id" class="absolute top-5 left-5 bg-white text-emerald-600 border border-gray-300 rounded-lg px-4 py-2 font-semibold no-underline transition-colors hover:bg-gray-50 flex items-center gap-2">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M19 12H5"></path>
             <path d="M12 19l-7-7 7-7"></path>
         </svg>
         Back to Course
     </a>
-    <div style="max-width: 1200px; margin: 0 auto; padding: 0 16px;">
-        <p style="margin:0 0 4px 0; color:#4b5563; font-size:20px;">@Model.CourseCode</p>
-        <h1 style="font-size:48px; font-weight:800; margin:0 0 4px 0; color:#111827;">Course Activities</h1>
-        <p style="margin:0 0 16px 0; color:#4b5563; font-size:18px;">@Model.SemesterInfo</p>
-        <p style="margin:0 0 0 0; color:#6b7280; font-size:14px;">Manage and organize course activities and assignments.</p>
+    <div class="max-w-7xl mx-auto px-4">
+        <p class="m-0 mb-1 text-gray-600 text-xl">@Model.CourseCode</p>
+        <h1 class="text-5xl font-extrabold m-0 mb-1 text-gray-900">Course Activities</h1>
+        <p class="m-0 mb-4 text-gray-600 text-lg">@Model.SemesterInfo</p>
+        <p class="m-0 text-gray-500 text-sm">Manage and organize course activities and assignments.</p>
     </div>
 </section>
 
 <!-- White Section with Activities Management -->
-<section style="background:#ffffff; padding: 40px 0;">
-    <div style="max-width: 1200px; margin: 0 auto; padding: 0 16px;">
-        <h2 style="margin:0 0 24px 0; font-weight:800; font-size:24px; color:#111827;">Activities Management</h2>
+<section class="bg-white py-10">
+    <div class="max-w-7xl mx-auto px-4">
+        <h2 class="m-0 mb-6 font-extrabold text-2xl text-gray-900">Activities Management</h2>
 
-        <div style="display:grid; grid-template-columns: 3fr 5fr; gap:24px;">
+        <div class="grid grid-cols-1 lg:grid-cols-8 gap-6">
             <!-- Left Column: Activities List -->
-            <div>
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
-                    <h3 style="margin:0; font-weight:700; font-size:18px; color:#111827;">Activities</h3>
-                    <button onclick="openAddActivityModal()" style="background:#059669; color:#ffffff; border:none; border-radius:8px; padding:8px 16px; font-weight:600; cursor:pointer; display:flex; align-items:center; gap:8px;">
+            <div class="lg:col-span-3">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="m-0 font-bold text-lg text-gray-900">Activities</h3>
+                    <button onclick="openAddActivityModal()" class="bg-emerald-600 text-white border-0 rounded-lg px-4 py-2 font-semibold cursor-pointer flex items-center gap-2">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M12 5v14"></path>
                             <path d="M5 12h14"></path>
@@ -39,654 +49,347 @@
                         Activity
                     </button>
                 </div>
-                <div style="border-radius:8px; overflow:hidden; border:1px solid #e5e7eb;">
-                    <table id="activitiesTable" style="width:100%; border-collapse:collapse;">
-                        <thead style="background:#059669;">
-                            <tr>
-                                <th style="padding:12px 16px; text-align:left; font-weight:700; color:#fff;">Activity</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr style="border-bottom:1px solid #e5e7eb; cursor:pointer;" onclick="selectActivity('Quiz 1: Introduction to Programming')">
-                                <td style="padding:16px; color:#111827; font-weight:500;">Quiz 1: Introduction to Programming</td>
-                            </tr>
-                            <tr style="background:#f9fafb; border-bottom:1px solid #e5e7eb; cursor:pointer;" onclick="selectActivity('Assignment 1: Hello World Program')">
-                                <td style="padding:16px; color:#111827; font-weight:500;">Assignment 1: Hello World Program</td>
-                            </tr>
-                            <tr style="border-bottom:1px solid #e5e7eb; cursor:pointer;" onclick="selectActivity('Midterm Exam')">
-                                <td style="padding:16px; color:#111827; font-weight:500;">Midterm Exam</td>
-                            </tr>
-                            <tr style="background:#f9fafb; border-bottom:1px solid #e5e7eb; cursor:pointer;" onclick="selectActivity('Lab Exercise 1: Variables & Data Types')">
-                                <td style="padding:16px; color:#111827; font-weight:500;">Lab Exercise 1: Variables & Data Types</td>
-                            </tr>
-                            <tr style="border-bottom:1px solid #e5e7eb; cursor:pointer;" onclick="selectActivity('Project 1: Calculator Application')">
-                                <td style="padding:16px; color:#111827; font-weight:500;">Project 1: Calculator Application</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
+
+                @if (Model.Activities == null || !Model.Activities.Any())
+                {
+                    <div class="rounded-lg border border-gray-200 bg-gray-50 p-8 text-center">
+                        <svg class="mx-auto h-12 w-12 text-gray-400 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                        <h3 class="text-lg font-medium text-gray-900 mb-2">No activities yet</h3>
+                        <p class="text-sm text-gray-500 mb-4">Get started by creating your first activity for this course.</p>
+                    </div>
+                }
+                else
+                {
+                    <div class="rounded-lg overflow-hidden border border-gray-200">
+                        <table class="w-full border-collapse">
+                            <thead class="bg-emerald-600">
+                                <tr>
+                                    <th class="px-4 py-3 text-left font-bold text-white">Activity</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var activity in Model.Activities)
+                                {
+                                    var isSelected = selectedActivity != null && selectedActivity.Id == activity.Id;
+                                    <tr class="border-b border-gray-200 cursor-pointer hover:bg-gray-50 @(isSelected ? "selected-activity" : "")">
+                                        <td class="px-4 py-4 text-gray-900 font-medium">
+                                            <a href="@Url.Action("CourseActivities", new { id = Model.CourseId, activityId = activity.Id })"
+                                               class="block no-underline text-gray-900">
+                                                @activity.Title
+                                            </a>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
             </div>
 
             <!-- Right Column: Activity Details -->
-            <div>
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
-                    <h3 style="margin:0; font-weight:700; font-size:18px; color:#111827;">Activity Details</h3>
-                    <button id="editButton" onclick="toggleEditMode()" style="background:#059669; color:#ffffff; border:none; border-radius:8px; padding:8px 16px; font-weight:600; cursor:pointer;">Edit</button>
+            <div class="lg:col-span-5">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="m-0 font-bold text-lg text-gray-900">Activity Details</h3>
+                    @if (selectedActivity != null)
+                    {
+                        <button id="editButton" onclick="toggleEditMode()" class="bg-emerald-600 text-white border-0 rounded-lg px-4 py-2 font-semibold cursor-pointer hover:bg-emerald-700">Edit</button>
+                    }
                 </div>
 
-                <div style="background:#f9fafb; border:1px solid #e5e7eb; border-radius:8px; padding:24px;">
-                    <div style="margin-bottom:20px;">
-                        <label style="display:block; font-weight:600; color:#374151; margin-bottom:8px;">Name</label>
-                        <div id="nameDisplay" style="color:#111827; font-size:16px;">Quiz 1: Introduction to Programming</div>
-                        <input id="nameInput" type="text" value="Quiz 1: Introduction to Programming" style="width:100%; padding:8px 12px; border:1px solid #d1d5db; border-radius:6px; font-size:16px; display:none;">
+                @if (selectedActivity == null)
+                {
+                    <div class="bg-gray-50 border border-gray-200 rounded-lg p-12 text-center">
+                        <svg class="mx-auto h-16 w-16 text-gray-400 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122" />
+                        </svg>
+                        <h3 class="text-lg font-medium text-gray-900 mb-2">Select an activity</h3>
+                        <p class="text-sm text-gray-500">Choose an activity from the list to view and edit its details.</p>
                     </div>
-
-                    <div style="margin-bottom:20px;">
-                        <label style="display:block; font-weight:600; color:#374151; margin-bottom:8px;">Description</label>
-                        <div id="descriptionDisplay" style="color:#111827; font-size:14px; line-height:1.5;">This quiz covers the fundamental concepts of programming including variables, data types, and basic control structures. Students should be familiar with the course materials from the first two weeks.</div>
-                        <textarea id="descriptionInput" rows="4" style="width:100%; padding:8px 12px; border:1px solid #d1d5db; border-radius:6px; font-size:14px; line-height:1.5; display:none;">This quiz covers the fundamental concepts of programming including variables, data types, and basic control structures. Students should be familiar with the course materials from the first two weeks.</textarea>
-                    </div>
-
-                    <div style="margin-bottom:20px;">
-                        <label style="display:block; font-weight:600; color:#374151; margin-bottom:8px;">Due Date</label>
-                        <div id="dueDateDisplay" style="color:#111827; font-size:16px;">November 20, 2025 - 11:59 PM</div>
-                        <input id="dueDateInput" type="datetime-local" value="2025-11-20T23:59" style="width:100%; padding:8px 12px; border:1px solid #d1d5db; border-radius:6px; font-size:16px; display:none;">
-                    </div>
-
-                    <div style="margin-bottom:20px;">
-                        <label style="display:block; font-weight:600; color:#374151; margin-bottom:8px;">Maximum Score</label>
-                        <div id="maxScoreDisplay" style="color:#111827; font-size:16px;">50 points</div>
-                        <input id="maxScoreInput" type="number" value="50" min="0" style="width:100%; padding:8px 12px; border:1px solid #d1d5db; border-radius:6px; font-size:16px; display:none;">
-                    </div>
-
-                    <div style="display:flex; justify-content:space-between; align-items:center;">
-                        <div>
-                            <label style="display:block; font-weight:600; color:#374151; margin-bottom:8px;">Visibility</label>
-                            <div id="visibilityDisplay" style="display:flex; align-items:center; gap:12px;">
-                                <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
-                                    <input type="radio" name="visibility" value="visible" checked style="margin:0;">
-                                    <span style="color:#111827; font-size:14px;">Visible to students</span>
-                                </label>
-                                <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
-                                    <input type="radio" name="visibility" value="hidden" style="margin:0;">
-                                    <span style="color:#111827; font-size:14px;">Hidden from students</span>
-                                </label>
+                }
+                else
+                {
+                    <form method="post" action="@Url.Action("UpdateActivity", new { id = Model.CourseId, activityId = selectedActivity.Id })">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="CourseId" value="@Model.CourseId" />
+                        <div class="bg-gray-50 border border-gray-200 rounded-lg p-6">
+                            <div class="mb-5">
+                                <label class="block font-semibold text-gray-700 mb-2">Name</label>
+                                <div id="nameDisplay" class="text-gray-900 text-base">@selectedActivity.Title</div>
+                                <input id="nameInput" name="Title" type="text" value="@selectedActivity.Title" class="hidden w-full px-3 py-2 border border-gray-300 rounded-md text-base" required>
                             </div>
-                            <div id="visibilityEdit" style="display:flex; align-items:center; gap:12px; display:none;">
-                                <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
-                                    <input type="radio" name="visibilityEdit" value="visible" checked style="margin:0;">
-                                    <span style="color:#111827; font-size:14px;">Visible to students</span>
-                                </label>
-                                <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
-                                    <input type="radio" name="visibilityEdit" value="hidden" style="margin:0;">
-                                    <span style="color:#111827; font-size:14px;">Hidden from students</span>
-                                </label>
+
+                            <div class="mb-5">
+                                <label class="block font-semibold text-gray-700 mb-2">Description</label>
+                                <div id="descriptionDisplay" class="text-gray-900 text-sm leading-relaxed">@(selectedActivity.Description ?? "No description provided")</div>
+                                <textarea id="descriptionInput" name="Description" rows="4" class="hidden w-full px-3 py-2 border border-gray-300 rounded-md text-sm leading-relaxed">@selectedActivity.Description</textarea>
+                            </div>
+
+                            <div class="mb-5">
+                                <label class="block font-semibold text-gray-700 mb-2">Due Date</label>
+                                <div id="dueDateDisplay" class="text-gray-900 text-base">
+                                    @if (selectedActivity.DueDate != null)
+                                    {
+                                        @($"{selectedActivity.DueDate:MMMM dd, yyyy - hh:mm tt}")
+                                    }
+                                    else
+                                    {
+                                        <span class="text-gray-500">No due date set</span>
+                                    }
+                                </div>
+                                <input id="dueDateInput" name="DueDate" type="datetime-local" value="@(selectedActivity.DueDate?.ToString("yyyy-MM-ddTHH:mm"))" class="hidden w-full px-3 py-2 border border-gray-300 rounded-md text-base">
+                            </div>
+
+                            <div class="mb-5">
+                                <label class="block font-semibold text-gray-700 mb-2">Maximum Score</label>
+                                <div id="maxScoreDisplay" class="text-gray-900 text-base">@selectedActivity.MaxScore points</div>
+                                <input id="maxScoreInput" name="MaxScore" type="number" value="@selectedActivity.MaxScore" min="0" class="hidden w-full px-3 py-2 border border-gray-300 rounded-md text-base" required>
+                            </div>
+
+                            <div class="flex justify-between items-center">
+                                <div>
+                                    <label class="block font-semibold text-gray-700 mb-2">Visibility</label>
+                                    <div id="visibilityDisplay" class="flex items-center gap-3">
+                                        <label class="flex items-center gap-2 cursor-default">
+                                            <input type="radio" name="view_IsVisible" value="true" @(isVisible ? "checked" : null) disabled class="m-0">
+                                            <span class="text-gray-900 text-sm">Visible to students</span>
+                                        </label>
+                                        <label class="flex items-center gap-2 cursor-default">
+                                            <input type="radio" name="view_IsVisible" value="false" @(!isVisible ? "checked" : null) disabled class="m-0">
+                                            <span class="text-gray-900 text-sm">Hidden from students</span>
+                                        </label>
+                                    </div>
+                                    <div id="visibilityEdit" class="hidden items-center gap-3">
+                                        <label class="flex items-center gap-2 cursor-pointer">
+                                            <input type="radio" name="IsVisible" value="true" @(isVisible ? "checked" : null) class="m-0">
+                                            <span class="text-gray-900 text-sm">Visible to students</span>
+                                        </label>
+                                        <label class="flex items-center gap-2 cursor-pointer">
+                                            <input type="radio" name="IsVisible" value="false" @(!isVisible ? "checked" : null) class="m-0">
+                                            <span class="text-gray-900 text-sm">Hidden from students</span>
+                                        </label>
+                                    </div>
+                                </div>
+                                <div id="editActions" class="hidden">
+                                    <button type="submit" class="bg-emerald-600 text-white border-0 rounded-md px-4 py-2 font-semibold cursor-pointer mr-2 hover:bg-emerald-700">Save</button>
+                                    <button type="button" onclick="cancelEdit()" class="bg-gray-500 text-white border-0 rounded-md px-4 py-2 font-semibold cursor-pointer hover:bg-gray-600">Cancel</button>
+                                </div>
                             </div>
                         </div>
-                        <div id="editActions" style="display:none;">
-                            <button onclick="saveChanges()" style="background:#059669; color:#ffffff; border:none; border-radius:6px; padding:8px 16px; font-weight:600; cursor:pointer; margin-right:8px;">Save</button>
-                            <button onclick="cancelEdit()" style="background:#6b7280; color:#ffffff; border:none; border-radius:6px; padding:8px 16px; font-weight:600; cursor:pointer;">Cancel</button>
-                        </div>
-                    </div>
-                </div>
+                    </form>
+                }
             </div>
         </div>
     </div>
 </section>
 
-<!-- Student Activity Performance Section -->
-<section style="background:#ffffff; padding: 40px 0;">
-    <div style="max-width: 1200px; margin: 0 auto; padding: 0 16px;">
-        <h2 style="margin:0 0 24px 0; font-weight:800; font-size:24px; color:#111827;">Student Activity Performance</h2>
+@* Student Activity Performance section *@
+<section class="bg-white py-10">
+    <div class="max-w-7xl mx-auto px-4">
+        <h2 class="m-0 mb-6 font-extrabold text-2xl text-gray-900">Student Activity Performance</h2>
 
-        <div style="border-radius:8px; overflow:hidden; border:1px solid #e5e7eb;">
-            <table id="performanceTable" style="width:100%; border-collapse:collapse;">
-                <thead style="background:#059669;">
-                    <tr>
-                        <th style="padding:12px 16px; text-align:left; font-weight:700; color:#fff;">First Name</th>
-                        <th style="padding:12px 16px; text-align:left; font-weight:700; color:#fff;">Last Name</th>
-                        <th style="padding:12px 16px; text-align:left; font-weight:700; color:#fff;">Grade</th>
-                        <th style="padding:12px 16px; text-align:left; font-weight:700; color:#fff;">Status</th>
-                        <th style="padding:12px 16px; text-align:left; font-weight:700; color:#fff;">Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr style="border-bottom:1px solid #e5e7eb;">
-                        <td style="padding:16px; color:#111827; font-weight:500;">John</td>
-                        <td style="padding:16px; color:#111827; font-weight:500;">Smith</td>
-                        <td style="padding:16px;" id="grade-john-smith">
-                            <span class="grade-display">45/50 (90%)</span>
-                            <input type="number" class="grade-input" min="0" max="50" value="45" style="display:none; width:80px; padding:4px; border:1px solid #d1d5db; border-radius:4px; text-align:center;">
-                            <button onclick="saveGrade('john-smith')" class="save-grade-btn" style="display:none; background:#059669; color:#ffffff; border:none; border-radius:4px; padding:2px 6px; font-size:12px; font-weight:600; cursor:pointer; margin-left:4px;">Save</button>
-                            <button onclick="cancelGrade('john-smith')" class="cancel-grade-btn" style="display:none; background:#dc2626; color:#ffffff; border:none; border-radius:4px; padding:2px 6px; font-size:12px; font-weight:600; cursor:pointer; margin-left:4px;">Cancel</button>
-                        </td>
-                        <td style="padding:16px;">
-                            <span style="background:#d1fae5; color:#065f46; padding:4px 8px; border-radius:4px; font-size:12px; font-weight:600;">Submitted</span>
-                        </td>
-                        <td style="padding:16px;">
-                            <button onclick="openGradeModal('John Smith', 'Quiz 1: Introduction to Programming')" style="background:#059669; color:#ffffff; border:none; border-radius:6px; padding:6px 12px; font-weight:600; cursor:pointer; margin-right:8px;">Grade Activity</button>
-                            <button onclick="editGrade('john-smith')" style="background:#6b7280; color:#ffffff; border:none; border-radius:6px; padding:6px 12px; font-weight:600; cursor:pointer;">Edit Grade</button>
-                        </td>
-                    </tr>
-                    <tr style="background:#f9fafb; border-bottom:1px solid #e5e7eb;">
-                        <td style="padding:16px; color:#111827; font-weight:500;">Jane</td>
-                        <td style="padding:16px; color:#111827; font-weight:500;">Doe</td>
-                        <td style="padding:16px;" id="grade-jane-doe">
-                            <span class="grade-display">42/50 (84%)</span>
-                            <input type="number" class="grade-input" min="0" max="50" value="42" style="display:none; width:80px; padding:4px; border:1px solid #d1d5db; border-radius:4px; text-align:center;">
-                            <button onclick="saveGrade('jane-doe')" class="save-grade-btn" style="display:none; background:#059669; color:#ffffff; border:none; border-radius:4px; padding:2px 6px; font-size:12px; font-weight:600; cursor:pointer; margin-left:4px;">Save</button>
-                            <button onclick="cancelGrade('jane-doe')" class="cancel-grade-btn" style="display:none; background:#dc2626; color:#ffffff; border:none; border-radius:4px; padding:2px 6px; font-size:12px; font-weight:600; cursor:pointer; margin-left:4px;">Cancel</button>
-                        </td>
-                        <td style="padding:16px;">
-                            <span style="background:#fed7aa; color:#9a3412; padding:4px 8px; border-radius:4px; font-size:12px; font-weight:600;">Late</span>
-                        </td>
-                        <td style="padding:16px;">
-                            <button onclick="openGradeModal('Jane Doe', 'Quiz 1: Introduction to Programming')" style="background:#059669; color:#ffffff; border:none; border-radius:6px; padding:6px 12px; font-weight:600; cursor:pointer; margin-right:8px;">Grade Activity</button>
-                            <button onclick="editGrade('jane-doe')" style="background:#6b7280; color:#ffffff; border:none; border-radius:6px; padding:6px 12px; font-weight:600; cursor:pointer;">Edit Grade</button>
-                        </td>
-                    </tr>
-                    <tr style="border-bottom:1px solid #e5e7eb;">
-                        <td style="padding:16px; color:#111827; font-weight:500;">Bob</td>
-                        <td style="padding:16px; color:#111827; font-weight:500;">Johnson</td>
-                        <td style="padding:16px;" id="grade-bob-johnson">
-                            <span class="grade-display">35/50 (70%)</span>
-                            <input type="number" class="grade-input" min="0" max="50" value="35" style="display:none; width:80px; padding:4px; border:1px solid #d1d5db; border-radius:4px; text-align:center;">
-                            <button onclick="saveGrade('bob-johnson')" class="save-grade-btn" style="display:none; background:#059669; color:#ffffff; border:none; border-radius:4px; padding:2px 6px; font-size:12px; font-weight:600; cursor:pointer; margin-left:4px;">Save</button>
-                            <button onclick="cancelGrade('bob-johnson')" class="cancel-grade-btn" style="display:none; background:#dc2626; color:#ffffff; border:none; border-radius:4px; padding:2px 6px; font-size:12px; font-weight:600; cursor:pointer; margin-left:4px;">Cancel</button>
-                        </td>
-                        <td style="padding:16px;">
-                            <span style="background:#d1fae5; color:#065f46; padding:4px 8px; border-radius:4px; font-size:12px; font-weight:600;">Graded</span>
-                        </td>
-                        <td style="padding:16px;">
-                            <button onclick="openGradeModal('Bob Johnson', 'Quiz 1: Introduction to Programming')" style="background:#059669; color:#ffffff; border:none; border-radius:6px; padding:6px 12px; font-weight:600; cursor:pointer; margin-right:8px;">Grade Activity</button>
-                            <button onclick="editGrade('bob-johnson')" style="background:#6b7280; color:#ffffff; border:none; border-radius:6px; padding:6px 12px; font-weight:600; cursor:pointer;">Edit Grade</button>
-                        </td>
-                    </tr>
-                    <tr style="background:#f9fafb; border-bottom:1px solid #e5e7eb;">
-                        <td style="padding:16px; color:#111827; font-weight:500;">Alice</td>
-                        <td style="padding:16px; color:#111827; font-weight:500;">Brown</td>
-                        <td style="padding:16px;" id="grade-alice-brown">
-                            <span class="grade-display">Not graded</span>
-                            <input type="number" class="grade-input" min="0" max="50" placeholder="0" style="display:none; width:80px; padding:4px; border:1px solid #d1d5db; border-radius:4px; text-align:center;">
-                            <button onclick="saveGrade('alice-brown')" class="save-grade-btn" style="display:none; background:#059669; color:#ffffff; border:none; border-radius:4px; padding:2px 6px; font-size:12px; font-weight:600; cursor:pointer; margin-left:4px;">Save</button>
-                            <button onclick="cancelGrade('alice-brown')" class="cancel-grade-btn" style="display:none; background:#dc2626; color:#ffffff; border:none; border-radius:4px; padding:2px 6px; font-size:12px; font-weight:600; cursor:pointer; margin-left:4px;">Cancel</button>
-                        </td>
-                        <td style="padding:16px;">
-                            <span style="background:#e5e7eb; color:#374151; padding:4px 8px; border-radius:4px; font-size:12px; font-weight:600;">Submitted</span>
-                        </td>
-                        <td style="padding:16px;">
-                            <button onclick="openGradeModal('Alice Brown', 'Quiz 1: Introduction to Programming')" style="background:#059669; color:#ffffff; border:none; border-radius:6px; padding:6px 12px; font-weight:600; cursor:pointer; margin-right:8px;">Grade Activity</button>
-                            <button onclick="editGrade('alice-brown')" style="background:#6b7280; color:#ffffff; border:none; border-radius:6px; padding:6px 12px; font-weight:600; cursor:pointer;">Edit Grade</button>
-                        </td>
-                    </tr>
-                    <tr style="border-bottom:1px solid #e5e7eb;">
-                        <td style="padding:16px; color:#111827; font-weight:500;">Charlie</td>
-                        <td style="padding:16px; color:#111827; font-weight:500;">Wilson</td>
-                        <td style="padding:16px;" id="grade-charlie-wilson">
-                            <span class="grade-display">48/50 (96%)</span>
-                            <input type="number" class="grade-input" min="0" max="50" value="48" style="display:none; width:80px; padding:4px; border:1px solid #d1d5db; border-radius:4px; text-align:center;">
-                            <button onclick="saveGrade('charlie-wilson')" class="save-grade-btn" style="display:none; background:#059669; color:#ffffff; border:none; border-radius:4px; padding:2px 6px; font-size:12px; font-weight:600; cursor:pointer; margin-left:4px;">Save</button>
-                            <button onclick="cancelGrade('charlie-wilson')" class="cancel-grade-btn" style="display:none; background:#dc2626; color:#ffffff; border:none; border-radius:4px; padding:2px 6px; font-size:12px; font-weight:600; cursor:pointer; margin-left:4px;">Cancel</button>
-                        </td>
-                        <td style="padding:16px;">
-                            <span style="background:#d1fae5; color:#065f46; padding:4px 8px; border-radius:4px; font-size:12px; font-weight:600;">Graded</span>
-                        </td>
-                        <td style="padding:16px;">
-                            <button onclick="openGradeModal('Charlie Wilson', 'Quiz 1: Introduction to Programming')" style="background:#059669; color:#ffffff; border:none; border-radius:6px; padding:6px 12px; font-weight:600; cursor:pointer; margin-right:8px;">Grade Activity</button>
-                            <button onclick="editGrade('charlie-wilson')" style="background:#6b7280; color:#ffffff; border:none; border-radius:6px; padding:6px 12px; font-weight:600; cursor:pointer;">Edit Grade</button>
-                        </td>
-                    </tr>
-                    <tr style="background:#f9fafb; border-bottom:1px solid #e5e7eb;">
-                        <td style="padding:16px; color:#111827; font-weight:500;">David</td>
-                        <td style="padding:16px; color:#111827; font-weight:500;">Lee</td>
-                        <td style="padding:16px;" id="grade-david-lee">
-                            <span class="grade-display">Not graded</span>
-                            <input type="number" class="grade-input" min="0" max="50" placeholder="0" style="display:none; width:80px; padding:4px; border:1px solid #d1d5db; border-radius:4px; text-align:center;">
-                            <button onclick="saveGrade('david-lee')" class="save-grade-btn" style="display:none; background:#059669; color:#ffffff; border:none; border-radius:4px; padding:2px 6px; font-size:12px; font-weight:600; cursor:pointer; margin-left:4px;">Save</button>
-                            <button onclick="cancelGrade('david-lee')" class="cancel-grade-btn" style="display:none; background:#dc2626; color:#ffffff; border:none; border-radius:4px; padding:2px 6px; font-size:12px; font-weight:600; cursor:pointer; margin-left:4px;">Cancel</button>
-                        </td>
-                        <td style="padding:16px;">
-                            <span style="background:#fed7aa; color:#9a3412; padding:4px 8px; border-radius:4px; font-size:12px; font-weight:600;">Late</span>
-                        </td>
-                        <td style="padding:16px;">
-                            <button onclick="openGradeModal('David Lee', 'Quiz 1: Introduction to Programming')" style="background:#059669; color:#ffffff; border:none; border-radius:6px; padding:6px 12px; font-weight:600; cursor:pointer; margin-right:8px;">Grade Activity</button>
-                            <button onclick="editGrade('david-lee')" style="background:#6b7280; color:#ffffff; border:none; border-radius:6px; padding:6px 12px; font-weight:600; cursor:pointer;">Edit Grade</button>
-                        </td>
-                    </tr>
-                    <tr style="border-bottom:1px solid #e5e7eb;">
-                        <td style="padding:16px; color:#111827; font-weight:500;">Emma</td>
-                        <td style="padding:16px; color:#111827; font-weight:500;">Davis</td>
-                        <td style="padding:16px;" id="grade-emma-davis">
-                            <span class="grade-display">38/50 (76%)</span>
-                            <input type="number" class="grade-input" min="0" max="50" value="38" style="display:none; width:80px; padding:4px; border:1px solid #d1d5db; border-radius:4px; text-align:center;">
-                            <button onclick="saveGrade('emma-davis')" class="save-grade-btn" style="display:none; background:#059669; color:#ffffff; border:none; border-radius:4px; padding:2px 6px; font-size:12px; font-weight:600; cursor:pointer; margin-left:4px;">Save</button>
-                            <button onclick="cancelGrade('emma-davis')" class="cancel-grade-btn" style="display:none; background:#dc2626; color:#ffffff; border:none; border-radius:4px; padding:2px 6px; font-size:12px; font-weight:600; cursor:pointer; margin-left:4px;">Cancel</button>
-                        </td>
-                        <td style="padding:16px;">
-                            <span style="background:#d1fae5; color:#065f46; padding:4px 8px; border-radius:4px; font-size:12px; font-weight:600;">Submitted</span>
-                        </td>
-                        <td style="padding:16px;">
-                            <button onclick="openGradeModal('Emma Davis', 'Quiz 1: Introduction to Programming')" style="background:#059669; color:#ffffff; border:none; border-radius:6px; padding:6px 12px; font-weight:600; cursor:pointer; margin-right:8px;">Grade Activity</button>
-                            <button onclick="editGrade('emma-davis')" style="background:#6b7280; color:#ffffff; border:none; border-radius:6px; padding:6px 12px; font-weight:600; cursor:pointer;">Edit Grade</button>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
+        @if (selectedActivity == null)
+{
+            <div class="rounded-lg border border-gray-200 bg-gray-50 p-8 text-center">
+                <h3 class="text-lg font-medium text-gray-900 mb-2">Select an activity</h3>
+                <p class="text-sm text-gray-500">Choose an activity first to view students and their submissions.</p>
+            </div>
+        }
+        else if (students == null || !students.Any())
+        {
+            <div class="rounded-lg border border-gray-200 bg-gray-50 p-8 text-center">
+                <h3 class="text-lg font-medium text-gray-900 mb-2">No students enrolled</h3>
+                <p class="text-sm text-gray-500">There are no students enrolled in this course yet.</p>
+            </div>
+        }
+        else
+        {
+            <div class="rounded-lg overflow-hidden border border-gray-200">
+                <table class="w-full border-collapse">
+                    <thead class="bg-emerald-600">
+                        <tr>
+                            <th class="px-4 py-3 text-left font-bold text-white">First Name</th>
+                            <th class="px-4 py-3 text-left font-bold text-white">Last Name</th>
+                            <th class="px-4 py-3 text-left font-bold text-white">Grade</th>
+                            <th class="px-4 py-3 text-left font-bold text-white">Status</th>
+                            <th class="px-4 py-3 text-left font-bold text-white">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var student in students)
+                        {
+                            var rowClass = students.ToList().IndexOf(student) % 2 == 0 ? "" : "bg-gray-50";
+                            <tr class="@rowClass border-b border-gray-200">
+                                <td class="px-4 py-4 text-gray-900 font-medium">@student.FirstName</td>
+                                <td class="px-4 py-4 text-gray-900 font-medium">@student.LastName</td>
+                                <td class="px-4 py-4">
+                                    @if (student.Grade != null)
+                                    {
+                                        var percentage = Math.Round((double)student.Grade / selectedActivity.MaxScore * 100);
+                                        <span>@student.Grade/@selectedActivity.MaxScore (@percentage%)</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-gray-500">Not graded</span>
+                                    }
+                                </td>
+                                <td class="px-4 py-4">
+                                    @if (student.Status == "Submitted")
+                                    {
+                                        <span class="bg-emerald-100 text-emerald-800 px-2 py-1 rounded text-xs font-semibold">Submitted</span>
+                                    }
+                                    else if (student.Status == "Late")
+                                    {
+                                        <span class="bg-orange-200 text-orange-800 px-2 py-1 rounded text-xs font-semibold">Late</span>
+                                    }
+                                    else if (student.Status == "Graded")
+                                    {
+                                        <span class="bg-emerald-100 text-emerald-800 px-2 py-1 rounded text-xs font-semibold">Graded</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="bg-gray-200 text-gray-700 px-2 py-1 rounded text-xs font-semibold">@student.Status</span>
+                                    }
+                                </td>
+                                <td class="px-4 py-4">
+                                    @if (selectedActivity != null)
+                                    {
+                                        <button type="button"
+                                                class="bg-emerald-600 text-white border-0 rounded-md px-3 py-1.5 font-semibold cursor-pointer hover:bg-emerald-700"
+                                                onclick="openGradeModal(this)"
+                                                data-student-id="@student.Id"
+                                                data-student-name="@($"{student.FirstName} {student.LastName}")"
+                                                data-activity-id="@selectedActivity.Id"
+                                                data-activity-name="@selectedActivity.Title"
+                                                data-max-score="@selectedActivity.MaxScore">
+                                            Grade Activity
+                                        </button>
+
+                                    }
+                                    else
+                                    {
+                                        <button disabled class="bg-gray-300 text-gray-700 rounded-md px-3 py-1.5 font-semibold cursor-not-allowed">Select activity</button>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
     </div>
 </section>
+
 
 <!-- Grade Activity Modal -->
-<div id="gradeActivityModal" class="grade-modal">
-    <div class="grade-modal-box">
-        <div class="grade-modal-header">
-            <h3 id="modalActivityTitle" class="grade-modal-title">Grade Activity</h3>
-            <button onclick="closeGradeModal()" class="grade-modal-close">&times;</button>
-        </div>
-        <div class="grade-modal-body">
-            <div class="grade-modal-content">
-                <div style="margin-bottom:20px;">
-                    <strong id="studentNameDisplay">Student Name</strong> answered <strong id="activityNameDisplay">Activity Name</strong>
+<div id="gradeActivityModal" class="grade-modal hidden fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm z-50 items-center justify-center opacity-0 transition-opacity duration-300">
+    <div class="bg-white rounded-2xl w-11/12 max-w-lg max-h-screen overflow-hidden shadow-2xl transform scale-90 transition-transform duration-300">
+        <form id="gradeForm" method="post" action="@Url.Action("GradeActivity", new { id = Model.Id })">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="StudentId" id="modalStudentId">
+            <input type="hidden" name="ActivityId" id="modalActivityId">
+
+            <div class="flex justify-between items-center px-8 pt-6 pb-4 border-b border-gray-200">
+                <h3 id="modalActivityTitle" class="m-0 text-xl font-bold text-gray-900">Grade Activity</h3>
+                <button type="button" onclick="closeGradeModal()" class="bg-transparent border-0 text-2xl text-gray-500 cursor-pointer p-0 w-8 h-8 flex items-center justify-center rounded-md hover:bg-gray-100">&times;</button>
+            </div>
+            <div class="px-8 py-6">
+                <div class="mb-5">
+                    <strong id="studentNameDisplay">Student Name</strong> - <strong id="activityNameDisplay">Activity Name</strong>
                 </div>
-                <div style="margin-bottom:20px;">
-                    <label style="display:block; font-weight:600; color:#374151; margin-bottom:8px;">Feedback</label>
-                    <textarea id="feedbackInput" rows="4" placeholder="Provide feedback for the student's work..." style="width:100%; padding:12px; border:1px solid #d1d5db; border-radius:8px; font-size:14px; line-height:1.5; resize:vertical;"></textarea>
+                <div class="mb-5">
+                    <label class="block font-semibold text-gray-700 mb-2">Grade</label>
+                    <input type="number" name="Grade" id="gradeValue" min="0" step="0.01" class="w-full px-3 py-2 border border-gray-300 rounded-md text-base" required>
+                    <p class="text-xs text-gray-500 mt-1">Maximum score: <span id="modalMaxScore"></span> points</p>
                 </div>
-                <div class="grade-modal-actions">
-                    <button onclick="closeGradeModal()" style="padding:10px 24px; border-radius:8px; font-size:14px; font-weight:600; cursor:pointer; background:#ffffff; color:#6b7280; border:1px solid #d1d5db;">Cancel</button>
-                    <button onclick="confirmGrade()" style="padding:10px 24px; border-radius:8px; font-size:14px; font-weight:600; cursor:pointer; background:#059669; color:#ffffff; border:none;">Confirm</button>
+                <div class="mb-5">
+                    <label class="block font-semibold text-gray-700 mb-2">Feedback</label>
+                    <textarea name="Feedback" id="feedbackInput" rows="4" placeholder="Provide feedback for the student's work..." class="w-full px-3 py-3 border border-gray-300 rounded-lg text-sm leading-relaxed resize-y"></textarea>
+                </div>
+                <div class="flex gap-3 justify-end mt-6">
+                    <button type="button" onclick="closeGradeModal()" class="px-6 py-2.5 rounded-lg text-sm font-semibold cursor-pointer bg-white text-gray-500 border border-gray-300 hover:bg-gray-50">Cancel</button>
+                    <button type="submit" class="px-6 py-2.5 rounded-lg text-sm font-semibold cursor-pointer bg-emerald-600 text-white border-0 hover:bg-emerald-700">Submit Grade</button>
                 </div>
             </div>
-        </div>
-    </div>
-</div>
-
-<!-- Success Modal -->
-<div id="successModal" class="success-modal">
-    <div class="success-modal-box">
-        <div class="success-modal-content">
-            <div class="success-icon">✓</div>
-            <h3 class="success-title">Activity Graded Successfully!</h3>
-            <p class="success-message">The student's activity has been graded and feedback has been provided.</p>
-            <button onclick="closeSuccessModal()" class="success-close-btn">Close</button>
-        </div>
+        </form>
     </div>
 </div>
 
 <!-- Add Activity Modal -->
-<div id="addActivityModal" class="add-activity-modal">
-    <div class="add-activity-modal-box">
-        <div class="add-activity-modal-header">
-            <h3 class="add-activity-modal-title">Add New Activity</h3>
-            <button onclick="closeAddActivityModal()" class="add-activity-modal-close">&times;</button>
-        </div>
-        <div class="add-activity-modal-body">
-            <div style="margin-bottom:20px;">
-                <label style="display:block; font-weight:600; color:#374151; margin-bottom:8px;">Name *</label>
-                <input id="addActivityName" type="text" placeholder="Enter activity name" style="width:100%; padding:8px 12px; border:1px solid #d1d5db; border-radius:6px; font-size:16px;">
-            </div>
+<div id="addActivityModal" class="add-activity-modal hidden fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm z-50 items-center justify-center opacity-0 transition-opacity duration-300">
+    <div class="bg-white rounded-2xl w-11/12 max-w-2xl max-h-screen overflow-hidden shadow-2xl transform scale-90 transition-transform duration-300">
+        <form method="post" action="@Url.Action("CreateActivity", new { id = Model.CourseId })">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="id" value="@Model.CourseId" />
 
-            <div style="margin-bottom:20px;">
-                <label style="display:block; font-weight:600; color:#374151; margin-bottom:8px;">Description</label>
-                <textarea id="addActivityDescription" rows="4" placeholder="Enter activity description" style="width:100%; padding:8px 12px; border:1px solid #d1d5db; border-radius:6px; font-size:14px; line-height:1.5;"></textarea>
+            <div class="flex justify-between items-center px-8 pt-6 pb-4 border-b border-gray-200">
+                <h3 class="m-0 text-xl font-bold text-gray-900">Add New Activity</h3>
+                <button type="button" onclick="closeAddActivityModal()" class="bg-transparent border-0 text-2xl text-gray-500 cursor-pointer p-0 w-8 h-8 flex items-center justify-center rounded hover:bg-gray-100">&times;</button>
             </div>
+            <div class="px-8 py-6 max-h-[calc(90vh-120px)] overflow-y-auto">
+                <div class="mb-5">
+                    <label class="block font-semibold text-gray-700 mb-2">Name *</label>
+                    <input name="Title" type="text" placeholder="Enter activity name" class="w-full px-3 py-2 border border-gray-300 rounded-md text-base" required>
+                </div>
 
-            <div style="margin-bottom:20px;">
-                <label style="display:block; font-weight:600; color:#374151; margin-bottom:8px;">Due Date</label>
-                <input id="addActivityDueDate" type="datetime-local" style="width:100%; padding:8px 12px; border:1px solid #d1d5db; border-radius:6px; font-size:16px;">
-            </div>
+                <div class="mb-5">
+                    <label class="block font-semibold text-gray-700 mb-2">Description</label>
+                    <textarea name="Description" rows="4" placeholder="Enter activity description" class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm leading-relaxed"></textarea>
+                </div>
 
-            <div style="margin-bottom:20px;">
-                <label style="display:block; font-weight:600; color:#374151; margin-bottom:8px;">Maximum Score</label>
-                <input id="addActivityMaxScore" type="number" min="0" placeholder="Enter maximum score" style="width:100%; padding:8px 12px; border:1px solid #d1d5db; border-radius:6px; font-size:16px;">
-            </div>
+                <div class="mb-5">
+                    <label class="block font-semibold text-gray-700 mb-2">Due Date</label>
+                    <input name="DueDate" type="datetime-local" class="w-full px-3 py-2 border border-gray-300 rounded-md text-base">
+                </div>
 
-            <div style="margin-bottom:24px;">
-                <label style="display:block; font-weight:600; color:#374151; margin-bottom:8px;">Visibility</label>
-                <div style="display:flex; align-items:center; gap:12px;">
-                    <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
-                        <input type="radio" name="addActivityVisibility" value="visible" checked style="margin:0;">
-                        <span style="color:#111827; font-size:14px;">Visible to students</span>
-                    </label>
-                    <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
-                        <input type="radio" name="addActivityVisibility" value="hidden" style="margin:0;">
-                        <span style="color:#111827; font-size:14px;">Hidden from students</span>
-                    </label>
+                <div class="mb-5">
+                    <label class="block font-semibold text-gray-700 mb-2">Maximum Score *</label>
+                    <input name="MaxScore" type="number" min="0" placeholder="Enter maximum score" class="w-full px-3 py-2 border border-gray-300 rounded-md text-base" required>
+                </div>
+
+                <div class="mb-6">
+                    <label class="block font-semibold text-gray-700 mb-2">Visibility</label>
+                    <div class="flex items-center gap-3">
+                        <label class="flex items-center gap-2 cursor-pointer">
+                            <input type="radio" name="IsVisible" value="true" checked class="m-0">
+                            <span class="text-gray-900 text-sm">Visible to students</span>
+                        </label>
+                        <label class="flex items-center gap-2 cursor-pointer">
+                            <input type="radio" name="IsVisible" value="false" class="m-0">
+                            <span class="text-gray-900 text-sm">Hidden from students</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="flex justify-end gap-3 pt-4 border-t border-gray-200">
+                    <button type="button" onclick="closeAddActivityModal()" class="bg-gray-500 text-white border-0 rounded-md px-5 py-2.5 font-semibold cursor-pointer hover:bg-gray-600">Cancel</button>
+                    <button type="submit" class="bg-emerald-600 text-white border-0 rounded-md px-5 py-2.5 font-semibold cursor-pointer hover:bg-emerald-700">Add Activity</button>
                 </div>
             </div>
-
-            <div style="display:flex; justify-content:flex-end; gap:12px; padding-top:16px; border-top:1px solid #e5e7eb;">
-                <button onclick="closeAddActivityModal()" style="background:#6b7280; color:#ffffff; border:none; border-radius:6px; padding:10px 20px; font-weight:600; cursor:pointer;">Cancel</button>
-                <button onclick="addActivity()" style="background:#059669; color:#ffffff; border:none; border-radius:6px; padding:10px 20px; font-weight:600; cursor:pointer;">Add Activity</button>
-            </div>
-        </div>
+        </form>
     </div>
 </div>
 
 @section Scripts {
     <style>
-        /* Table styling */
-        #activitiesTable {
-            border: none !important;
-        }
-        #activitiesTable thead th {
-            border-bottom: 1px solid #f3f4f6 !important;
-        }
-        #activitiesTable tbody td {
-            border-bottom: 1px solid #f3f4f6 !important;
-        }
-        #activitiesTable tbody tr:hover {
-            background-color: #f3f4f6 !important;
-        }
-
-        /* Performance table styling */
-        #performanceTable {
-            border: none !important;
-        }
-        #performanceTable thead th {
-            border-bottom: 1px solid #f3f4f6 !important;
-        }
-        #performanceTable tbody td {
-            border-bottom: 1px solid #f3f4f6 !important;
-        }
-
-        /* Grade input styling */
-        .grade-input {
-            font-size: 14px;
-            font-weight: 600;
-            color: #059669;
-        }
-        .grade-input:focus {
-            outline: none;
-            border-color: #059669;
-            box-shadow: 0 0 0 2px rgba(5, 150, 105, 0.1);
-        }
-
-        /* Grade Activity Modal */
-        .grade-modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.5);
-            backdrop-filter: blur(4px);
-            z-index: 10000;
-            align-items: center;
-            justify-content: center;
-            opacity: 0;
-            transition: opacity 0.3s ease;
-        }
-
-        .grade-modal.show {
-            display: flex;
-            opacity: 1;
-        }
-
-        .grade-modal-box {
-            background: white;
-            border-radius: 16px;
-            width: 90%;
-            max-width: 500px;
-            max-height: 90vh;
-            overflow: hidden;
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-            transform: scale(0.9);
-            transition: transform 0.3s ease;
-        }
-
-        .grade-modal.show .grade-modal-box {
-            transform: scale(1);
-        }
-
-        .grade-modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 24px 32px 16px;
-            border-bottom: 1px solid #e5e7eb;
-        }
-
-        .grade-modal-title {
-            margin: 0;
-            font-size: 20px;
-            font-weight: 700;
-            color: #111827;
-        }
-
-        .grade-modal-close {
-            background: none;
-            border: none;
-            font-size: 24px;
-            cursor: pointer;
-            color: #6b7280;
-            padding: 0;
-            width: 32px;
-            height: 32px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 6px;
-            transition: background-color 0.2s;
-        }
-
-        .grade-modal-close:hover {
-            background-color: #f3f4f6;
-        }
-
-        .grade-modal-body {
-            padding: 24px 32px;
-        }
-
-        .grade-modal-actions {
-            display: flex;
-            gap: 12px;
-            justify-content: flex-end;
-            margin-top: 24px;
-        }
-
-        /* Success Modal */
-        .success-modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.5);
-            backdrop-filter: blur(4px);
-            z-index: 10001;
-            align-items: center;
-            justify-content: center;
-            opacity: 0;
-            transition: opacity 0.3s ease;
-        }
-
-        .success-modal.show {
-            display: flex;
-            opacity: 1;
-        }
-
-        .success-modal-box {
-            background: white;
-            border-radius: 16px;
-            padding: 32px;
-            max-width: 400px;
-            width: 90%;
-            text-align: center;
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-            transform: scale(0.9);
-            transition: transform 0.3s ease;
-        }
-
-        .success-modal.show .success-modal-box {
-            transform: scale(1);
-        }
-
-        .success-icon {
-            width: 64px;
-            height: 64px;
-            border-radius: 50%;
-            background: #d1fae5;
-            color: #059669;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 32px;
-            font-weight: bold;
-            margin: 0 auto 20px;
-        }
-
-        .success-title {
-            font-size: 20px;
-            font-weight: 700;
-            color: #111827;
-            margin: 0 0 12px 0;
-        }
-
-        .success-message {
-            font-size: 14px;
-            color: #6b7280;
-            margin: 0 0 24px 0;
-            line-height: 1.5;
-        }
-
-        .success-close-btn {
-            padding: 10px 24px;
-            border-radius: 8px;
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            background: #059669;
-            color: #ffffff;
-            border: none;
-        }
-
-        /* Add Activity Modal */
-        .add-activity-modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.5);
-            backdrop-filter: blur(4px);
-            z-index: 10000;
-            align-items: center;
-            justify-content: center;
-            opacity: 0;
-            transition: opacity 0.3s ease;
-        }
-
+        .grade-modal.show,
         .add-activity-modal.show {
-            display: flex;
-            opacity: 1;
+            display: flex !important;
+            opacity: 1 !important;
         }
 
-        .add-activity-modal-box {
-            background: white;
-            border-radius: 16px;
-            width: 90%;
-            max-width: 600px;
-            max-height: 90vh;
-            overflow: hidden;
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-            transform: scale(0.9);
-            transition: transform 0.3s ease;
-        }
+            .grade-modal.show > div,
+            .add-activity-modal.show > div {
+                transform: scale(1) !important;
+            }
 
-        .add-activity-modal.show .add-activity-modal-box {
-            transform: scale(1);
-        }
-
-        .add-activity-modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 24px 32px 16px;
-            border-bottom: 1px solid #e5e7eb;
-        }
-
-        .add-activity-modal-title {
-            margin: 0;
-            font-size: 20px;
-            font-weight: 700;
-            color: #111827;
-        }
-
-        .add-activity-modal-close {
-            background: none;
-            border: none;
-            font-size: 24px;
-            color: #6b7280;
-            cursor: pointer;
-            padding: 0;
-            width: 32px;
-            height: 32px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 4px;
-            transition: background 0.2s ease;
-        }
-
-        .add-activity-modal-close:hover {
-            background: #f3f4f6;
-            color: #374151;
-        }
-
-        .add-activity-modal-body {
-            padding: 24px 32px;
-            max-height: calc(90vh - 120px);
-            overflow-y: auto;
+        .selected-activity {
+            background-color: #e0f2fe !important;
+            border-left: 4px solid #059669 !important;
         }
     </style>
     <script>
-        $(document).ready(function() {
-            $('#activitiesTable').DataTable({
-                "pageLength": 10,
-                "lengthChange": false,
-                "searching": false,
-                "ordering": true,
-                "info": true,
-                "paging": true,
-                "language": {
-                    "paginate": {
-                        "previous": "Prev",
-                        "next": "Next"
-                    }
-                }
-            });
-
-            $('#performanceTable').DataTable({
-                "pageLength": 10,
-                "lengthChange": false,
-                "searching": true,
-                "ordering": true,
-                "info": true,
-                "paging": true,
-                "language": {
-                    "paginate": {
-                        "previous": "Prev",
-                        "next": "Next"
-                    }
-                }
-            });
-        });
-
-        function selectActivity(activityName) {
-            // Remove selected class from all rows
-            $('#activitiesTable tbody tr').removeClass('selected-activity');
-
-            // Add selected class to clicked row
-            event.currentTarget.classList.add('selected-activity');
-
-            // Here you would typically update the right panel with the selected activity details
-            console.log('Selected activity:', activityName);
-        }
-
         let isEditMode = false;
 
         function toggleEditMode() {
@@ -695,65 +398,34 @@
             const editActions = document.getElementById('editActions');
 
             if (isEditMode) {
-                // Switch to edit mode
                 editButton.textContent = 'Cancel';
-                editButton.style.background = '#6b7280';
-                editActions.style.display = 'block';
+                editButton.className = 'bg-gray-500 text-white border-0 rounded-lg px-4 py-2 font-semibold cursor-pointer hover:bg-gray-600';
+                editButton.type = 'button';
+                editActions.classList.remove('hidden');
 
-                // Show input fields, hide display fields
-                document.getElementById('nameDisplay').style.display = 'none';
-                document.getElementById('nameInput').style.display = 'block';
+                document.getElementById('nameDisplay').classList.add('hidden');
+                document.getElementById('nameInput').classList.remove('hidden');
+                document.getElementById('nameInput').removeAttribute('disabled');
 
-                document.getElementById('descriptionDisplay').style.display = 'none';
-                document.getElementById('descriptionInput').style.display = 'block';
+                document.getElementById('descriptionDisplay').classList.add('hidden');
+                document.getElementById('descriptionInput').classList.remove('hidden');
+                document.getElementById('descriptionInput').removeAttribute('disabled');
 
-                document.getElementById('dueDateDisplay').style.display = 'none';
-                document.getElementById('dueDateInput').style.display = 'block';
+                document.getElementById('dueDateDisplay').classList.add('hidden');
+                document.getElementById('dueDateInput').classList.remove('hidden');
+                document.getElementById('dueDateInput').removeAttribute('disabled');
 
-                document.getElementById('maxScoreDisplay').style.display = 'none';
-                document.getElementById('maxScoreInput').style.display = 'block';
+                document.getElementById('maxScoreDisplay').classList.add('hidden');
+                document.getElementById('maxScoreInput').classList.remove('hidden');
+                document.getElementById('maxScoreInput').removeAttribute('disabled');
 
-                document.getElementById('visibilityDisplay').style.display = 'none';
-                document.getElementById('visibilityEdit').style.display = 'flex';
+                document.getElementById('visibilityDisplay').classList.add('hidden');
+                document.getElementById('visibilityEdit').classList.remove('hidden');
+                document.getElementById('visibilityEdit').classList.add('flex');
+                document.querySelectorAll('#visibilityEdit input').forEach(input => input.removeAttribute('disabled'));
             } else {
-                // Switch back to view mode
                 cancelEdit();
             }
-        }
-
-        function saveChanges() {
-            // Get values from input fields
-            const name = document.getElementById('nameInput').value;
-            const description = document.getElementById('descriptionInput').value;
-            const dueDate = new Date(document.getElementById('dueDateInput').value);
-            const maxScore = document.getElementById('maxScoreInput').value;
-            const visibility = document.querySelector('input[name="visibilityEdit"]:checked').value;
-
-            // Update display fields
-            document.getElementById('nameDisplay').textContent = name;
-            document.getElementById('descriptionDisplay').textContent = description;
-            document.getElementById('dueDateDisplay').textContent = dueDate.toLocaleDateString('en-US', {
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric'
-            }) + ' - ' + dueDate.toLocaleTimeString('en-US', {
-                hour: 'numeric',
-                minute: '2-digit',
-                hour12: true
-            });
-            document.getElementById('maxScoreDisplay').textContent = maxScore + ' points';
-
-            // Update visibility display
-            const visibilityInputs = document.querySelectorAll('input[name="visibility"]');
-            visibilityInputs.forEach(input => {
-                input.checked = (input.value === visibility);
-            });
-
-            // Switch back to view mode
-            toggleEditMode();
-
-            // Here you would typically send the data to the server
-            console.log('Saved changes:', { name, description, dueDate, maxScore, visibility });
         }
 
         function cancelEdit() {
@@ -761,220 +433,95 @@
             const editButton = document.getElementById('editButton');
             const editActions = document.getElementById('editActions');
 
-            // Reset button
             editButton.textContent = 'Edit';
-            editButton.style.background = '#059669';
-            editActions.style.display = 'none';
+            editButton.className = 'bg-emerald-600 text-white border-0 rounded-lg px-4 py-2 font-semibold cursor-pointer hover:bg-emerald-700';
+            editActions.classList.add('hidden');
 
-            // Show display fields, hide input fields
-            document.getElementById('nameDisplay').style.display = 'block';
-            document.getElementById('nameInput').style.display = 'none';
+            document.getElementById('nameDisplay').classList.remove('hidden');
+            document.getElementById('nameInput').classList.add('hidden');
 
-            document.getElementById('descriptionDisplay').style.display = 'block';
-            document.getElementById('descriptionInput').style.display = 'none';
+            document.getElementById('descriptionDisplay').classList.remove('hidden');
+            document.getElementById('descriptionInput').classList.add('hidden');
 
-            document.getElementById('dueDateDisplay').style.display = 'block';
-            document.getElementById('dueDateInput').style.display = 'none';
+            document.getElementById('dueDateDisplay').classList.remove('hidden');
+            document.getElementById('dueDateInput').classList.add('hidden');
 
-            document.getElementById('maxScoreDisplay').style.display = 'block';
-            document.getElementById('maxScoreInput').style.display = 'none';
+            document.getElementById('maxScoreDisplay').classList.remove('hidden');
+            document.getElementById('maxScoreInput').classList.add('hidden');
 
-            document.getElementById('visibilityDisplay').style.display = 'flex';
-            document.getElementById('visibilityEdit').style.display = 'none';
+            document.getElementById('visibilityDisplay').classList.remove('hidden');
+            document.getElementById('visibilityEdit').classList.add('hidden');
         }
 
-        // Grade Activity Modal Functions
-        function openGradeModal(studentName, activityName) {
+        function openGradeModal(btn) {
+            const studentId = btn.dataset.studentId;
+            const studentName = btn.dataset.studentName;
+            const activityName = btn.dataset.activityName;
+            const activityId = btn.dataset.activityId;
+            const maxScore = btn.dataset.maxScore;
+            console.log("DEBUG modal args:", studentId, studentName, activityName, activityId);
+
+
+            document.getElementById('modalStudentId').value = studentId;
+            document.getElementById('modalActivityId').value = activityId;
+
             document.getElementById('studentNameDisplay').textContent = studentName;
             document.getElementById('activityNameDisplay').textContent = activityName;
-            document.getElementById('modalActivityTitle').textContent = 'Grade: ' + activityName;
-            document.getElementById('feedbackInput').value = '';
-            document.getElementById('gradeActivityModal').classList.add('show');
+            document.getElementById('modalActivityTitle').textContent = "Grade: " + activityName;
+
+            document.getElementById('gradeValue').value = "";
+            document.getElementById('modalMaxScore').textContent = maxScore;
+            document.getElementById('feedbackInput').value = "";
+
+            const modal = document.getElementById('gradeActivityModal');
+            modal.classList.remove('hidden');
+
+
+            setTimeout(() => modal.classList.add('show'), 10);
         }
 
         function closeGradeModal() {
-            document.getElementById('gradeActivityModal').classList.remove('show');
+            const modal = document.getElementById('gradeActivityModal');
+            modal.classList.remove('show');
+            setTimeout(() => modal.classList.add('hidden'), 300);
         }
 
-        function confirmGrade() {
-            const feedback = document.getElementById('feedbackInput').value;
-            const studentName = document.getElementById('studentNameDisplay').textContent;
-            const activityName = document.getElementById('activityNameDisplay').textContent;
-
-            // Close grade modal
-            closeGradeModal();
-
-            // Show success modal
-            document.getElementById('successModal').classList.add('show');
-
-            // Here you would typically send the grade and feedback to the server
-            console.log('Graded activity:', { studentName, activityName, feedback });
-        }
-
-        function closeSuccessModal() {
-            document.getElementById('successModal').classList.remove('show');
-        }
-
-        function editGrade(studentId) {
-            const gradeCell = document.querySelector(`#grade-${studentId}`);
-            const gradeDisplay = gradeCell.querySelector('.grade-display');
-            const gradeInput = gradeCell.querySelector('.grade-input');
-            const editBtn = gradeCell.querySelector('.edit-grade-btn');
-            const saveBtn = gradeCell.querySelector('.save-grade-btn');
-            const cancelBtn = gradeCell.querySelector('.cancel-grade-btn');
-
-            // Hide display and edit button, show input and action buttons
-            gradeDisplay.style.display = 'none';
-            editBtn.style.display = 'none';
-            gradeInput.style.display = 'inline-block';
-            saveBtn.style.display = 'inline-block';
-            cancelBtn.style.display = 'inline-block';
-
-            // Set input value to current grade (extract number from "45/50 (90%)" format)
-            const currentGradeText = gradeDisplay.textContent.trim();
-            const gradeMatch = currentGradeText.match(/^(\d+)/);
-            const currentGrade = gradeMatch ? gradeMatch[1] : '';
-            gradeInput.value = currentGrade;
-
-            // Focus on input
-            gradeInput.focus();
-
-            // Handle Enter key to save, Escape to cancel
-            gradeInput.onkeydown = function(e) {
-                if (e.key === 'Enter') {
-                    saveGrade(studentId);
-                } else if (e.key === 'Escape') {
-                    cancelGrade(studentId);
-                }
-            };
-        }
-
-        function saveGrade(studentId) {
-            const gradeCell = document.querySelector(`#grade-${studentId}`);
-            const gradeDisplay = gradeCell.querySelector('.grade-display');
-            const gradeInput = gradeCell.querySelector('.grade-input');
-            const editBtn = gradeCell.querySelector('.edit-grade-btn');
-            const saveBtn = gradeCell.querySelector('.save-grade-btn');
-            const cancelBtn = gradeCell.querySelector('.cancel-grade-btn');
-
-            // Get the new grade value
-            const newGrade = gradeInput.value.trim();
-            const maxScore = 50; // This should come from the activity data
-
-            // Calculate percentage
-            const percentage = newGrade ? Math.round((parseInt(newGrade) / maxScore) * 100) : 0;
-            const displayText = newGrade ? `${newGrade}/${maxScore} (${percentage}%)` : '-';
-
-            // Update display with new grade
-            gradeDisplay.textContent = displayText;
-
-            // Hide input and action buttons, show display and edit button
-            gradeDisplay.style.display = 'inline';
-            editBtn.style.display = 'inline-block';
-            gradeInput.style.display = 'none';
-            saveBtn.style.display = 'none';
-            cancelBtn.style.display = 'none';
-
-            // Here you would typically send the update to the server
-            console.log(`Grade updated for student ${studentId}: ${newGrade}/${maxScore} (${percentage}%)`);
-        }
-
-        function cancelGrade(studentId) {
-            const gradeCell = document.querySelector(`#grade-${studentId}`);
-            const gradeDisplay = gradeCell.querySelector('.grade-display');
-            const gradeInput = gradeCell.querySelector('.grade-input');
-            const editBtn = gradeCell.querySelector('.edit-grade-btn');
-            const saveBtn = gradeCell.querySelector('.save-grade-btn');
-            const cancelBtn = gradeCell.querySelector('.cancel-grade-btn');
-
-            // Hide input and action buttons, show display and edit button
-            gradeDisplay.style.display = 'inline';
-            editBtn.style.display = 'inline-block';
-            gradeInput.style.display = 'none';
-            saveBtn.style.display = 'none';
-            cancelBtn.style.display = 'none';
-        }
-
-        // Close modals when clicking outside
-        document.getElementById('gradeActivityModal').addEventListener('click', function(e) {
-            if (e.target === this) {
-                closeGradeModal();
-            }
-        });
-
-        document.getElementById('successModal').addEventListener('click', function(e) {
-            if (e.target === this) {
-                closeSuccessModal();
-            }
-        });
-
-        // Close modals on ESC key
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape') {
-                closeGradeModal();
-                closeSuccessModal();
-                closeAddActivityModal();
-            }
-        });
-
-        // Add Activity Modal Functions
         function openAddActivityModal() {
-            // Reset form fields
-            document.getElementById('addActivityName').value = '';
-            document.getElementById('addActivityDescription').value = '';
-            document.getElementById('addActivityDueDate').value = '';
-            document.getElementById('addActivityMaxScore').value = '';
-            document.querySelector('input[name="addActivityVisibility"][value="visible"]').checked = true;
-
-            // Show modal
-            document.getElementById('addActivityModal').classList.add('show');
+            const modal = document.getElementById('addActivityModal');
+            modal.classList.remove('hidden');
+            setTimeout(() => modal.classList.add('show'), 10);
         }
 
         function closeAddActivityModal() {
-            document.getElementById('addActivityModal').classList.remove('show');
+            const modal = document.getElementById('addActivityModal');
+            modal.classList.remove('show');
+            setTimeout(() => modal.classList.add('hidden'), 300);
         }
 
-        function addActivity() {
-            // Get form values
-            const name = document.getElementById('addActivityName').value.trim();
-            const description = document.getElementById('addActivityDescription').value.trim();
-            const dueDate = document.getElementById('addActivityDueDate').value;
-            const maxScore = document.getElementById('addActivityMaxScore').value;
-            const visibility = document.querySelector('input[name="addActivityVisibility"]:checked').value;
-
-            // Basic validation
-            if (!name) {
-                alert('Please enter an activity name.');
-                return;
-            }
-
-            // Here you would typically send the data to the server
-            console.log('Adding new activity:', {
-                name: name,
-                description: description,
-                dueDate: dueDate,
-                maxScore: maxScore,
-                visibility: visibility
+        // safe event listener attachments
+        const gradeModalEl = document.getElementById('gradeActivityModal');
+        if (gradeModalEl) {
+            gradeModalEl.addEventListener('click', function(e) {
+                if (e.target === this) {
+                    closeGradeModal();
+                }
             });
-
-            // Close modal
-            closeAddActivityModal();
-
-            // Show success message (you could implement a success modal here)
-            alert('Activity added successfully!');
         }
 
-        // Close add activity modal when clicking outside
-        document.getElementById('addActivityModal').addEventListener('click', function(e) {
-            if (e.target === this) {
+        const addModalEl = document.getElementById('addActivityModal');
+        if (addModalEl) {
+            addModalEl.addEventListener('click', function(e) {
+                if (e.target === this) {
+                    closeAddActivityModal();
+                }
+            });
+        }
+
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeGradeModal();
                 closeAddActivityModal();
             }
         });
     </script>
-    <style>
-        .selected-activity {
-            background-color: #e0f2fe !important;
-            border-left: 4px solid #059669 !important;
-        }
-    </style>
 }

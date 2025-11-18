@@ -8,7 +8,7 @@ namespace ASI.Basecode.Data.Models
     public class ActivitySubmissionModel : BaseModel
     {
         [PrimaryKey("id", false)]
-        public int Id { get; set; }
+        public string Id { get; set; }
 
         [Column("activityId")]
         public int ActivityId { get; set; }
