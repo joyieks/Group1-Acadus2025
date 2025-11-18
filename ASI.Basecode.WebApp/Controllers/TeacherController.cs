@@ -11,7 +11,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
- namespace ASI.Basecode.WebApp.Controllers
+namespace ASI.Basecode.WebApp.Controllers
 
 {
     /// <summary>
@@ -38,7 +38,7 @@ using System.Threading.Tasks;
             _configuration = configuration;
             _supabaseAuthService = supabaseAuthService;
             _teacherCourseService = teacherCourseService;
-             _courseService = courseService; 
+            _courseService = courseService;
         }
 
         /// <summary>
@@ -100,73 +100,73 @@ using System.Threading.Tasks;
         [HttpGet]
         public async Task<IActionResult> Courses()
         {
-   try
-     {
-      // Get the current teacher's Supabase user ID from claims
-     var supabaseUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-    
-    if (string.IsNullOrWhiteSpace(supabaseUserId))
-       {
-        Console.WriteLine("ERROR: Teacher Supabase User ID not found in claims");
-   return View("Courses/Index", new List<TeacherCourseViewModel>());
-    }
+            try
+            {
+                // Get the current teacher's Supabase user ID from claims
+                var supabaseUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
-        Console.WriteLine($"=== LOADING COURSES FOR TEACHER ===");
-            Console.WriteLine($"Teacher Supabase User ID: {supabaseUserId}");
+                if (string.IsNullOrWhiteSpace(supabaseUserId))
+                {
+                    Console.WriteLine("ERROR: Teacher Supabase User ID not found in claims");
+                    return View("Courses/Index", new List<TeacherCourseViewModel>());
+                }
 
-     // Get courses taught by this teacher from database
-       var dbCourses = await _courseService.GetCoursesByInstructorAsync(supabaseUserId);
-       
-        Console.WriteLine($"Found {dbCourses.Count} courses for teacher");
+                Console.WriteLine($"=== LOADING COURSES FOR TEACHER ===");
+                Console.WriteLine($"Teacher Supabase User ID: {supabaseUserId}");
 
-        // Map database courses to view model
+                // Get courses taught by this teacher from database
+                var dbCourses = await _courseService.GetCoursesByInstructorAsync(supabaseUserId);
+
+                Console.WriteLine($"Found {dbCourses.Count} courses for teacher");
+
+                // Map database courses to view model
                 var courses = dbCourses.Select((course, index) => new TeacherCourseViewModel
-   {
-    Id = (int)course.Id,  // ? Cast from long to int
-      CourseCode = course.Code ?? "N/A",
-     CourseTitle = course.Name ?? "Untitled Course",
-         SemesterInfo = GetSemesterInfo(course.SemesterId),
-            CardColor = GetCardColor(index)  // Assign colors based on index
-    }).ToList();
+                {
+                    Id = (int)course.Id,  // ? Cast from long to int
+                    CourseCode = course.Code ?? "N/A",
+                    CourseTitle = course.Name ?? "Untitled Course",
+                    SemesterInfo = GetSemesterInfo(course.SemesterId),
+                    CardColor = GetCardColor(index)  // Assign colors based on index
+                }).ToList();
 
- if (courses.Count == 0)
-   {
-        Console.WriteLine("No courses found for this teacher");
-       ViewBag.Message = "You are not assigned to any courses yet. Please contact your administrator.";
-     }
+                if (courses.Count == 0)
+                {
+                    Console.WriteLine("No courses found for this teacher");
+                    ViewBag.Message = "You are not assigned to any courses yet. Please contact your administrator.";
+                }
 
-     return View("Courses/Index", courses.ToArray());
-   }
-      catch (Exception ex)
-          {
-    Console.WriteLine($"ERROR loading teacher courses: {ex.Message}");
-         Console.WriteLine($"Stack Trace: {ex.StackTrace}");
-    ViewBag.Error = "Unable to load courses. Please try again later.";
+                return View("Courses/Index", courses.ToArray());
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"ERROR loading teacher courses: {ex.Message}");
+                Console.WriteLine($"Stack Trace: {ex.StackTrace}");
+                ViewBag.Error = "Unable to load courses. Please try again later.";
                 return View("Courses/Index", new List<TeacherCourseViewModel>());
             }
         }
 
-      /// <summary>
+        /// <summary>
         /// Helper method to get semester information
         /// </summary>
- private string GetSemesterInfo(long? semesterId)
-      {
- if (!semesterId.HasValue)
-   return "No Semester Assigned";
+        private string GetSemesterInfo(long? semesterId)
+        {
+            if (!semesterId.HasValue)
+                return "No Semester Assigned";
 
-     // TODO: You can enhance this to fetch actual semester details from database
-      // For now, return a placeholder
-      return $"Semester ID: {semesterId}";
+            // TODO: You can enhance this to fetch actual semester details from database
+            // For now, return a placeholder
+            return $"Semester ID: {semesterId}";
         }
 
         /// <summary>
         /// Helper method to assign card colors based on index
-   /// </summary>
-private string GetCardColor(int index)
-{
+        /// </summary>
+        private string GetCardColor(int index)
+        {
             // Cycle through a set of green shades
-  var colors = new[]
-         {
+            var colors = new[]
+                   {
     "#E8F9E8",  // Light green
    "#D1FAE5",  // Lighter green
        "#A7F3D0",  // Medium green
@@ -175,8 +175,8 @@ private string GetCardColor(int index)
   "#10B981"   // Darkest green
         };
 
-   return colors[index % colors.Length];
- }
+            return colors[index % colors.Length];
+        }
         /// <summary>
         /// Displays the full course view.
         /// </summary>
@@ -456,73 +456,6 @@ private string GetCardColor(int index)
             }
         }
 
-        /// <summary>
-        /// Adds or updates a grade for an activity.
-        /// </summary>
-        /// <param name="studentId">The student ID.</param>
-        /// <param name="activityId">The activity ID.</param>
-        /// <param name="grade">The grade value.</param>
-        /// <returns>JSON result indicating success or failure.</returns>
-        //[HttpPost]
-        //public async Task<IActionResult> AddOrUpdateGrade(long studentId, int activityId, decimal grade)
-        //{
-        //    try
-        //    {
-        //        await AsiBasecodeDBContext.InitializeSupabaseAsync(_configuration);
-        //        var client = AsiBasecodeDBContext.SupabaseClient;
-
-        //        // TODO: Get teacher ID from authentication
-        //        int teacherId = 1; // Placeholder
-
-        //        // Check if grade already exists
-        //        var existingGradeResponse = await client.From<GradeModel>()
-        //            .Filter("student_id", Supabase.Postgrest.Constants.Operator.Equals, studentId)
-        //            .Filter("activity_id", Supabase.Postgrest.Constants.Operator.Equals, activityId)
-        //            .Get();
-
-        //        var existingGrade = existingGradeResponse.Models.FirstOrDefault();
-
-        //        if (existingGrade != null)
-        //        {
-        //            // Update existing grade
-        //            existingGrade.Grade = grade;
-        //            existingGrade.UpdatedAt = DateTime.UtcNow;
-        //            existingGrade.GradedBy = teacherId;
-        //            await existingGrade.Update<GradeModel>();
-        //            return Json(new { success = true, message = "Grade updated successfully." });
-        //        }
-        //        else
-        //        {
-        //            // Create new grade
-        //            var newGrade = new GradeModel
-        //            {
-        //                StudentId = studentId,
-        //                ActivityId = activityId,
-        //                Grade = grade,
-        //                GradedAt = DateTime.UtcNow,
-        //                GradedBy = teacherId
-        //            };
-        //            await client.From<GradeModel>().Insert(newGrade);
-                    
-        //            // Mark activity as graded if not already
-        //            var activityResponse = await client.From<ActivityModel>()
-        //                .Filter("id", Supabase.Postgrest.Constants.Operator.Equals, activityId)
-        //                .Get();
-        //            var activity = activityResponse.Models.FirstOrDefault();
-        //            if (activity != null && !activity.IsGraded)
-        //            {
-        //                activity.IsGraded = true;
-        //                await activity.Update<ActivityModel>();
-        //            }
-
-        //            return Json(new { success = true, message = "Grade added successfully." });
-        //        }
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        return Json(new { success = false, message = $"Error: {ex.Message}" });
-        //    }
-        //}
 
         /// <summary>
         /// Retrieves grades filtered by various criteria.
@@ -770,6 +703,14 @@ private string GetCardColor(int index)
                 Console.WriteLine($"Error getting teacher ID from Supabase ID: {ex.Message}");
                 return null;
             }
+        }
+
+        private string GetRandomCardColor()
+        {
+            // Simple random pastel green variants
+            var colors = new[] { "#E8F9E8", "#D1FAE5", "#A7F3D0", "#6EE7B7" };
+            var random = new Random();
+            return colors[random.Next(colors.Length)];
         }
     }
 }
