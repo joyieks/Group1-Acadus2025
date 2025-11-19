@@ -63,14 +63,17 @@ namespace ASI.Basecode.Services.Services
 
                 return new StudentCourseDetailsViewModel.ActivityItem
                 {
+                    ActivityId = a.Id,  // Added to identify the activity for submission
                     Title = a.Title,
                     Description = a.Description,
-                    DueDate = a.DueDate.ToString("yyyy-MM-dd"),
+                    DueDate = a.DueDate.ToString("MMM dd, yyyy hh:mm tt"),  // Include time in display
                     Status = sub?.SubmissionStatus ?? "Not Submitted",
                     Score = sub?.Score.ToString() ?? "0",
                     Date = a.DueDate,
                     CanAppeal = false,
-                    Percentage = percentage?.ToString("0.0") ?? "0.0"
+                    Percentage = percentage?.ToString("0.0") ?? "0.0",
+                    Feedback = sub?.Feedback ?? string.Empty, // Include teacher's feedback
+                    MaxScore = a.maxScore.ToString() // Include max score for display
                 };
 
             }).ToList();
