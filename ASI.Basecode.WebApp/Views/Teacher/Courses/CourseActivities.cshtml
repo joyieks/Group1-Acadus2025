@@ -64,7 +64,8 @@
                             else
                             {
                                 <tr>
-                                    <td colspan="2" style="padding:16px; color:#6b7280; text-align:center;">No activities yet. Click "Activity" to add one.</td>
+                                    <td style="padding:16px; color:#6b7280; text-align:center;">No activities yet. Click "Activity" to add one.</td>
+                                    <td style="padding:16px; color:#6b7280; text-align:center;"></td>
                                 </tr>
                             }
                         </tbody>
@@ -131,22 +132,22 @@
                         <div>
                             <label style="display:block; font-weight:600; color:#374151; margin-bottom:8px;">Visibility</label>
                             <div id="visibilityDisplay" style="display:flex; align-items:center; gap:12px;">
-                                <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
-                                    <input type="radio" name="visibility" value="visible" @(ViewBag.SelectedActivity != null && !((ASI.Basecode.Services.ServiceModels.TeacherActivityModel)ViewBag.SelectedActivity).IsVisible ? "" : "checked") style="margin:0;">
+                                <label style="display:flex; align-items:center; gap:8px; cursor:default;">
+                                    <input type="radio" name="visibility" value="visible" @(ViewBag.SelectedActivity != null && ((ASI.Basecode.Services.ServiceModels.TeacherActivityModel)ViewBag.SelectedActivity).IsVisible == true ? "checked" : "") disabled style="margin:0; cursor:not-allowed;">
                                     <span style="color:#111827; font-size:14px;">Visible to students</span>
                                 </label>
-                                <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
-                                    <input type="radio" name="visibility" value="hidden" @(ViewBag.SelectedActivity != null && ((ASI.Basecode.Services.ServiceModels.TeacherActivityModel)ViewBag.SelectedActivity).IsVisible ? "" : "checked") style="margin:0;">
+                                <label style="display:flex; align-items:center; gap:8px; cursor:default;">
+                                    <input type="radio" name="visibility" value="hidden" @(ViewBag.SelectedActivity != null && ((ASI.Basecode.Services.ServiceModels.TeacherActivityModel)ViewBag.SelectedActivity).IsVisible == false ? "checked" : "") disabled style="margin:0; cursor:not-allowed;">
                                     <span style="color:#111827; font-size:14px;">Hidden from students</span>
                                 </label>
                             </div>
                             <div id="visibilityEdit" style="display:flex; align-items:center; gap:12px; display:none;">
                                 <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
-                                    <input type="radio" name="visibilityEdit" value="visible" checked style="margin:0;">
+                                    <input type="radio" name="visibilityEdit" value="visible" @(ViewBag.SelectedActivity != null && ((ASI.Basecode.Services.ServiceModels.TeacherActivityModel)ViewBag.SelectedActivity).IsVisible == true ? "checked" : "") style="margin:0; cursor:pointer;">
                                     <span style="color:#111827; font-size:14px;">Visible to students</span>
                                 </label>
                                 <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
-                                    <input type="radio" name="visibilityEdit" value="hidden" style="margin:0;">
+                                    <input type="radio" name="visibilityEdit" value="hidden" @(ViewBag.SelectedActivity != null && ((ASI.Basecode.Services.ServiceModels.TeacherActivityModel)ViewBag.SelectedActivity).IsVisible == false ? "checked" : "") style="margin:0; cursor:pointer;">
                                     <span style="color:#111827; font-size:14px;">Hidden from students</span>
                                 </label>
                             </div>
@@ -677,20 +678,39 @@
     </style>
     <script>
         $(document).ready(function() {
-            $('#activitiesTable').DataTable({
-                "pageLength": 10,
-                "lengthChange": false,
-                "searching": false,
-                "ordering": true,
-                "info": true,
-                "paging": true,
-                "language": {
-                    "paginate": {
-                        "previous": "Prev",
-                        "next": "Next"
+            // Initialize DataTable only if table has correct structure
+            var activitiesTable = $('#activitiesTable');
+            if (activitiesTable.length > 0) {
+                var tbodyRows = activitiesTable.find('tbody tr');
+                var headerCols = activitiesTable.find('thead th').length;
+                
+                // Check if all rows have the correct number of columns
+                var hasValidStructure = true;
+                tbodyRows.each(function() {
+                    var rowCols = $(this).find('td').length;
+                    if (rowCols !== headerCols && rowCols !== 0) {
+                        hasValidStructure = false;
+                        return false; // break loop
                     }
+                });
+                
+                if (hasValidStructure && headerCols > 0) {
+                    activitiesTable.DataTable({
+                        "pageLength": 10,
+                        "lengthChange": false,
+                        "searching": false,
+                        "ordering": true,
+                        "info": true,
+                        "paging": true,
+                        "language": {
+                            "paginate": {
+                                "previous": "Prev",
+                                "next": "Next"
+                            }
+                        }
+                    });
                 }
-            });
+            }
 
             // Initialize DataTables for performance table
             // Check if table has actual data rows (not just the empty message)
@@ -762,6 +782,15 @@
 
                 document.getElementById('visibilityDisplay').style.display = 'none';
                 document.getElementById('visibilityEdit').style.display = 'flex';
+                
+                // Preserve current visibility state when entering edit mode
+                const currentVisibility = document.querySelector('input[name="visibility"]:checked');
+                if (currentVisibility) {
+                    const visibilityEditRadio = document.querySelector(`input[name="visibilityEdit"][value="${currentVisibility.value}"]`);
+                    if (visibilityEditRadio) {
+                        visibilityEditRadio.checked = true;
+                    }
+                }
             } else {
                 // Switch back to view mode
                 cancelEdit();
@@ -836,6 +865,12 @@
 
             document.getElementById('visibilityDisplay').style.display = 'flex';
             document.getElementById('visibilityEdit').style.display = 'none';
+            
+            // Re-enable display mode radio buttons (they should be disabled/read-only)
+            const displayRadios = document.querySelectorAll('input[name="visibility"]');
+            displayRadios.forEach(radio => {
+                radio.disabled = true;
+            });
         }
 
         let currentStudentId = '';

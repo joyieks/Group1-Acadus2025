@@ -179,7 +179,7 @@ namespace ASI.Basecode.WebApp.Controllers
                 if (string.IsNullOrWhiteSpace(supabaseUserId))
                 {
                     Console.WriteLine("ERROR: Teacher Supabase User ID not found in claims");
-                    return View("Courses/Index", new List<TeacherCourseViewModel>());
+                    return View("Courses/Index", new List<CourseCardViewModel>());
                 }
 
                 Console.WriteLine($"=== LOADING COURSES FOR TEACHER ===");
@@ -190,10 +190,10 @@ namespace ASI.Basecode.WebApp.Controllers
 
                 Console.WriteLine($"Found {dbCourses.Count} courses for teacher");
 
-                // Map database courses to view model
-                var courses = dbCourses.Select((course, index) => new TeacherCourseViewModel
+                // Map database courses to view model (CourseCardViewModel for the view)
+                var courses = dbCourses.Select((course, index) => new CourseCardViewModel
                 {
-                    Id = (int)course.Id,  // ? Cast from long to int
+                    Id = course.Id,  // Keep as long to match CourseCardViewModel
                     CourseCode = course.Code ?? "N/A",
                     CourseTitle = course.Name ?? "Untitled Course",
                     SemesterInfo = GetSemesterInfo(course.SemesterId),
@@ -213,7 +213,7 @@ namespace ASI.Basecode.WebApp.Controllers
                 Console.WriteLine($"ERROR loading teacher courses: {ex.Message}");
                 Console.WriteLine($"Stack Trace: {ex.StackTrace}");
                 ViewBag.Error = "Unable to load courses. Please try again later.";
-                return View("Courses/Index", new List<TeacherCourseViewModel>());
+                return View("Courses/Index", new List<CourseCardViewModel>());
             }
         }
 
@@ -715,11 +715,7 @@ namespace ASI.Basecode.WebApp.Controllers
                 }
 
                 activity.IsVisible = true;
-<<<<<<< HEAD
-                activity.ArchivedAt = DateTime.UtcNow;
-=======
                 activity.InvisibleAt = DateTime.UtcNow;
->>>>>>> main
                 await activity.Update<ActivityModel>();
 
                 // Log audit activity
@@ -1402,6 +1398,60 @@ namespace ASI.Basecode.WebApp.Controllers
             var colors = new[] { "#E8F9E8", "#D1FAE5", "#A7F3D0", "#6EE7B7" };
             var random = new Random();
             return colors[random.Next(colors.Length)];
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> Profile()
+        {
+            try
+            {
+                var supabaseUserId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? User.FindFirstValue("sub");
+                if (string.IsNullOrWhiteSpace(supabaseUserId))
+                {
+                    ViewBag.NoDataMessage = "Session expired. Please log in again.";
+                    return View("~/Views/Shared/Profile.cshtml", new StudentProfileViewModel());
+                }
+
+                var model = new StudentProfileViewModel();
+                var client = await _supabaseAuthService.GetSupabaseClientForAuthAsync();
+
+                // Load user info
+                var user = await client.From<SupabaseUserNew>()
+                    .Where(x => x.UserTypeId == supabaseUserId)
+                    .Get();
+
+                var userData = user?.Models?.FirstOrDefault();
+                if (userData != null)
+                {
+                    model.FirstName = userData.FirstName;
+                    model.MiddleName = userData.MiddleName;
+                    model.LastName = userData.LastName;
+                    model.Suffix = userData.Suffix;
+                    model.PhoneNumber = userData.ContactNumber;
+                    model.StudentId = userData.UserDisplayId ?? "N/A";
+                    model.FullName = string.Join(" ", new[] { userData.FirstName, userData.MiddleName, userData.LastName, userData.Suffix }.Where(s => !string.IsNullOrWhiteSpace(s)));
+                    model.EmailAddress = userData.Email;
+                    model.Status = userData.IsActive ?? false ? "Active" : "Inactive";
+                }
+
+                // Profile image
+                model.ProfileImageUrl = await _supabaseAuthService.GetUserProfileImageUrlAsync(supabaseUserId);
+                if (TempData["UploadedProfileUrl"] is string uploadedUrl && !string.IsNullOrWhiteSpace(uploadedUrl))
+                {
+                    model.ProfileImageUrl = uploadedUrl;
+                }
+
+                // Password last updated (default to now if not available)
+                model.PasswordLastUpdated = DateTime.Now.AddMonths(-1);
+
+                return View("~/Views/Shared/Profile.cshtml", model);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error loading teacher profile: {ex.Message}");
+                ViewBag.NoDataMessage = "Error loading profile data. Please try again.";
+                return View("~/Views/Shared/Profile.cshtml", new StudentProfileViewModel());
+            }
         }
     }
 

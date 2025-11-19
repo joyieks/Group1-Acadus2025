@@ -12,7 +12,8 @@
             </tr>
         </thead>
         <tbody>
-            @{
+            @if (Model != null && Model.Any())
+            {
                 int index = 0;
                 foreach (var student in Model)
                 {
@@ -45,6 +46,14 @@
                     </tr>
                     index++;
                 }
+            }
+            else
+            {
+                <tr>
+                    <td colspan="4" style="padding:24px; text-align:center; color:#6b7280; font-size:14px;">
+                        No graded activities yet. Top students will appear here once activities are graded.
+                    </td>
+                </tr>
             }
         </tbody>
     </table>

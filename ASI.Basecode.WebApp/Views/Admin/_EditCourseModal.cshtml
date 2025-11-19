@@ -284,78 +284,30 @@
                 const formData = new FormData(form);
                 const courseName = form.querySelector('input[name="Name"]').value;
                 
+                // Get course ID before submission
+                const courseId = form.querySelector('input[name="CourseId"]').value;
+                
                 fetch(form.action, {
                     method: 'POST',
                     body: formData,
                     headers: {
                         'X-Requested-With': 'XMLHttpRequest'
-                    }
+                    },
+                    redirect: 'follow' // Follow redirects automatically
                 })
-                .then(response => response.json())
-                .then(data => {
+                .then(response => {
                     loadingBackdrop.remove();
                     
-                    if (data.success) {
-                        // Show success modal
-                        const successBackdrop = document.createElement('div');
-                        successBackdrop.style.cssText = 'position:fixed; inset:0; background:rgba(0,0,0,0.35); backdrop-filter:blur(3px); z-index:10000;';
-                        
-                        const successBox = document.createElement('div');
-                        successBox.style.cssText = 'position:fixed; left:50%; top:20%; transform:translateX(-50%); z-index:10001; max-width:520px; width:90%; background:#fff; border-radius:12px; box-shadow:0 8px 30px rgba(0,0,0,0.2);';
-                        successBox.innerHTML = `
-                            <div style="padding:20px; border-bottom:1px solid #eef2f7;">
-                                <h3 style="margin:0; font-size:18px; font-weight:800; color:#111827;">Success</h3>
-                                <p style="margin:8px 0 0 0; color:#4b5563; font-size:14px;">Course "<strong>${courseName}</strong>" has been updated successfully.</p>
-                            </div>
-                            <div style="display:flex; justify-content:flex-end; gap:12px; padding:16px;">
-                                <button onclick="location.reload();" style="padding:10px 18px; border-radius:8px; border:none; background:#059669; color:#fff; text-decoration:none; font-weight:600; cursor:pointer;">Done</button>
-                            </div>
-                        `;
-                        
-                        document.body.appendChild(successBackdrop);
-                        document.body.appendChild(successBox);
-                        closeEditCourseModal();
-                    } else {
-                        // Show error modal
-                        const errorBackdrop = document.createElement('div');
-                        errorBackdrop.style.cssText = 'position:fixed; inset:0; background:rgba(0,0,0,0.35); backdrop-filter:blur(3px); z-index:10000;';
-                        
-                        const errorBox = document.createElement('div');
-                        errorBox.style.cssText = 'position:fixed; left:50%; top:20%; transform:translateX(-50%); z-index:10001; max-width:520px; width:90%; background:#fff; border-radius:12px; box-shadow:0 8px 30px rgba(0,0,0,0.2);';
-                        errorBox.innerHTML = `
-                            <div style="padding:20px; border-bottom:1px solid #eef2f7;">
-                                <h3 style="margin:0; font-size:18px; font-weight:800; color:#991b1b;">Error</h3>
-                                <p style="margin:8px 0 0 0; color:#4b5563; font-size:14px;">${data.message}</p>
-                            </div>
-                            <div style="display:flex; justify-content:flex-end; gap:12px; padding:16px;">
-                                <button onclick="this.closest('div').parentElement.remove(); this.closest('div').previousElementSibling.remove();" style="padding:10px 18px; border-radius:8px; border:none; background:#dc2626; color:#fff; font-weight:600; cursor:pointer;">Try Again</button>
-                            </div>
-                        `;
-                        
-                        document.body.appendChild(errorBackdrop);
-                        document.body.appendChild(errorBox);
-                    }
+                    // Since the controller always redirects, just navigate to ViewCourse page
+                    // This ensures we see the success/error message from TempData
+                    window.location.href = `/Admin/ViewCourse/${courseId}`;
                 })
                 .catch(error => {
                     loadingBackdrop.remove();
+                    console.error('Error updating course:', error);
                     
-                    const errorBackdrop = document.createElement('div');
-                    errorBackdrop.style.cssText = 'position:fixed; inset:0; background:rgba(0,0,0,0.35); backdrop-filter:blur(3px); z-index:10000;';
-                    
-                    const errorBox = document.createElement('div');
-                    errorBox.style.cssText = 'position:fixed; left:50%; top:20%; transform:translateX(-50%); z-index:10001; max-width:520px; width:90%; background:#fff; border-radius:12px; box-shadow:0 8px 30px rgba(0,0,0,0.2);';
-                    errorBox.innerHTML = `
-                        <div style="padding:20px; border-bottom:1px solid #eef2f7;">
-                            <h3 style="margin:0; font-size:18px; font-weight:800; color:#991b1b;">Error</h3>
-                            <p style="margin:8px 0 0 0; color:#4b5563; font-size:14px;">An error occurred. Please try again.</p>
-                        </div>
-                        <div style="display:flex; justify-content:flex-end; gap:12px; padding:16px;">
-                            <button onclick="this.closest('div').parentElement.remove(); this.closest('div').previousElementSibling.remove();" style="padding:10px 18px; border-radius:8px; border:none; background:#dc2626; color:#fff; font-weight:600; cursor:pointer;">Try Again</button>
-                        </div>
-                    `;
-                    
-                    document.body.appendChild(errorBackdrop);
-                    document.body.appendChild(errorBox);
+                    // On error, redirect to ViewCourse page to show error message
+                    window.location.href = `/Admin/ViewCourse/${courseId}`;
                 });
             });
         });

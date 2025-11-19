@@ -8,7 +8,9 @@ using System.Collections.Generic;
 using ASI.Basecode.Data.Models;
 using System;
 using System.Linq;
+using System.Security.Claims;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
+using static ASI.Basecode.Data.Models.CourseGradebookViewModel;
 
 
 namespace ASI.Basecode.WebApp.Controllers
@@ -24,8 +26,9 @@ namespace ASI.Basecode.WebApp.Controllers
         private readonly ICourseService _courseService;
         private readonly IUserService _userService;
         private readonly IAuditLogService _auditLogService;
+        private readonly ITeacherCourseService _teacherCourseService;
 
-        public AdminController(IStudentService studentService, ITeacherService teacherService, ISupabaseAuthService supabaseAuthService, IAdminService adminService, ICourseService courseService, IUserService userService, IAuditLogService auditLogService)
+        public AdminController(IStudentService studentService, ITeacherService teacherService, ISupabaseAuthService supabaseAuthService, IAdminService adminService, ICourseService courseService, IUserService userService, IAuditLogService auditLogService, ITeacherCourseService teacherCourseService)
         {
             _studentService = studentService;
             _teacherService = teacherService;
@@ -34,6 +37,7 @@ namespace ASI.Basecode.WebApp.Controllers
             _courseService = courseService;
             _userService = userService;
             _auditLogService = auditLogService;
+            _teacherCourseService = teacherCourseService;
         }
 
         [HttpGet]
@@ -438,6 +442,14 @@ namespace ASI.Basecode.WebApp.Controllers
                 ViewBag.Role = role;
                 ViewBag.Department = "CCS"; // TODO: Load from actual department table
 
+                // Load academic performance for students
+                if (role.Equals("Student", StringComparison.OrdinalIgnoreCase))
+                {
+                    var academicPerformance = await GetStudentAcademicPerformanceAsync(user.UserTypeId);
+                    ViewBag.AcademicPerformance = academicPerformance;
+                    Console.WriteLine($"Loaded {academicPerformance.Count} courses for student academic performance");
+                }
+
                 Console.WriteLine($"ViewUser page loaded for user ID {id}");
                 return View(user);
             }
@@ -701,6 +713,60 @@ namespace ASI.Basecode.WebApp.Controllers
         }
 
         [HttpGet]
+        public async Task<IActionResult> Profile()
+        {
+            try
+            {
+                var supabaseUserId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? User.FindFirstValue("sub");
+                if (string.IsNullOrWhiteSpace(supabaseUserId))
+                {
+                    ViewBag.NoDataMessage = "Session expired. Please log in again.";
+                    return View("~/Views/Shared/Profile.cshtml", new StudentProfileViewModel());
+                }
+
+                var model = new StudentProfileViewModel();
+                var client = await _supabaseAuthService.GetSupabaseClientForAuthAsync();
+
+                // Load user info
+                var user = await client.From<SupabaseUserNew>()
+                    .Where(x => x.UserTypeId == supabaseUserId)
+                    .Get();
+
+                var userData = user?.Models?.FirstOrDefault();
+                if (userData != null)
+                {
+                    model.FirstName = userData.FirstName;
+                    model.MiddleName = userData.MiddleName;
+                    model.LastName = userData.LastName;
+                    model.Suffix = userData.Suffix;
+                    model.PhoneNumber = userData.ContactNumber;
+                    model.StudentId = userData.UserDisplayId ?? "N/A";
+                    model.FullName = string.Join(" ", new[] { userData.FirstName, userData.MiddleName, userData.LastName, userData.Suffix }.Where(s => !string.IsNullOrWhiteSpace(s)));
+                    model.EmailAddress = userData.Email;
+                    model.Status = userData.IsActive ?? false ? "Active" : "Inactive";
+                }
+
+                // Profile image
+                model.ProfileImageUrl = await _supabaseAuthService.GetUserProfileImageUrlAsync(supabaseUserId);
+                if (TempData["UploadedProfileUrl"] is string uploadedUrl && !string.IsNullOrWhiteSpace(uploadedUrl))
+                {
+                    model.ProfileImageUrl = uploadedUrl;
+                }
+
+                // Password last updated (default to now if not available)
+                model.PasswordLastUpdated = DateTime.Now.AddMonths(-1);
+
+                return View("~/Views/Shared/Profile.cshtml", model);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error loading admin profile: {ex.Message}");
+                ViewBag.NoDataMessage = "Error loading profile data. Please try again.";
+                return View("~/Views/Shared/Profile.cshtml", new StudentProfileViewModel());
+            }
+        }
+
+        [HttpGet]
         public IActionResult EditProfile()
         {
             return View();
@@ -911,6 +977,8 @@ namespace ASI.Basecode.WebApp.Controllers
                 {
                     try
                     {
+                        Console.WriteLine($"  Processing enrollment: StudentId={enrollment.StudentId}, Status={enrollment.Status}, CourseId={enrollment.CourseId}");
+                        
                         // Get user details (display ID, name)
                         var user = await _studentService.GetStudentBySupabaseIdAsync(enrollment.StudentId);
                         
@@ -926,12 +994,33 @@ namespace ASI.Basecode.WebApp.Controllers
                                 StudentId = enrollment.StudentId
                             });
                             
-                            Console.WriteLine($"  - Student: {fullName} ({user.UserDisplayId}) - Status: {enrollment.Status}");
+                            Console.WriteLine($"  ✓ Added student: {fullName} ({user.UserDisplayId}) - Status: {enrollment.Status}");
+                        }
+                        else
+                        {
+                            Console.WriteLine($"  ✗ Student not found for enrollment StudentId={enrollment.StudentId}");
+                            // Still add the enrollment with limited info
+                            enrolledStudents.Add(new CourseEnrolledStudentViewModel
+                            {
+                                IdNumber = "N/A",
+                                FullName = $"Student ID: {enrollment.StudentId}",
+                                Status = enrollment.Status,
+                                StudentId = enrollment.StudentId
+                            });
                         }
                     }
                     catch (Exception ex)
                     {
-                        Console.WriteLine($"  - Error fetching user details for enrollment {enrollment.StudentId}: {ex.Message}");
+                        Console.WriteLine($"  ✗ Error fetching user details for enrollment {enrollment.StudentId}: {ex.Message}");
+                        Console.WriteLine($"    Stack Trace: {ex.StackTrace}");
+                        // Still add the enrollment with limited info
+                        enrolledStudents.Add(new CourseEnrolledStudentViewModel
+                        {
+                            IdNumber = "N/A",
+                            FullName = $"Error loading: {enrollment.StudentId}",
+                            Status = enrollment.Status,
+                            StudentId = enrollment.StudentId
+                        });
                     }
                 }
 
@@ -947,11 +1036,42 @@ namespace ASI.Basecode.WebApp.Controllers
                     ViewData["SearchTerm"] = search;
                 }
 
+                // Fetch instructor name if instructor ID exists
+                string instructorName = "N/A";
+                if (!string.IsNullOrWhiteSpace(course.TeacherId))
+                {
+                    try
+                    {
+                        var client = await _supabaseAuthService.GetSupabaseClientForAuthAsync();
+                        var instructorQuery = await client.From<SupabaseUserNew>()
+                            .Where(x => x.UserTypeId == course.TeacherId)
+                            .Get();
+                        var instructor = instructorQuery?.Models?.FirstOrDefault();
+                        
+                        if (instructor != null)
+                        {
+                            var nameParts = new[] { instructor.FirstName, instructor.MiddleName, instructor.LastName, instructor.Suffix }
+                                .Where(s => !string.IsNullOrWhiteSpace(s));
+                            instructorName = string.Join(" ", nameParts);
+                            if (string.IsNullOrWhiteSpace(instructorName))
+                            {
+                                instructorName = instructor.UserDisplayId ?? "N/A";
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"Error fetching instructor name: {ex.Message}");
+                        instructorName = course.TeacherId; // Fallback to ID if name fetch fails
+                    }
+                }
+
                 // Create the view model
                 var viewModel = new ViewCourseViewModel
                 {
                     Course = course,
-                    EnrolledStudents = enrolledStudents
+                    EnrolledStudents = enrolledStudents,
+                    InstructorName = instructorName
                 };
 
                 Console.WriteLine($"Passing ViewCourseViewModel to view with {enrolledStudents.Count} enrolled students");
@@ -1043,7 +1163,8 @@ namespace ASI.Basecode.WebApp.Controllers
                     var errorMessage = string.Join(", ", errors);
                     
                     Console.WriteLine($"Validation failed: {errorMessage}");
-                    return Json(new { success = false, message = $"Validation error: {errorMessage}" });
+                    TempData["ErrorMessage"] = $"Validation error: {errorMessage}";
+                    return RedirectToAction("ViewCourse", new { id = model.CourseId });
                 }
 
                 Console.WriteLine($"=== AdminController.EditCourse (POST) ===");
@@ -1065,17 +1186,22 @@ namespace ASI.Basecode.WebApp.Controllers
                 if (!success)
                 {
                     Console.WriteLine($"Course update failed: {message}");
-                    return Json(new { success = false, message = message });
+                    TempData["ErrorMessage"] = message;
+                    return RedirectToAction("ViewCourse", new { id = model.CourseId });
                 }
 
                 Console.WriteLine($"Course updated successfully: {model.Name}");
-                return Json(new { success = true, message = "Course updated successfully", courseId = model.CourseId });
+                
+                // Always redirect to ViewCourse page with success message
+                TempData["SuccessMessage"] = "Course updated successfully";
+                return RedirectToAction("ViewCourse", new { id = model.CourseId });
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"Error updating course: {ex.Message}");
                 Console.WriteLine($"Stack trace: {ex.StackTrace}");
-                return Json(new { success = false, message = $"Error updating course: {ex.Message}" });
+                TempData["ErrorMessage"] = $"Error updating course: {ex.Message}";
+                return RedirectToAction("ViewCourse", new { id = model.CourseId });
             }
         }
 
@@ -1194,79 +1320,118 @@ namespace ASI.Basecode.WebApp.Controllers
         }
 
         /// <summary>
-<<<<<<< HEAD
-        /// Form post to search available students for a course
+        /// Gets available students for a course (not enrolled)
         /// </summary>
-        [HttpPost]
-        public async Task<IActionResult> GetAvailableStudentsForCourse(int courseId, string search)
+        [HttpGet("Admin/GetAvailableStudentsForCourse")]
+        [IgnoreAntiforgeryToken]
+        public async Task<IActionResult> GetAvailableStudentsForCourse([FromQuery] int courseId, [FromQuery] string search = "")
         {
             try
             {
+                Console.WriteLine($"=== AdminController.GetAvailableStudentsForCourse START ===");
+                Console.WriteLine($"Course ID: {courseId}, Search: '{search ?? ""}'");
+                Console.WriteLine($"Request Path: {Request.Path}");
+                Console.WriteLine($"Request QueryString: {Request.QueryString}");
+                
+                if (courseId <= 0)
+                {
+                    Console.WriteLine("ERROR: Invalid course ID");
+                    return new JsonResult(new { 
+                        success = false, 
+                        message = "Invalid course ID" 
+                    })
+                    {
+                        ContentType = "application/json"
+                    };
+                }
+
                 Console.WriteLine($"=== AdminController.GetAvailableStudentsForCourse ===");
                 Console.WriteLine($"Course ID: {courseId}, Search: '{search ?? ""}'");
 
-                var availableStudents = await _courseService.GetAvailableStudentsForCourseAsync(courseId, search ?? "");
+                // Get enrolled student IDs
+                var enrollments = await _courseService.GetCourseEnrollmentsByCourseIdAsync(courseId);
+                var enrolledStudentIds = (enrollments ?? new List<EnrollmentModel>())
+                    .Where(e => e != null && 
+                           !string.IsNullOrWhiteSpace(e.Status) && 
+                           (e.Status.Equals("Active", StringComparison.OrdinalIgnoreCase) || e.Status.Equals("active", StringComparison.OrdinalIgnoreCase)) && 
+                           e.DroppedAt == null)
+                    .Select(e => e.StudentId)
+                    .Where(id => !string.IsNullOrWhiteSpace(id))
+                    .ToList();
 
-                Console.WriteLine($"Service returned {availableStudents?.Count ?? 0} raw students from database");
+                Console.WriteLine($"Enrolled student IDs: {string.Join(", ", enrolledStudentIds)}");
+
+                // Get all students
+                var allStudents = await _userService.GetStudentsAsync() ?? new List<SupabaseUserNew>();
+                Console.WriteLine($"Total students retrieved: {allStudents.Count}");
+
+                if (allStudents.Count == 0)
+                {
+                    Console.WriteLine("WARNING: No students found in database!");
+                    return new JsonResult(new { 
+                        success = true, 
+                        students = new List<object>(),
+                        debug = new {
+                            totalStudents = 0,
+                            enrolledCount = enrolledStudentIds.Count,
+                            message = "No students found in database. Please create students first."
+                        }
+                    })
+                    {
+                        ContentType = "application/json"
+                    };
+                }
+
+                // Filter out already enrolled students
+                var availableStudents = allStudents
+                    .Where(s => !enrolledStudentIds.Contains(s.UserTypeId))
+                    .ToList();
+
+                // Apply search filter if provided
+                if (!string.IsNullOrWhiteSpace(search))
+                {
+                    var searchLower = search.ToLower();
+                    availableStudents = availableStudents
+                        .Where(s => 
+                            (s.UserDisplayId ?? "").ToLower().Contains(searchLower) ||
+                            (s.FirstName ?? "").ToLower().Contains(searchLower) ||
+                            (s.LastName ?? "").ToLower().Contains(searchLower))
+                        .ToList();
+                }
 
                 var result = availableStudents
                     .Select(s => new
                     {
-                        StudentId = s.UserTypeId,
-                        IdNumber = s.UserDisplayId ?? "N/A",
-                        FullName = $"{s.FirstName} {s.LastName}".Trim()
+                        studentId = s.UserTypeId,
+                        idNumber = s.UserDisplayId ?? "N/A",
+                        firstName = s.FirstName ?? "",
+                        lastName = s.LastName ?? "",
+                        status = s.IsActive == true ? "Active" : "Inactive"
                     })
                     .ToList();
 
-                Console.WriteLine($"Processed into {result.Count} available students for display");
-                if (result.Count > 0)
-                {
-                    Console.WriteLine("Available students:");
-                    foreach (var student in result)
-                    {
-                        Console.WriteLine($"  - ID: {student.IdNumber}, Name: {student.FullName}, StudentId: {student.StudentId}");
-                    }
-                }
-                else
-                {
-                    Console.WriteLine("No available students found matching the search criteria");
-                }
-                
-                // Fetch course and enrolled students to rebuild the view
-                var course = await _courseService.GetCourseByIdAsync(courseId);
-                var enrollments = await _courseService.GetCourseEnrollmentsByCourseIdAsync(courseId);
-                
-                var enrolledStudents = new List<CourseEnrolledStudentViewModel>();
-                foreach (var enrollment in enrollments)
-                {
-                    var user = await _studentService.GetStudentBySupabaseIdAsync(enrollment.StudentId);
-                    if (user != null)
-                    {
-                        enrolledStudents.Add(new CourseEnrolledStudentViewModel
-                        {
-                            IdNumber = user.UserDisplayId ?? "N/A",
-                            FullName = $"{user.FirstName} {user.LastName}".Trim(),
-                            Status = enrollment.Status,
-                            StudentId = enrollment.StudentId
-                        });
-                    }
-                }
+                Console.WriteLine($"Available students (not enrolled): {result.Count}");
+                Console.WriteLine($"=== GetAvailableStudentsForCourse END ===");
 
-                var viewModel = new ViewCourseViewModel
+                return new JsonResult(new { 
+                    success = true, 
+                    students = result
+                })
                 {
-                    Course = course,
-                    EnrolledStudents = enrolledStudents
+                    ContentType = "application/json"
                 };
-
-                ViewData["AvailableStudents"] = result;
-                return View("ViewCourse", viewModel);
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"Error getting available students: {ex.Message}");
                 Console.WriteLine($"Stack Trace: {ex.StackTrace}");
-                TempData["Error"] = $"Error searching students: {ex.Message}";
-                return RedirectToAction("ViewCourse", new { id = courseId });
+                return new JsonResult(new { 
+                    success = false, 
+                    message = $"Error loading students: {ex.Message}" 
+                })
+                {
+                    ContentType = "application/json"
+                };
             }
         }
 
@@ -1274,6 +1439,7 @@ namespace ASI.Basecode.WebApp.Controllers
         /// Form post to enroll a student in a course
         /// </summary>
         [HttpPost]
+        [IgnoreAntiforgeryToken]
         public async Task<IActionResult> EnrollStudentInCourse(int courseId, string studentId)
         {
             try
@@ -1285,26 +1451,360 @@ namespace ASI.Basecode.WebApp.Controllers
 
                 Console.WriteLine($"Service enrollment result - Success: {success}, Message: '{message}'");
 
-                if (success)
+                // Check if this is an AJAX request
+                if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
                 {
-                    Console.WriteLine($"Student enrolled successfully - Course: {courseId}, Student: {studentId}");
-                    TempData["Success"] = message;
+                    if (success)
+                    {
+                        Console.WriteLine($"Student enrolled successfully - Course: {courseId}, Student: {studentId}");
+                        return Json(new { success = true, message = message });
+                    }
+                    else
+                    {
+                        Console.WriteLine($"Enrollment failed - Course: {courseId}, Student: {studentId}, Reason: {message}");
+                        return Json(new { success = false, message = message });
+                    }
                 }
                 else
                 {
-                    Console.WriteLine($"Enrollment failed - Course: {courseId}, Student: {studentId}, Reason: {message}");
-                    TempData["Error"] = message;
-                }
+                    // Regular form submission - use redirect
+                    if (success)
+                    {
+                        Console.WriteLine($"Student enrolled successfully - Course: {courseId}, Student: {studentId}");
+                        TempData["Success"] = message;
+                    }
+                    else
+                    {
+                        Console.WriteLine($"Enrollment failed - Course: {courseId}, Student: {studentId}, Reason: {message}");
+                        TempData["Error"] = message;
+                    }
 
-                return RedirectToAction("ViewCourse", new { id = courseId });
+                    return RedirectToAction("ViewCourse", new { id = courseId });
+                }
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"Error enrolling student: {ex.Message}");
                 Console.WriteLine($"Stack Trace: {ex.StackTrace}");
-                TempData["Error"] = $"Error: {ex.Message}";
-                return RedirectToAction("ViewCourse", new { id = courseId });
-=======
+                
+                // Check if this is an AJAX request
+                if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+                {
+                    return Json(new { success = false, message = $"Error: {ex.Message}" });
+                }
+                else
+                {
+                    TempData["Error"] = $"Error: {ex.Message}";
+                    return RedirectToAction("ViewCourse", new { id = courseId });
+                }
+            }
+        }
+
+        /// <summary>
+        /// Drops a student from a course.
+        /// </summary>
+        /// <param name="courseId">The course ID.</param>
+        /// <param name="studentId">The student ID (UUID string).</param>
+        /// <returns>JSON result indicating success or failure.</returns>
+        [HttpPost("Admin/DropStudent")]
+        [IgnoreAntiforgeryToken]
+        public async Task<IActionResult> DropStudent([FromQuery] int courseId, [FromQuery] string studentId)
+        {
+            try
+            {
+                Console.WriteLine($"=== AdminController.DropStudent START ===");
+                Console.WriteLine($"CourseId: {courseId}, StudentId: {studentId}");
+
+                if (string.IsNullOrWhiteSpace(studentId))
+                {
+                    return Json(new { success = false, message = "Student ID is required." });
+                }
+
+                var client = await _supabaseAuthService.GetSupabaseClientForAuthAsync();
+
+                // Find the enrollment - get all enrollments for course, filter in memory
+                Console.WriteLine($"Querying enrollments for course_id = {courseId}");
+                var enrollmentResponse = await client.From<EnrollmentModel>()
+                    .Filter("course_id", Supabase.Postgrest.Constants.Operator.Equals, (long)courseId)
+                    .Get();
+
+                var allEnrollments = enrollmentResponse?.Models ?? new List<EnrollmentModel>();
+                Console.WriteLine($"Found {allEnrollments.Count} total enrollments for course {courseId}");
+                
+                // Log all enrollments for debugging
+                foreach (var e in allEnrollments)
+                {
+                    Console.WriteLine($"  Enrollment: StudentId={e.StudentId}, Status={e.Status}, CourseId={e.CourseId}");
+                }
+                
+                // First, check if any enrollment exists for this student (regardless of status)
+                var anyEnrollment = allEnrollments.FirstOrDefault(e => e.StudentId == studentId);
+                if (anyEnrollment == null)
+                {
+                    Console.WriteLine($"No enrollment found for student {studentId} in course {courseId}");
+                    return Json(new { success = false, message = "Student is not enrolled in this course." });
+                }
+                
+                Console.WriteLine($"Found enrollment for student: Status={anyEnrollment.Status}, StudentId={anyEnrollment.StudentId}");
+                
+                // Filter in memory for student_id and active status
+                var enrollment = allEnrollments
+                    .FirstOrDefault(e => e.StudentId == studentId && 
+                                       !string.IsNullOrEmpty(e.Status) && 
+                                       (e.Status == "Active" || e.Status.Equals("active", StringComparison.OrdinalIgnoreCase)));
+                
+                if (enrollment == null)
+                {
+                    Console.WriteLine($"Student {studentId} has enrollment but status is '{anyEnrollment.Status}', not Active");
+                    return Json(new { success = false, message = $"Student enrollment status is '{anyEnrollment.Status}'. Cannot remove a student that is not actively enrolled." });
+                }
+
+                Console.WriteLine($"Found enrollment. Updating status to 'Dropped'");
+                // Update enrollment status to "Dropped"
+                enrollment.Status = "Dropped";
+                enrollment.DroppedAt = DateTime.UtcNow;
+                await enrollment.Update<EnrollmentModel>();
+
+                Console.WriteLine($"=== AdminController.DropStudent SUCCESS ===");
+
+                // Log audit activity
+                try
+                {
+                    var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? User.FindFirstValue("sub");
+                    var allUsers = await _userService.GetAllUsersAsync();
+                    var currentUser = allUsers.FirstOrDefault(u => u.UserTypeId == currentUserId);
+                    var course = await _courseService.GetCourseByIdAsync(courseId);
+                    var student = allUsers.FirstOrDefault(u => u.UserTypeId == studentId);
+
+                    await _auditLogService.LogActivityAsync(
+                        userId: currentUserId,
+                        userRole: "Admin",
+                        userName: $"{currentUser?.FirstName} {currentUser?.LastName}".Trim(),
+                        actionType: "REMOVE_STUDENT",
+                        actionDescription: $"Removed student '{($"{student?.FirstName} {student?.LastName}").Trim()}' from course '{course?.Code} - {course?.Name}'",
+                        courseId: courseId,
+                        courseCode: course?.Code,
+                        courseName: course?.Name,
+                        studentId: studentId,
+                        studentName: $"{student?.FirstName} {student?.LastName}".Trim()
+                    );
+                }
+                catch (Exception auditEx)
+                {
+                    Console.WriteLine($"Error logging audit activity: {auditEx.Message}");
+                }
+
+                return Json(new { success = true, message = "Student removed successfully." });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error dropping student: {ex.Message}");
+                Console.WriteLine($"Stack Trace: {ex.StackTrace}");
+                return Json(new { success = false, message = $"Error removing student: {ex.Message}" });
+            }
+        }
+
+        /// <summary>
+        /// Gets academic performance data for a student (courses enrolled and overall percentage)
+        /// </summary>
+        private async Task<List<AcademicPerformanceItem>> GetStudentAcademicPerformanceAsync(string studentId)
+        {
+            var performanceList = new List<AcademicPerformanceItem>();
+
+            try
+            {
+                var client = await _supabaseAuthService.GetSupabaseClientForAuthAsync();
+
+                // Get active enrollments for this student
+                var enrollmentsResponse = await client
+                    .From<EnrollmentModel>()
+                    .Filter("student_id", Supabase.Postgrest.Constants.Operator.Equals, studentId)
+                    .Get();
+
+                var enrollments = enrollmentsResponse?.Models ?? new List<EnrollmentModel>();
+                var activeEnrollments = enrollments
+                    .Where(e => !string.IsNullOrEmpty(e.Status) && 
+                           (e.Status.Equals("Active", StringComparison.OrdinalIgnoreCase) || e.Status.Equals("active", StringComparison.OrdinalIgnoreCase)) &&
+                           e.DroppedAt == null)
+                    .ToList();
+
+                Console.WriteLine($"Found {activeEnrollments.Count} active enrollments for student {studentId}");
+
+                // For each enrollment, get course details and calculate percentage
+                foreach (var enrollment in activeEnrollments)
+                {
+                    try
+                    {
+                        // Get course details
+                        var courseQuery = await client
+                            .From<CourseModel>()
+                            .Filter("id", Supabase.Postgrest.Constants.Operator.Equals, enrollment.CourseId)
+                            .Get();
+                        var course = courseQuery?.Models?.FirstOrDefault();
+
+                        if (course == null)
+                        {
+                            Console.WriteLine($"Course {enrollment.CourseId} not found for enrollment");
+                            continue;
+                        }
+
+                        // Get student grade detail for this course
+                        var gradeDetail = await _teacherCourseService.GetStudentGradeDetailAsync(studentId, (int)enrollment.CourseId);
+
+                        performanceList.Add(new AcademicPerformanceItem
+                        {
+                            CourseCode = course.Code ?? "N/A",
+                            CourseTitle = course.Name ?? "Untitled Course",
+                            OverallPercentage = gradeDetail?.Percentage ?? 0
+                        });
+
+                        Console.WriteLine($"Course: {course.Code} - Percentage: {gradeDetail?.Percentage ?? 0}%");
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"Error loading grade for course {enrollment.CourseId}: {ex.Message}");
+                        // Continue with other courses even if one fails
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error loading academic performance: {ex.Message}");
+                Console.WriteLine($"Stack Trace: {ex.StackTrace}");
+            }
+
+            return performanceList;
+        }
+
+        /// <summary>
+        /// ViewModel for academic performance items
+        /// </summary>
+        public class AcademicPerformanceItem
+        {
+            public string CourseCode { get; set; }
+            public string CourseTitle { get; set; }
+            public double OverallPercentage { get; set; }
+        }
+
+        /// <summary>
+        /// Gets student details (profile and grades) for a specific course
+        /// </summary>
+        [HttpGet]
+        [Route("Admin/GetStudentDetails")]
+        [IgnoreAntiforgeryToken]
+        public async Task<IActionResult> GetStudentDetails([FromQuery] string studentId, [FromQuery] int courseId)
+        {
+            try
+            {
+                Console.WriteLine($"=== GetStudentDetails ===");
+                Console.WriteLine($"StudentId: {studentId}, CourseId: {courseId}");
+
+                if (string.IsNullOrWhiteSpace(studentId) || courseId <= 0)
+                {
+                    return Json(new { success = false, message = "Invalid student ID or course ID" });
+                }
+
+                var client = await _supabaseAuthService.GetSupabaseClientForAuthAsync();
+
+                // Get student profile information
+                var userQuery = await client.From<SupabaseUserNew>()
+                    .Where(x => x.UserTypeId == studentId)
+                    .Get();
+                var user = userQuery?.Models?.FirstOrDefault();
+
+                if (user == null)
+                {
+                    Console.WriteLine($"Student not found: {studentId}");
+                    return Json(new { success = false, message = "Student not found" });
+                }
+
+                Console.WriteLine($"User found: {user.FirstName} {user.LastName}");
+
+                // Get student profile (academic info)
+                var studentProfileQuery = await client.From<Student>()
+                    .Where(x => x.StudentId == studentId)
+                    .Get();
+                var studentProfile = studentProfileQuery?.Models?.FirstOrDefault();
+
+                // Get student grades for this course
+                StudentGradeDetail gradeDetail = null;
+                try
+                {
+                    gradeDetail = await _teacherCourseService.GetStudentGradeDetailAsync(studentId, courseId);
+                    Console.WriteLine($"Grade detail loaded: {gradeDetail?.Activities?.Count ?? 0} activities");
+                }
+                catch (Exception gradeEx)
+                {
+                    Console.WriteLine($"Warning: Error loading grades: {gradeEx.Message}");
+                    // Continue with empty grades - not critical
+                    gradeDetail = new StudentGradeDetail
+                    {
+                        StudentId = studentId,
+                        StudentDisplayId = user.UserDisplayId ?? "N/A",
+                        Name = $"{user.FirstName} {user.LastName}".Trim(),
+                        Activities = new List<CourseGradebookViewModel.ActivityGradeItem>()
+                    };
+                }
+
+                // Build profile data
+                var profileData = new
+                {
+                    idNumber = user.UserDisplayId ?? "N/A",
+                    firstName = user.FirstName ?? "",
+                    middleName = user.MiddleName ?? "",
+                    lastName = user.LastName ?? "",
+                    suffix = user.Suffix ?? "",
+                    fullName = string.Join(" ", new[] { user.FirstName, user.MiddleName, user.LastName, user.Suffix }.Where(s => !string.IsNullOrWhiteSpace(s))),
+                    email = user.Email ?? "N/A",
+                    phoneNumber = user.ContactNumber ?? "N/A",
+                    status = user.IsActive ?? false ? "Active" : "Inactive",
+                    department = studentProfile?.DepartmentId?.ToString() ?? "N/A",
+                    course = studentProfile?.ProgramId?.ToString() ?? "N/A",
+                    yearLevel = studentProfile?.YearLevel?.ToString() ?? "N/A"
+                };
+
+                // Build grades data
+                var activitiesList = new List<object>();
+                if (gradeDetail?.Activities != null && gradeDetail.Activities.Any())
+                {
+                    activitiesList = gradeDetail.Activities.Select(a => new
+                    {
+                        activityId = a.ActivityId,
+                        activityName = a.ActivityName,
+                        rawScore = a.RawScore,
+                        maxScore = a.MaxScore,
+                        percentage = a.MaxScore > 0 ? Math.Round((double)a.RawScore / a.MaxScore * 100, 1) : 0
+                    }).Cast<object>().ToList();
+                }
+
+                var gradesData = new
+                {
+                    totalRawScore = gradeDetail?.TotalRawScore ?? 0,
+                    totalMaxScore = gradeDetail?.TotalMaxScore ?? 0,
+                    percentage = gradeDetail?.Percentage ?? 0,
+                    activities = activitiesList
+                };
+
+                Console.WriteLine($"Returning student details: Profile={profileData.fullName}, Grades={gradesData.activities.Count} activities");
+
+                var result = new
+                {
+                    success = true,
+                    profile = profileData,
+                    grades = gradesData
+                };
+
+                return Json(result);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"ERROR getting student details: {ex.Message}");
+                Console.WriteLine($"Stack Trace: {ex.StackTrace}");
+                return Json(new { success = false, message = $"Error loading student details: {ex.Message}" });
+            }
+        }
+
+        /// <summary>
         /// Logs an admin activity to the audit_logs table
         /// </summary>
         /// <param name="actionType">Type of action (e.g., "CREATE_USER", "UPDATE_USER", "DELETE_USER", "CREATE_COURSE")</param>

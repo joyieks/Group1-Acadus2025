@@ -127,9 +127,48 @@
                 <div>
                     <div style="background:#f9fafb; border:1px solid #e5e7eb; border-radius:8px; padding:24px;">
                         <h3 style="margin:0 0 20px 0; font-weight:700; font-size:18px; color:#111827;">Academic Performance</h3>
-                        <div style="padding:32px; text-align:center; color:#6b7280;">
-                            No data available yet
-                        </div>
+                        @{
+                            var academicPerformance = ViewBag.AcademicPerformance as List<ASI.Basecode.WebApp.Controllers.AdminController.AcademicPerformanceItem>;
+                        }
+                        @if (academicPerformance != null && academicPerformance.Any())
+                        {
+                            <div style="border-radius:8px; overflow:hidden; border:1px solid #e5e7eb;">
+                                <table style="width:100%; border-collapse:collapse;">
+                                    <thead style="background:#059669;">
+                                        <tr>
+                                            <th style="padding:12px 16px; text-align:left; font-weight:700; color:#fff; font-size:14px;">Course Code</th>
+                                            <th style="padding:12px 16px; text-align:left; font-weight:700; color:#fff; font-size:14px;">Course Title</th>
+                                            <th style="padding:12px 16px; text-align:center; font-weight:700; color:#fff; font-size:14px;">Overall Grade</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var item in academicPerformance)
+                                        {
+                                            <tr style="background:#ffffff; border-bottom:1px solid #e5e7eb;">
+                                                <td style="padding:12px 16px; color:#111827; font-weight:600; font-size:14px;">@item.CourseCode</td>
+                                                <td style="padding:12px 16px; color:#6b7280; font-size:14px;">@item.CourseTitle</td>
+                                                <td style="padding:12px 16px; text-align:center; color:#059669; font-weight:700; font-size:14px;">
+                                                    @if (item.OverallPercentage > 0)
+                                                    {
+                                                        <span>@item.OverallPercentage.ToString("0.0")%</span>
+                                                    }
+                                                    else
+                                                    {
+                                                        <span style="color:#6b7280;">No grades yet</span>
+                                                    }
+                                                </td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        }
+                        else
+                        {
+                            <div style="padding:32px; text-align:center; color:#6b7280;">
+                                No courses enrolled yet
+                            </div>
+                        }
                     </div>
                 </div>
             }

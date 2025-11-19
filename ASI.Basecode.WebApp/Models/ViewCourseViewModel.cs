@@ -17,5 +17,10 @@ namespace ASI.Basecode.WebApp.Models
         /// Gets or sets the list of enrolled students
         /// </summary>
         public List<CourseEnrolledStudentViewModel> EnrolledStudents { get; set; } = new List<CourseEnrolledStudentViewModel>();
+
+        /// <summary>
+        /// Gets or sets the instructor's full name
+        /// </summary>
+        public string InstructorName { get; set; }
     }
 }

@@ -541,7 +541,7 @@
     <div class="container" style="max-width: 1200px; margin: 0 auto; padding: 0 16px;">
         <div style="display:grid; grid-template-columns: 1fr 1fr; gap:24px;">
             <div>
-                @await Component.InvokeAsync("TopStudents")
+                @await Component.InvokeAsync("TopStudents", new { courseId = Model.Id })
             </div>
             <div>
                 @await Component.InvokeAsync("QuickActions", Model.Id)

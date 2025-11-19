@@ -5,6 +5,7 @@ using ASI.Basecode.Services.ServiceModels;
 using Microsoft.Extensions.Configuration;
 using Supabase;
 using System;
+using System.Collections.Generic;
 using System.Linq;  // Added for FirstOrDefault
 using System.Net.Http;
 using System.Threading.Tasks;
@@ -384,14 +385,17 @@ namespace ASI.Basecode.Services.Services
                 var client = await GetSupabaseClientAsync();
                 // Query users table by Supabase user ID (userTypeId)
                 var response = await client.From<SupabaseUserNew>()
-                    .Where(x => x.UserTypeId == supabaseUserId)
-                    .Single();
+                    .Filter("userTypeId", Supabase.Postgrest.Constants.Operator.Equals, supabaseUserId)
+                    .Get();
 
-                return response;
+                var users = response?.Models ?? new List<SupabaseUserNew>();
+                return users.FirstOrDefault();
             }
             catch (Exception ex)
             {
-                throw new Exception($"Error retrieving student by Supabase ID: {ex.Message}", ex);
+                Console.WriteLine($"Error retrieving student by Supabase ID {supabaseUserId}: {ex.Message}");
+                Console.WriteLine($"Stack Trace: {ex.StackTrace}");
+                return null;
             }
         }
 

@@ -190,118 +190,180 @@ namespace ASI.Basecode.WebApp.Controllers
         [HttpGet]
         public async Task<IActionResult> Profile()
         {
-            var supabaseUserId = HttpContext.Session.GetString("SupabaseUserId");
+            var supabaseUserId = HttpContext.Session.GetString("SupabaseUserId") ?? 
+                                User.FindFirstValue(ClaimTypes.NameIdentifier) ?? 
+                                User.FindFirstValue("sub");
             if (string.IsNullOrWhiteSpace(supabaseUserId))
             {
                 ViewBag.NoDataMessage = "Session expired. Please log in again.";
-                return View(new StudentProfileViewModel());
+                return View("~/Views/Shared/Profile.cshtml", new StudentProfileViewModel());
             }
 
             var model = new StudentProfileViewModel();
             try
             {
+                Console.WriteLine($"=== Loading Student Profile ===");
+                Console.WriteLine($"SupabaseUserId: {supabaseUserId}");
+
                 var client = await _supabaseAuthService.GetSupabaseClientForAuthAsync();
 
                 // Load user info (all personal data is in users table)
-                var user = await client.From<SupabaseUserNew>()
+                var userQuery = await client.From<SupabaseUserNew>()
                     .Where(x => x.UserTypeId == supabaseUserId)
-                    .Single();
+                    .Get();
+                var user = userQuery?.Models?.FirstOrDefault();
 
-                if (user != null)
+                if (user == null)
                 {
-                    model.FirstName = user.FirstName;
-                    model.MiddleName = user.MiddleName;
-                    model.LastName = user.LastName;
-                    model.FullName = string.Join(" ", new[] { user.FirstName, user.MiddleName, user.LastName }.Where(s => !string.IsNullOrWhiteSpace(s)));
-                    model.EmailAddress = user.Email;
-
-                    // Get studentProfile for academic info
-                    var studentProfile = await client.From<Student>()
-                      .Where(x => x.StudentId == supabaseUserId)
-                    .Single();
-
-                    model.Department = studentProfile?.DepartmentId?.ToString() ?? "N/A";
-                    model.Course = studentProfile?.ProgramId?.ToString() ?? "N/A";  // Fixed: use ProgramId
-                    model.YearLevel = studentProfile?.YearLevel?.ToString() ?? "N/A";
-                    model.Status = user.IsActive ?? false ? "Active" : "Inactive";
+                    Console.WriteLine($"User not found for SupabaseUserId: {supabaseUserId}");
+                    ViewBag.NoDataMessage = "User profile not found. Please contact your administrator.";
+                    return View("~/Views/Shared/Profile.cshtml", model);
                 }
 
-                // Address (primary)
-                if (user != null)
+                Console.WriteLine($"User found: {user.FirstName} {user.LastName}");
+
+                model.FirstName = user.FirstName;
+                model.MiddleName = user.MiddleName;
+                model.LastName = user.LastName;
+                model.Suffix = user.Suffix;
+                model.PhoneNumber = user.ContactNumber;
+                model.StudentId = user.UserDisplayId;
+                model.FullName = string.Join(" ", new[] { user.FirstName, user.MiddleName, user.LastName, user.Suffix }.Where(s => !string.IsNullOrWhiteSpace(s)));
+                model.EmailAddress = user.Email;
+                model.Status = user.IsActive ?? false ? "Active" : "Inactive";
+
+                // Get studentProfile for academic info
+                try
                 {
-                    // Get studentProfile ID first
-                    var studentProfile = await client.From<Student>()
-      .Where(x => x.StudentId == supabaseUserId)
-                  .Single();
+                    var studentProfileQuery = await client.From<Student>()
+                        .Where(x => x.StudentId == supabaseUserId)
+                        .Get();
+                    var studentProfile = studentProfileQuery?.Models?.FirstOrDefault();
 
-                    var studentAddress = await client.From<StudentAddress>()
-                            .Where(sa => sa.StudentId == studentProfile.Id && sa.IsPrimary == true)  // Fixed: use studentProfile.Id (int)
-                            .Single();
-
-                    if (studentAddress != null)
+                    if (studentProfile != null)
                     {
-                        var address = await client.From<Address>()
-                 .Where(a => a.Id == studentAddress.AddressId)
-                       .Single();
-                        if (address != null)
+                        Console.WriteLine($"StudentProfile found: ID={studentProfile.Id}");
+                        model.Department = studentProfile.DepartmentId?.ToString() ?? "N/A";
+                        model.Course = studentProfile.ProgramId?.ToString() ?? "N/A";
+                        model.YearLevel = studentProfile.YearLevel?.ToString() ?? "N/A";
+
+                        // Address (primary) - wrapped in try-catch to handle missing address gracefully
+                        try
                         {
-                            model.HouseNumber = address.HouseNumber;
-                            model.Street = address.StreetName;
-                            model.Subdivision = address.Subdivision;
-                            model.Barangay = address.Barangay;
-                            model.City = address.City;
-                            model.Province = address.Province;
-                            model.ZipCode = address.ZipCode;
+                            var studentAddressQuery = await client.From<StudentAddress>()
+                                .Where(sa => sa.StudentId == studentProfile.Id && sa.IsPrimary == true)
+                                .Get();
+                            var studentAddress = studentAddressQuery?.Models?.FirstOrDefault();
+
+                            if (studentAddress != null)
+                            {
+                                var addressQuery = await client.From<Address>()
+                                    .Where(a => a.Id == studentAddress.AddressId)
+                                    .Get();
+                                var address = addressQuery?.Models?.FirstOrDefault();
+                                
+                                if (address != null)
+                                {
+                                    model.HouseNumber = address.HouseNumber;
+                                    model.Street = address.StreetName;
+                                    model.Subdivision = address.Subdivision;
+                                    model.Barangay = address.Barangay;
+                                    model.City = address.City;
+                                    model.Province = address.Province;
+                                    model.ZipCode = address.ZipCode;
+                                }
+                            }
                         }
+                        catch (Exception addrEx)
+                        {
+                            Console.WriteLine($"Warning: Could not load address: {addrEx.Message}");
+                            // Continue without address - not critical
+                        }
+
+                        // Emergency contact (primary) - wrapped in try-catch to handle missing contact gracefully
+                        try
+                        {
+                            var emergencyQuery = await client.From<StudentEmergencyContact>()
+                                .Where(ec => ec.StudentId == studentProfile.Id && ec.IsPrimary == true)
+                                .Get();
+                            var emergency = emergencyQuery?.Models?.FirstOrDefault();
+                            
+                            if (emergency != null)
+                            {
+                                var contactQuery = await client.From<Contact>()
+                                    .Where(c => c.Id == emergency.ContactId)
+                                    .Get();
+                                var contact = contactQuery?.Models?.FirstOrDefault();
+                                
+                                if (contact != null)
+                                {
+                                    model.EmergencyFirstName = contact.FirstName;
+                                    model.EmergencyMiddleName = contact.MiddleName;
+                                    model.EmergencyLastName = contact.LastName;
+                                    model.EmergencySuffix = contact.Suffix;
+                                    model.EmergencyContactNumber = contact.ContactNumber;
+                                    model.EmergencyRelationship = emergency.Relationship;
+                                }
+                            }
+                        }
+                        catch (Exception contactEx)
+                        {
+                            Console.WriteLine($"Warning: Could not load emergency contact: {contactEx.Message}");
+                            // Continue without emergency contact - not critical
+                        }
+                    }
+                    else
+                    {
+                        Console.WriteLine($"StudentProfile not found for SupabaseUserId: {supabaseUserId}");
+                        // Set default values for academic info
+                        model.Department = "N/A";
+                        model.Course = "N/A";
+                        model.YearLevel = "N/A";
                     }
                 }
-
-                // Emergency contact (primary)
-                if (user != null)
+                catch (Exception studentProfileEx)
                 {
-                    var studentProfile = await client.From<Student>()
-                .Where(x => x.StudentId == supabaseUserId)
-                         .Single();
-
-                    var emergency = await client.From<StudentEmergencyContact>()
-                    .Where(ec => ec.StudentId == studentProfile.Id && ec.IsPrimary == true)  // Fixed: use studentProfile.Id (int)
-                           .Single();
-                    if (emergency != null)
-                    {
-                        var contact = await client.From<Contact>()
-                       .Where(c => c.Id == emergency.ContactId)
-                          .Single();
-                        if (contact != null)
-                        {
-                            model.EmergencyFirstName = contact.FirstName;
-                            model.EmergencyMiddleName = contact.MiddleName;
-                            model.EmergencyLastName = contact.LastName;
-                            model.EmergencySuffix = contact.Suffix;
-                            model.EmergencyContactNumber = contact.ContactNumber;
-                            model.EmergencyRelationship = emergency.Relationship;
-                        }
-                    }
+                    Console.WriteLine($"Warning: Error loading student profile details: {studentProfileEx.Message}");
+                    // Continue with basic user info - academic info is optional
+                    model.Department = "N/A";
+                    model.Course = "N/A";
+                    model.YearLevel = "N/A";
                 }
 
                 // Profile image from Auth metadata (set by upload)
-                model.ProfileImageUrl = await _supabaseAuthService.GetUserProfileImageUrlAsync(supabaseUserId);
+                try
+                {
+                    model.ProfileImageUrl = await _supabaseAuthService.GetUserProfileImageUrlAsync(supabaseUserId);
+                }
+                catch (Exception imgEx)
+                {
+                    Console.WriteLine($"Warning: Could not load profile image: {imgEx.Message}");
+                    // Continue without profile image - not critical
+                }
 
                 // If recent upload exists in this session, prefer it
                 if (TempData["UploadedProfileUrl"] is string uploadedUrl && !string.IsNullOrWhiteSpace(uploadedUrl))
                 {
                     model.ProfileImageUrl = uploadedUrl;
                 }
+
+                Console.WriteLine($"Profile loaded successfully. HasData: {model.HasData}");
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error loading student profile: {ex.Message}");
-                ViewBag.NoDataMessage = "Unable to load profile data at the moment.";
+                Console.WriteLine($"ERROR loading student profile: {ex.Message}");
+                Console.WriteLine($"Stack Trace: {ex.StackTrace}");
+                ViewBag.NoDataMessage = "Error loading profile data. Please try again.";
+                return View("~/Views/Shared/Profile.cshtml", new StudentProfileViewModel());
             }
 
-            if (!model.HasData)
+            // Only show "No profile data available" if we have absolutely no data
+            if (!model.HasData && string.IsNullOrWhiteSpace(model.FirstName) && string.IsNullOrWhiteSpace(model.LastName))
+            {
                 ViewBag.NoDataMessage = "No profile data available.";
+            }
 
-            return View(model);
+            return View("~/Views/Shared/Profile.cshtml", model);
         }
 
         /// <summary>
@@ -342,30 +404,81 @@ namespace ASI.Basecode.WebApp.Controllers
                     return RedirectToAction("CourseDetails", new { courseId = courseId });
                 }
 
+                // Get activity details to check due date
+                var activity = await _activityRepository.GetActivityByIdAsync(activityId);
+                if (activity == null)
+                {
+                    TempData["ErrorMessage"] = "Activity not found.";
+                    return RedirectToAction("CourseDetails", new { courseId = courseId });
+                }
+
                 // Check if submission already exists
                 var existing = await _activityRepository.GetSubmissionAsync(activityId, studentId);
+
+                // Determine submission status based on due date
+                var currentTime = DateTime.UtcNow;
+                
+                // Handle due date - ensure proper timezone handling
+                DateTime dueDateUtc;
+                if (activity.DueDate.Kind == DateTimeKind.Unspecified)
+                {
+                    // If timezone is unspecified, assume it's stored as UTC in database
+                    dueDateUtc = DateTime.SpecifyKind(activity.DueDate, DateTimeKind.Utc);
+                }
+                else if (activity.DueDate.Kind == DateTimeKind.Local)
+                {
+                    // Convert local time to UTC
+                    dueDateUtc = activity.DueDate.ToUniversalTime();
+                }
+                else
+                {
+                    // Already UTC
+                    dueDateUtc = activity.DueDate;
+                }
+                
+                // Compare times - if current time is greater than due date, it's late
+                var isLate = currentTime > dueDateUtc;
+                var submissionStatus = isLate ? "Late" : "Submitted";
+                
+                // Force status to be set (never null)
+                if (string.IsNullOrWhiteSpace(submissionStatus))
+                {
+                    submissionStatus = "Submitted"; // Default fallback
+                }
+
+                Console.WriteLine($"=== SubmitActivity ===");
+                Console.WriteLine($"ActivityId: {activityId}, StudentId: {studentId}");
+                Console.WriteLine($"Original Due Date from DB: {activity.DueDate} (Kind: {activity.DueDate.Kind})");
+                Console.WriteLine($"Due Date (UTC): {dueDateUtc} (UTC)");
+                Console.WriteLine($"Current Time (UTC): {currentTime} (UTC)");
+                Console.WriteLine($"Time Difference: {(currentTime - dueDateUtc).TotalHours:F2} hours");
+                Console.WriteLine($"Is Late: {isLate} (Current > Due Date: {currentTime > dueDateUtc})");
+                Console.WriteLine($"Submission Status: '{submissionStatus}'");
+                Console.WriteLine($"SubmissionContent length: {submissionContent?.Length ?? 0}");
+                Console.WriteLine($"SubmissionContent preview: {submissionContent?.Substring(0, Math.Min(50, submissionContent?.Length ?? 0))}...");
 
                 var submission = new ActivitySubmissionModel
                 {
                     ActivityId = activityId,
                     StudentId = studentId,
                     SubmissionContent = submissionContent,
-                    SubmissionStatus = existing == null ? "Submitted" : "Submitted",  // Allow resubmission
-                    CreatedAt = DateTime.UtcNow,
+                    SubmissionStatus = submissionStatus,
+                    CreatedAt = currentTime,
                     Score = existing?.Score ?? 0  // Keep existing score if resubmitting
                 };
 
-                // Debug: Log submission content
-                Console.WriteLine($"=== SubmitActivity ===");
-                Console.WriteLine($"ActivityId: {activityId}, StudentId: {studentId}");
-                Console.WriteLine($"SubmissionContent length: {submissionContent?.Length ?? 0}");
-                Console.WriteLine($"SubmissionContent preview: {submissionContent?.Substring(0, Math.Min(50, submissionContent?.Length ?? 0))}...");
-
                 await _activityRepository.SaveSubmissionAsync(submission);
                 
-                Console.WriteLine($"Submission saved successfully");
+                Console.WriteLine($"Submission saved successfully with status: {submissionStatus}");
 
-                TempData["SuccessMessage"] = "Activity submitted successfully!";
+                if (isLate)
+                {
+                    TempData["SuccessMessage"] = "Activity submitted successfully! (Note: This submission is late)";
+                }
+                else
+                {
+                    TempData["SuccessMessage"] = "Activity submitted successfully!";
+                }
                 return RedirectToAction("CourseDetails", new { courseId = courseId });
             }
             catch (Exception ex)

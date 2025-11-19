@@ -47,10 +47,14 @@ namespace ASI.Basecode.Services.Services
             }
 
             // 3. Fetch activities and submissions
+            // GetActivitiesByCourseIdAsync already filters by IsVisible = false (visible activities only)
             var activities = await _studentCourseRepository.GetActivitiesByCourseIdAsync(cid);
             var submissions = await _studentCourseRepository.GetSubmissionsByStudentAndCourseAsync(studentId, cid);
 
-            // 4. Map activities
+            // Get activity IDs for visible activities only
+            var visibleActivityIds = activities.Select(a => a.Id).ToList();
+
+            // 4. Map activities (only visible activities)
             var activityItems = activities.Select(a =>
             {
                 var sub = submissions.FirstOrDefault(s => s.ActivityId == a.Id);
@@ -78,20 +82,29 @@ namespace ASI.Basecode.Services.Services
 
             }).ToList();
 
-            // 5. Map feedbacks with instructor name
+            // 5. Map feedbacks with instructor name - ONLY for visible activities
             var instructorName = instructor != null
                 ? $"{instructor.FirstName} {instructor.LastName}".Trim()
                 : "";
 
+            // Filter submissions to only include those from visible activities
             var feedbackItems = submissions
-                .Where(s => !string.IsNullOrWhiteSpace(s.Feedback))
-                .Select(s => new StudentCourseDetailsViewModel.FeedbackItem
+                .Where(s => visibleActivityIds.Contains(s.ActivityId) && !string.IsNullOrWhiteSpace(s.Feedback))
+                .Select(s => 
                 {
-                    Title = "Feedback for Activity " + s.ActivityId,
-                    Date = s.CreatedAt.ToString("yyyy-MM-dd"),
-                    Content = s.Feedback,
-                    Instructor = instructorName,
-                    DateGiven = s.CreatedAt
+                    // Get activity title for better feedback display
+                    var activity = activities.FirstOrDefault(a => a.Id == s.ActivityId);
+                    var activityTitle = activity?.Title ?? $"Activity {s.ActivityId}";
+                    
+                    return new StudentCourseDetailsViewModel.FeedbackItem
+                    {
+                        Title = activityTitle,
+                        ActivityName = activityTitle,
+                        Date = s.CreatedAt.ToString("yyyy-MM-dd"),
+                        Content = s.Feedback,
+                        Instructor = instructorName,
+                        DateGiven = s.CreatedAt
+                    };
                 }).ToList();
 
             // 6. Return view model

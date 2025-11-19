@@ -5,6 +5,9 @@ using Microsoft.AspNetCore.Http;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
+using System.Threading.Tasks;
+using System.Security.Claims;
 using ASI.Basecode.Services.Interfaces;
 
 namespace ASI.Basecode.WebApp.Controllers
@@ -56,63 +59,67 @@ namespace ASI.Basecode.WebApp.Controllers
             return View();
         }
 
-        // Mock data example (for testing)
-        public IActionResult Profile()
+        // Redirect to StudentController.Profile() for students, or show profile for other users
+        public async Task<IActionResult> Profile()
         {
-            var model = new ASI.Basecode.WebApp.Models.StudentProfileViewModel
+            // Check if user is a student - if so, redirect to StudentController
+            if (User.IsInRole("Student"))
             {
-                // ===== Basic Profile Information =====
-                ProfileImageUrl = "/images/sample-profile.jpg",
-                FullName = "Juan Dela Cruz",
-
-
-                // ===== Personal Info =====
-                StudentId = "123",
-                Status = "Active",
-                FirstName = "Juan",
-                MiddleName = "Santos",
-                LastName = "Dela Cruz",
-                Suffix = "",
-                DateOfBirth = "May 3, 2002",
-                Gender = "Male",
-                Course = "Bachelor of Science in Information Technology",
-                YearLevel = "4",
-                Department = "College of Computer Studies",
-                EmailAddress = "juan.delacruz@example.com",
-                PhoneNumber = "09171234567",
-
-                // ===== Address Information =====
-                HouseNumber = "123",
-                Street = "Maple Street",
-                Subdivision = "Sunnyvale Subdivision",
-                Barangay = "Barangay Mabini",
-                City = "Quezon City",
-                Province = "Metro Manila",
-                ZipCode = "1100",
-
-                // ===== Emergency Contact Information =====
-                EmergencyFirstName = "Maria",
-                EmergencyMiddleName = "Reyes",
-                EmergencyLastName = "Dela Cruz",
-                EmergencySuffix = "",
-                EmergencyContactNumber = "09181234567",
-                EmergencyRelationship = "Mother",
-
-                // ===== Security Info =====
-                PasswordLastUpdated = DateTime.Now.AddMonths(-2)
-            };
-
-            // Prefer recently uploaded image if present
-            if (TempData["UploadedProfileUrl"] is string uploadedUrl && !string.IsNullOrWhiteSpace(uploadedUrl))
-            {
-                model.ProfileImageUrl = uploadedUrl;
+                return RedirectToAction("Profile", "Student");
             }
 
-            // If no profile data exists
-            if (!model.HasData)
-                ViewBag.NoDataMessage = "No profile data available. Please complete your profile information.";
+            // For other users (or if role check fails), try to load basic profile
+            try
+            {
+                var supabaseUserId = HttpContext.Session.GetString("SupabaseUserId") ?? 
+                                    User.FindFirstValue(System.Security.Claims.ClaimTypes.NameIdentifier) ?? 
+                                    User.FindFirstValue("sub");
+                
+                if (string.IsNullOrWhiteSpace(supabaseUserId))
+                {
+                    ViewBag.NoDataMessage = "Session expired. Please log in again.";
+                    return View("~/Views/Shared/Profile.cshtml", new StudentProfileViewModel());
+                }
 
-            return View(model);
+                var model = new StudentProfileViewModel();
+                var client = await _supabaseAuthService.GetSupabaseClientForAuthAsync();
+
+                // Load user info
+                var user = await client.From<ASI.Basecode.Data.Models.SupabaseUserNew>()
+                    .Where(x => x.UserTypeId == supabaseUserId)
+                    .Get();
+
+                var userData = user?.Models?.FirstOrDefault();
+                if (userData != null)
+                {
+                    model.FirstName = userData.FirstName;
+                    model.MiddleName = userData.MiddleName;
+                    model.LastName = userData.LastName;
+                    model.FullName = string.Join(" ", new[] { userData.FirstName, userData.MiddleName, userData.LastName }.Where(s => !string.IsNullOrWhiteSpace(s)));
+                    model.EmailAddress = userData.Email;
+                    model.PhoneNumber = userData.ContactNumber;
+                    model.StudentId = userData.UserDisplayId ?? "N/A";
+                    model.Status = userData.IsActive ?? false ? "Active" : "Inactive";
+                }
+
+                // Profile image
+                model.ProfileImageUrl = await _supabaseAuthService.GetUserProfileImageUrlAsync(supabaseUserId);
+                if (TempData["UploadedProfileUrl"] is string uploadedUrl && !string.IsNullOrWhiteSpace(uploadedUrl))
+                {
+                    model.ProfileImageUrl = uploadedUrl;
+                }
+
+                // Password last updated (default to now if not available)
+                model.PasswordLastUpdated = DateTime.Now.AddMonths(-1);
+
+                return View("~/Views/Shared/Profile.cshtml", model);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error loading profile: {ex.Message}");
+                ViewBag.NoDataMessage = "Error loading profile data. Please try again.";
+                return View("~/Views/Shared/Profile.cshtml", new StudentProfileViewModel());
+            }
         }
 
         [HttpPost]

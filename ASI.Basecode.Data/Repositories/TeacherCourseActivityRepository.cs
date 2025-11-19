@@ -236,8 +236,13 @@ namespace ASI.Basecode.Data.Repositories
             else
             {
                 // Update existing submission
+                var oldStatus = existing.SubmissionStatus;
                 existing.Score = submission.Score;
-                existing.SubmissionStatus = submission.SubmissionStatus ?? existing.SubmissionStatus;
+                // ALWAYS update status - force update for late submission detection
+                // Don't use null coalescing - always set the new status
+                existing.SubmissionStatus = submission.SubmissionStatus ?? "Submitted"; // Default fallback
+                Console.WriteLine($"Updating submission status from '{oldStatus}' to '{existing.SubmissionStatus}'");
+                
                 existing.Feedback = submission.Feedback ?? existing.Feedback;
                 // Update submission content if provided (allow students to resubmit)
                 if (!string.IsNullOrWhiteSpace(submission.SubmissionContent))
@@ -249,8 +254,10 @@ namespace ASI.Basecode.Data.Repositories
                 {
                     Console.WriteLine($"WARNING: SubmissionContent is null/empty, not updating");
                 }
+                // Update CreatedAt to reflect the new submission time
+                existing.CreatedAt = submission.CreatedAt;
                 await existing.Update<ActivitySubmissionModel>();
-                Console.WriteLine($"Existing submission updated");
+                Console.WriteLine($"Existing submission updated - Final status: '{existing.SubmissionStatus}'");
             }
         }
     }

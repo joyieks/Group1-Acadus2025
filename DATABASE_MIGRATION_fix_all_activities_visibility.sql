@@ -34,3 +34,4 @@ SELECT
     SUM(CASE WHEN "isVisible" = true THEN 1 ELSE 0 END) as hidden_activities
 FROM activities;
 
+

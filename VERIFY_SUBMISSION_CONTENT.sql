@@ -36,3 +36,4 @@ SELECT
     COUNT(*) - COUNT("submissionContent") as submissions_without_content
 FROM activity_submission;
 
+

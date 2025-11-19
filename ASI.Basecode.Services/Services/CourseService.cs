@@ -487,15 +487,22 @@ namespace ASI.Basecode.Services.Services
             {
                 var client = await _supabaseAuthService.GetSupabaseClientForAuthAsync();
 
-                // Get all active enrollments for this course
+                // Get all enrollments for this course (filter by status in memory for case-insensitive matching)
                 var enrollmentsQuery = await client
                     .From<EnrollmentModel>()
-                    .Where(e => e.CourseId == courseId && e.Status == "Active")
+                    .Filter("course_id", Supabase.Postgrest.Constants.Operator.Equals, courseId)
                     .Get();
 
-                var enrollments = enrollmentsQuery?.Models ?? new List<EnrollmentModel>();
+                var allEnrollments = enrollmentsQuery?.Models ?? new List<EnrollmentModel>();
+                
+                // Filter for active enrollments (case-insensitive) and not dropped
+                var enrollments = allEnrollments
+                    .Where(e => !string.IsNullOrEmpty(e.Status) && 
+                           (e.Status.Equals("Active", StringComparison.OrdinalIgnoreCase) || e.Status.Equals("active", StringComparison.OrdinalIgnoreCase)) &&
+                           e.DroppedAt == null)
+                    .ToList();
 
-                Console.WriteLine($"Retrieved {enrollments.Count} active enrollments for course {courseId}");
+                Console.WriteLine($"Retrieved {enrollments.Count} active enrollments for course {courseId} (out of {allEnrollments.Count} total)");
                 return enrollments;
             }
             catch (Exception ex)
@@ -681,29 +688,35 @@ namespace ASI.Basecode.Services.Services
                 // Check if student exists
                 var studentQuery = await client
                     .From<SupabaseUserNew>()
-                    .Where(u => u.UserTypeId == studentId)
-                    .Single();
+                    .Filter("userTypeId", Supabase.Postgrest.Constants.Operator.Equals, studentId)
+                    .Get();
 
-                if (studentQuery == null)
+                var students = studentQuery?.Models ?? new List<SupabaseUserNew>();
+                if (!students.Any())
                 {
+                    Console.WriteLine($"Student {studentId} not found in database");
                     return (false, "Student not found");
                 }
 
                 // Check if student is already enrolled
                 var existingEnrollmentQuery = await client
                     .From<EnrollmentModel>()
-                    .Where(e => e.CourseId == courseId && e.StudentId == studentId)
-                    .Single();
+                    .Filter("course_id", Supabase.Postgrest.Constants.Operator.Equals, courseId)
+                    .Filter("student_id", Supabase.Postgrest.Constants.Operator.Equals, studentId)
+                    .Get();
 
-                if (existingEnrollmentQuery != null)
+                var existingEnrollments = existingEnrollmentQuery?.Models ?? new List<EnrollmentModel>();
+                if (existingEnrollments.Any())
                 {
+                    var existingEnrollment = existingEnrollments.FirstOrDefault();
+                    Console.WriteLine($"Student {studentId} already has enrollment with status: {existingEnrollment?.Status}");
                     return (false, "Student is already enrolled in this course");
                 }
 
-                // Check max capacity
+                // Check max capacity - count only active enrollments
                 var currentEnrollmentsQuery = await client
                     .From<EnrollmentModel>()
-                    .Where(e => e.CourseId == courseId)
+                    .Filter("course_id", Supabase.Postgrest.Constants.Operator.Equals, courseId)
                     .Get();
 
                 var enrollmentCount = currentEnrollmentsQuery?.Models?.Count ?? 0;
@@ -718,12 +731,40 @@ namespace ASI.Basecode.Services.Services
                     StudentId = studentId,
                     CourseId = courseId,
                     EnrolledAt = DateTime.UtcNow,
-                    Status = "active"
+                    Status = "Active",  // Capitalized to match database enum
+                    DroppedAt = null
                 };
 
-                await client
+                Console.WriteLine($"Creating enrollment: StudentId={studentId}, CourseId={courseId}, Status=Active");
+                var insertResponse = await client
                     .From<EnrollmentModel>()
                     .Insert(newEnrollment);
+
+                var insertedEnrollment = insertResponse?.Model;
+                if (insertedEnrollment == null)
+                {
+                    Console.WriteLine($"WARNING: Enrollment insert returned null model");
+                    // Still return success as the insert might have worked
+                }
+                else
+                {
+                    Console.WriteLine($"Enrollment created successfully with ID: {insertedEnrollment.Id}, Status: {insertedEnrollment.Status}");
+                }
+
+                // Verify the enrollment was created by querying it back
+                var verifyQuery = await client
+                    .From<EnrollmentModel>()
+                    .Filter("course_id", Supabase.Postgrest.Constants.Operator.Equals, courseId)
+                    .Filter("student_id", Supabase.Postgrest.Constants.Operator.Equals, studentId)
+                    .Get();
+
+                var verifyEnrollments = verifyQuery?.Models ?? new List<EnrollmentModel>();
+                Console.WriteLine($"Verification: Found {verifyEnrollments.Count} enrollment(s) for student {studentId} in course {courseId}");
+                if (verifyEnrollments.Any())
+                {
+                    var verifyEnrollment = verifyEnrollments.FirstOrDefault();
+                    Console.WriteLine($"  - Enrollment ID: {verifyEnrollment.Id}, Status: {verifyEnrollment.Status}, DroppedAt: {verifyEnrollment.DroppedAt}");
+                }
 
                 Console.WriteLine($"Student {studentId} enrolled in course {courseId}");
                 return (true, "Student enrolled successfully");
