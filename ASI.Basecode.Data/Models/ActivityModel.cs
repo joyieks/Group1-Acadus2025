@@ -31,7 +31,7 @@ namespace ASI.Basecode.Data.Models
         [Column("isVisible")]
         public bool IsVisible { get; set; }
 
-        [Column("archived_at")]
-        public DateTime? ArchivedAt { get; set; }
+        [Column("invisible_at")]
+        public DateTime? InvisibleAt { get; set; }
     }
 }

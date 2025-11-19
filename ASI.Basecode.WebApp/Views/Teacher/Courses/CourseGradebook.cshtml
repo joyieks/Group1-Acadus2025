@@ -34,8 +34,8 @@
                     <table id="studentTable" style="width:100%; border-collapse:collapse;">
                         <thead style="background:#059669;">
                             <tr>
-                                <th style="padding:12px 16px; text-align:left; font-weight:700; color:#fff;">Student ID</th>
-                                <th style="padding:12px 16px; text-align:left; font-weight:700; color:#fff;">Name</th>
+                                <th style="padding:12px 16px; text-align:left; font-weight:700; color:#fff; min-width:180px; white-space:nowrap;">Student ID</th>
+                                <th style="padding:12px 16px; text-align:left; font-weight:700; color:#fff; min-width:200px; white-space:nowrap;">Name</th>
                                 <th style="padding:12px 16px; text-align:left; font-weight:700; color:#fff;">Overall Grade</th>
                             </tr>
                         </thead>
@@ -46,8 +46,8 @@
                                     style="border-bottom:1px solid #e5e7eb; cursor:pointer; transition:background 0.2s;"
                                     onmouseover="this.style.background='#f3f4f6';"
                                     onmouseout="this.style.background='transparent';">
-                                    <td style="padding:16px; color:#111827; font-weight:500;">@student.StudentId</td>
-                                    <td style="padding:16px; color:#111827;">@student.Name</td>
+                                    <td style="padding:16px; color:#111827; font-weight:500; white-space:nowrap;">@student.StudentDisplayId</td>
+                                    <td style="padding:16px; color:#111827; white-space:nowrap;">@student.Name</td>
                                     <td style="padding:16px; color:#059669; font-weight:600;">@student.AveragePercentage%</td>
                                 </tr>
                             }
@@ -91,7 +91,7 @@
                                         <td style="padding:12px 16px; color:#111827;">
                                             <span class="score-display">@activity.RawScore</span>
                                             <form id="@formId" method="post" asp-action="UpdateScore"
-                                                  onsubmit="return restoreEdit('@rowId')"
+                                                  onsubmit="return validateAndSubmit('@rowId', @activity.MaxScore)"
                                                   style="display:none;" class="score-form">
                                                 <input type="hidden" name="studentId" value="@Model.SelectedStudentDetail.StudentId" />
                                                 <input type="hidden" name="activityId" value="@activity.ActivityId" />
@@ -143,6 +143,18 @@
         #studentTable tbody td {
             border-bottom: 1px solid #f3f4f6 !important;
         }
+        /* Student ID column styling - prevent wrapping and ensure adequate width */
+        #studentTable thead th:first-child,
+        #studentTable tbody td:first-child {
+            min-width: 180px !important;
+            white-space: nowrap !important;
+        }
+        /* Name column styling - prevent wrapping and ensure adequate width */
+        #studentTable thead th:nth-child(2),
+        #studentTable tbody td:nth-child(2) {
+            min-width: 200px !important;
+            white-space: nowrap !important;
+        }
     </style>
     <script>
         $(document).ready(function() {
@@ -164,7 +176,7 @@
 
     </script>
     <script>
-            function enableEdit(rowId) {
+        function enableEdit(rowId) {
             const row = document.getElementById(rowId);
             const display = row.querySelector('.score-display');
             const form = row.querySelector('.score-form');
@@ -180,23 +192,22 @@
             input.style.border = '2px solid #3b82f6';
             input.style.backgroundColor = '#eff6ff';
         }
-                function restoreEdit(rowId) {
-            const row = document.getElementById(rowId);
-            const editBtn = row.querySelector('.edit-btn');
-            const saveBtn = row.querySelector('.save-btn');
-            const form = row.querySelector('.score-form');
-            const display = row.querySelector('.score-display');
 
-            // Optional: reset styles
-            form.style.display = 'none';
-            saveBtn.style.display = 'none';
-            editBtn.style.display = 'inline-block';
-            display.style.display = 'inline-block';
+        function validateAndSubmit(rowId, maxScore) {
+            const row = document.getElementById(rowId);
+            const input = row.querySelector('.score-input');
+            const value = parseFloat(input.value);
+
+            if (isNaN(value) || value < 0 || value > maxScore) {
+                alert(`Score must be between 0 and ${maxScore}`);
+                input.focus();
+                return false;
+            }
 
             return true; // allow form to submit
         }
-
     </script>
+
 
 
 

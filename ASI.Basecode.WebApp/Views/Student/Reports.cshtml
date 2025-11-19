@@ -9,13 +9,13 @@
         <h2 class="text-2xl font-bold text-[#337D58]">Grade Reports</h2>
 
         <div class="flex flex-col sm:flex-row items-center gap-3">
-
             <!-- Print Button -->
-            <button onclick="window.print()"
-                    class="flex items-center gap-2 bg-[#337D58] text-white px-5 py-2 rounded-lg text-sm font-medium hover:bg-[#2a6648] transition-all duration-200 shadow-sm active:scale-95">
+            <a href="@Url.Action("DownloadGradeReport", "Student")"
+               class="flex items-center gap-2 bg-[#337D58] text-white px-5 py-2 rounded-lg text-sm font-medium hover:bg-[#2a6648] transition-all duration-200 shadow-sm active:scale-95">
                 <img src="@Url.Content("~/img/printer.png")" alt="Print Icon" class="w-5 h-5" />
-                Print Grades
-            </button>
+                Download PDF Report
+            </a>
+
         </div>
     </div>
 

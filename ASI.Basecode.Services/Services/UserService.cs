@@ -87,16 +87,35 @@ namespace ASI.Basecode.Services.Services
         }
 
         /// <summary>
-        /// Retrieves all students (roleId = 1).
+        /// Retrieves all students (users with Student role - roleId = "1").
         /// </summary>
         public async Task<List<SupabaseUserNew>> GetStudentsAsync()
         {
             try
             {
-                var allUsers = await GetAllUsersAsync();
-                var students = allUsers.Where(u => u.UserTypeId == "1" && (u.IsActive == null || u.IsActive == true)).ToList();
+                var client = await _supabaseAuthService.GetSupabaseClientForAuthAsync();
 
-                Console.WriteLine($"Retrieved {students.Count} students from {allUsers.Count} total users");
+                // Get all user_roles where roleId = "1" (Student role)
+                var userRolesQuery = await client
+                    .From<UserRoleModel>()
+                    .Get();
+                
+                var allUserRoles = userRolesQuery?.Models ?? new List<UserRoleModel>();
+                var studentUserTypeIds = allUserRoles
+                    .Where(ur => ur.RoleId == "1")
+                    .Select(ur => ur.UserId)
+                    .Distinct()
+                    .ToList();
+                
+                Console.WriteLine($"Found {studentUserTypeIds.Count} users with Student role (roleId = '1')");
+
+                // Get all users and filter by those with student role
+                var allUsers = await GetAllUsersAsync();
+                var students = allUsers
+                    .Where(u => studentUserTypeIds.Contains(u.UserTypeId) && (u.IsActive == null || u.IsActive == true))
+                    .ToList();
+
+                Console.WriteLine($"Retrieved {students.Count} active students from {allUsers.Count} total users");
                 return students;
             }
             catch (Exception ex)

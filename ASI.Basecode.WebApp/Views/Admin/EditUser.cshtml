@@ -1,6 +1,8 @@
+@model ASI.Basecode.Data.Models.SupabaseUserNew
 @{
     Layout = null;
 }
+<!-- Edit User Form - Uses SupabaseUserNew model -->
 
 <!DOCTYPE html>
 <html>
@@ -143,140 +145,145 @@
             <!-- Header -->
             <div style="background:#E8F9E8; padding:24px 32px; border-radius:16px 16px 0 0; display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #d1fae5;">
                 <h2 style="font-size:24px; font-weight:800; color:#111827; margin:0;">Edit User</h2>
-                <button onclick="window.history.back()" style="background:none; border:none; font-size:28px; color:#6b7280; cursor:pointer; width:32px; height:32px; border-radius:6px; transition:all 0.2s;">&times;</button>
+                <button type="button" onclick="window.history.back()" style="background:none; border:none; font-size:28px; color:#6b7280; cursor:pointer; width:32px; height:32px; border-radius:6px; transition:all 0.2s;">&times;</button>
             </div>
 
-            <!-- Body -->
-            <div style="padding:32px; background:#f9fafb;">
+            <!-- ✅ FORM TAG WITH PROPER BINDINGS -->
+            <form asp-action="EditUser" asp-controller="Admin" method="post" id="editUserForm">
+                @Html.AntiForgeryToken()
                 
-                <!-- Section 1: Personal Information -->
-                <div class="section-white">
-                    <h3 style="font-size:18px; font-weight:800; color:#111827; margin:0 0 24px 0;">Section 1: Personal Information</h3>
-                    <div style="display:grid; grid-template-columns:repeat(2,1fr); gap:20px;">
-                        <div>
-                            <label style="display:block; margin-bottom:6px; font-size:14px; font-weight:600; color:#111827;">ID Number</label>
-                            <input type="text" value="123213" readonly style="width:100%; padding:10px 12px; border:1px solid #d1d5db; border-radius:6px; font-size:14px; background:#f3f4f6; color:#6b7280;">
-                        </div>
-                        <div>
-                            <label style="display:block; margin-bottom:6px; font-size:14px; font-weight:600; color:#111827;">Status <span style="color:#dc2626;">*</span></label>
-                            <select required style="width:100%; padding:10px 12px; border:1px solid #d1d5db; border-radius:6px; font-size:14px;">
-                                <option selected>Active</option>
-                                <option>Inactive</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label style="display:block; margin-bottom:6px; font-size:14px; font-weight:600; color:#111827;">First name <span style="color:#dc2626;">*</span></label>
-                            <input type="text" value="Johnny" required style="width:100%; padding:10px 12px; border:1px solid #d1d5db; border-radius:6px; font-size:14px;">
-                        </div>
-                        <div>
-                            <label style="display:block; margin-bottom:6px; font-size:14px; font-weight:600; color:#111827;">Last name <span style="color:#dc2626;">*</span></label>
-                            <input type="text" value="Appleseed" required style="width:100%; padding:10px 12px; border:1px solid #d1d5db; border-radius:6px; font-size:14px;">
-                        </div>
-                        <div>
-                            <label style="display:block; margin-bottom:6px; font-size:14px; font-weight:600; color:#111827;">Middle name</label>
-                            <input type="text" value="Michael" style="width:100%; padding:10px 12px; border:1px solid #d1d5db; border-radius:6px; font-size:14px;">
-                        </div>
-                        <div>
-                            <label style="display:block; margin-bottom:6px; font-size:14px; font-weight:600; color:#111827;">Suffix</label>
-                            <input type="text" value="Jr." style="width:100%; padding:10px 12px; border:1px solid #d1d5db; border-radius:6px; font-size:14px;">
-                        </div>
-                        <div>
-                            <label style="display:block; margin-bottom:6px; font-size:14px; font-weight:600; color:#111827;">Role <span style="color:#dc2626;">*</span></label>
-                            <select required style="width:100%; padding:10px 12px; border:1px solid #d1d5db; border-radius:6px; font-size:14px;">
-                                <option selected>Student</option>
-                                <option>Teacher</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label style="display:block; margin-bottom:6px; font-size:14px; font-weight:600; color:#111827;">Department/Office <span style="color:#dc2626;">*</span></label>
-                            <input type="text" value="CCS" required style="width:100%; padding:10px 12px; border:1px solid #d1d5db; border-radius:6px; font-size:14px;">
-                        </div>
-                        <div>
-                            <label style="display:block; margin-bottom:6px; font-size:14px; font-weight:600; color:#111827;">Contact Number <span style="color:#dc2626;">*</span></label>
-                            <input type="tel" value="+63 912 345 6789" required style="width:100%; padding:10px 12px; border:1px solid #d1d5db; border-radius:6px; font-size:14px;">
-                        </div>
-                        <div>
-                            <label style="display:block; margin-bottom:6px; font-size:14px; font-weight:600; color:#111827;">Email <span style="color:#dc2626;">*</span></label>
-                            <input type="email" value="johnny.appleseed@example.com" required style="width:100%; padding:10px 12px; border:1px solid #d1d5db; border-radius:6px; font-size:14px;">
+                <!-- ✅ CRITICAL: HIDDEN FIELD FOR USER ID -->
+                <input type="hidden" asp-for="Id" />
+
+                <!-- Body -->
+                <div style="padding:32px; background:#f9fafb;">
+                    
+                    <!-- Section 1: Personal Information -->
+                    <div class="section-white">
+                        <h3 style="font-size:18px; font-weight:800; color:#111827; margin:0 0 24px 0;">Section 1: Personal Information</h3>
+                        <div style="display:grid; grid-template-columns:repeat(2,1fr); gap:20px;">
+                            <div>
+                                <label style="display:block; margin-bottom:6px; font-size:14px; font-weight:600; color:#111827;">ID Number</label>
+                                <input asp-for="UserDisplayId" readonly style="width:100%; padding:10px 12px; border:1px solid #d1d5db; border-radius:6px; font-size:14px; background:#f3f4f6; color:#6b7280;">
+                            </div>
+                            <div>
+                                <label style="display:block; margin-bottom:6px; font-size:14px; font-weight:600; color:#111827;">Status <span style="color:#dc2626;">*</span></label>
+                                <select asp-for="IsActive" required style="width:100%; padding:10px 12px; border:1px solid #d1d5db; border-radius:6px; font-size:14px;">
+                                    <option value="true">Active</option>
+                                    <option value="false">Inactive</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label style="display:block; margin-bottom:6px; font-size:14px; font-weight:600; color:#111827;">First name <span style="color:#dc2626;">*</span></label>
+                                <input asp-for="FirstName" required style="width:100%; padding:10px 12px; border:1px solid #d1d5db; border-radius:6px; font-size:14px;">
+                            </div>
+                            <div>
+                                <label style="display:block; margin-bottom:6px; font-size:14px; font-weight:600; color:#111827;">Last name <span style="color:#dc2626;">*</span></label>
+                                <input asp-for="LastName" required style="width:100%; padding:10px 12px; border:1px solid #d1d5db; border-radius:6px; font-size:14px;">
+                            </div>
+                            <div>
+                                <label style="display:block; margin-bottom:6px; font-size:14px; font-weight:600; color:#111827;">Middle name</label>
+                                <input asp-for="MiddleName" style="width:100%; padding:10px 12px; border:1px solid #d1d5db; border-radius:6px; font-size:14px;">
+                            </div>
+                            <div>
+                                <label style="display:block; margin-bottom:6px; font-size:14px; font-weight:600; color:#111827;">Suffix</label>
+                                <input asp-for="Suffix" style="width:100%; padding:10px 12px; border:1px solid #d1d5db; border-radius:6px; font-size:14px;">
+                            </div>
+                            <div>
+                                <label style="display:block; margin-bottom:6px; font-size:14px; font-weight:600; color:#111827;">Role <span style="color:#dc2626;">*</span></label>
+                                <input type="text" value="@ViewBag.Role" readonly style="width:100%; padding:10px 12px; border:1px solid #d1d5db; border-radius:6px; font-size:14px; background:#f3f4f6; color:#6b7280;">
+                            </div>
+                            <div>
+                                <label style="display:block; margin-bottom:6px; font-size:14px; font-weight:600; color:#111827;">Department/Office</label>
+                                <input type="text" name="Department" value="@ViewBag.Department" style="width:100%; padding:10px 12px; border:1px solid #d1d5db; border-radius:6px; font-size:14px;">
+                            </div>
+                            <div>
+                                <label style="display:block; margin-bottom:6px; font-size:14px; font-weight:600; color:#111827;">Contact Number <span style="color:#dc2626;">*</span></label>
+                                <input asp-for="ContactNumber" required style="width:100%; padding:10px 12px; border:1px solid #d1d5db; border-radius:6px; font-size:14px;">
+                            </div>
+                            <div>
+                                <label style="display:block; margin-bottom:6px; font-size:14px; font-weight:600; color:#111827;">Email <span style="color:#dc2626;">*</span></label>
+                                <input asp-for="Email" required style="width:100%; padding:10px 12px; border:1px solid #d1d5db; border-radius:6px; font-size:14px;">
+                            </div>
                         </div>
                     </div>
+
+                    <!-- Section 2: Address Information (Optional - not saved yet) -->
+                    <div class="section-green">
+                        <h3 style="font-size:18px; font-weight:800; color:#111827; margin:0 0 24px 0;">Section 2: Address Information</h3>
+                        <div style="display:grid; grid-template-columns:1fr; gap:20px;">
+                            <div>
+                                <label style="display:block; margin-bottom:6px; font-size:14px; font-weight:600; color:#111827;">House/Apt number</label>
+                                <input type="text" name="HouseNumber" style="width:100%; padding:10px 12px; border:1px solid #d1d5db; border-radius:6px; font-size:14px; background:#ffffff;">
+                            </div>
+                            <div>
+                                <label style="display:block; margin-bottom:6px; font-size:14px; font-weight:600; color:#111827;">Street name</label>
+                                <input type="text" name="StreetName" style="width:100%; padding:10px 12px; border:1px solid #d1d5db; border-radius:6px; font-size:14px; background:#ffffff;">
+                            </div>
+                            <div>
+                                <label style="display:block; margin-bottom:6px; font-size:14px; font-weight:600; color:#111827;">Subdivision/Bldg.</label>
+                                <input type="text" name="Subdivision" style="width:100%; padding:10px 12px; border:1px solid #d1d5db; border-radius:6px; font-size:14px; background:#ffffff;">
+                            </div>
+                        </div>
+                        <div style="display:grid; grid-template-columns:repeat(2,1fr); gap:20px; margin-top:20px;">
+                            <div>
+                                <label style="display:block; margin-bottom:6px; font-size:14px; font-weight:600; color:#111827;">Barangay</label>
+                                <input type="text" name="Barangay" style="width:100%; padding:10px 12px; border:1px solid #d1d5db; border-radius:6px; font-size:14px; background:#ffffff;">
+                            </div>
+                            <div>
+                                <label style="display:block; margin-bottom:6px; font-size:14px; font-weight:600; color:#111827;">City</label>
+                                <input type="text" name="City" style="width:100%; padding:10px 12px; border:1px solid #d1d5db; border-radius:6px; font-size:14px; background:#ffffff;">
+                            </div>
+                            <div>
+                                <label style="display:block; margin-bottom:6px; font-size:14px; font-weight:600; color:#111827;">Province</label>
+                                <input type="text" name="Province" style="width:100%; padding:10px 12px; border:1px solid #d1d5db; border-radius:6px; font-size:14px; background:#ffffff;">
+                            </div>
+                            <div>
+                                <label style="display:block; margin-bottom:6px; font-size:14px; font-weight:600; color:#111827;">Zip Code</label>
+                                <input type="text" name="ZipCode" style="width:100%; padding:10px 12px; border:1px solid #d1d5db; border-radius:6px; font-size:14px; background:#ffffff;">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Section 3: Emergency Contact (Optional - not saved yet) -->
+                    <div class="section-white">
+                        <h3 style="font-size:18px; font-weight:800; color:#111827; margin:0 0 24px 0;">Section 3: Emergency Contact Information</h3>
+                        <div style="display:grid; grid-template-columns:repeat(2,1fr); gap:20px;">
+                            <div>
+                                <label style="display:block; margin-bottom:6px; font-size:14px; font-weight:600; color:#111827;">First name</label>
+                                <input type="text" name="EmergencyFirstName" style="width:100%; padding:10px 12px; border:1px solid #d1d5db; border-radius:6px; font-size:14px;">
+                            </div>
+                            <div>
+                                <label style="display:block; margin-bottom:6px; font-size:14px; font-weight:600; color:#111827;">Last name</label>
+                                <input type="text" name="EmergencyLastName" style="width:100%; padding:10px 12px; border:1px solid #d1d5db; border-radius:6px; font-size:14px;">
+                            </div>
+                            <div>
+                                <label style="display:block; margin-bottom:6px; font-size:14px; font-weight:600; color:#111827;">Middle name</label>
+                                <input type="text" name="EmergencyMiddleName" style="width:100%; padding:10px 12px; border:1px solid #d1d5db; border-radius:6px; font-size:14px;">
+                            </div>
+                            <div>
+                                <label style="display:block; margin-bottom:6px; font-size:14px; font-weight:600; color:#111827;">Suffix</label>
+                                <input type="text" name="EmergencySuffix" style="width:100%; padding:10px 12px; border:1px solid #d1d5db; border-radius:6px; font-size:14px;">
+                            </div>
+                            <div>
+                                <label style="display:block; margin-bottom:6px; font-size:14px; font-weight:600; color:#111827;">Contact Number</label>
+                                <input type="text" name="EmergencyContactNumber" style="width:100%; padding:10px 12px; border:1px solid #d1d5db; border-radius:6px; font-size:14px;">
+                            </div>
+                            <div>
+                                <label style="display:block; margin-bottom:6px; font-size:14px; font-weight:600; color:#111827;">Relationship</label>
+                                <input type="text" name="Relationship" style="width:100%; padding:10px 12px; border:1px solid #d1d5db; border-radius:6px; font-size:14px;">
+                            </div>
+                        </div>
+                    </div>
+
                 </div>
 
-                <!-- Section 2: Address Information -->
-                <div class="section-green">
-                    <h3 style="font-size:18px; font-weight:800; color:#111827; margin:0 0 24px 0;">Section 2: Address Information</h3>
-                    <div style="display:grid; grid-template-columns:1fr; gap:20px;">
-                        <div>
-                            <label style="display:block; margin-bottom:6px; font-size:14px; font-weight:600; color:#111827;">House/Apt number</label>
-                            <input type="text" value="123" style="width:100%; padding:10px 12px; border:1px solid #d1d5db; border-radius:6px; font-size:14px; background:#ffffff;">
-                        </div>
-                        <div>
-                            <label style="display:block; margin-bottom:6px; font-size:14px; font-weight:600; color:#111827;">Street name <span style="color:#dc2626;">*</span></label>
-                            <input type="text" value="Main Street" required style="width:100%; padding:10px 12px; border:1px solid #d1d5db; border-radius:6px; font-size:14px; background:#ffffff;">
-                        </div>
-                        <div>
-                            <label style="display:block; margin-bottom:6px; font-size:14px; font-weight:600; color:#111827;">Subdivision/Bldg.</label>
-                            <input type="text" value="Green Valley" style="width:100%; padding:10px 12px; border:1px solid #d1d5db; border-radius:6px; font-size:14px; background:#ffffff;">
-                        </div>
-                    </div>
-                    <div style="display:grid; grid-template-columns:repeat(2,1fr); gap:20px; margin-top:20px;">
-                        <div>
-                            <label style="display:block; margin-bottom:6px; font-size:14px; font-weight:600; color:#111827;">Barangay <span style="color:#dc2626;">*</span></label>
-                            <input type="text" value="Barangay 1" required style="width:100%; padding:10px 12px; border:1px solid #d1d5db; border-radius:6px; font-size:14px; background:#ffffff;">
-                        </div>
-                        <div>
-                            <label style="display:block; margin-bottom:6px; font-size:14px; font-weight:600; color:#111827;">City <span style="color:#dc2626;">*</span></label>
-                            <input type="text" value="Manila" required style="width:100%; padding:10px 12px; border:1px solid #d1d5db; border-radius:6px; font-size:14px; background:#ffffff;">
-                        </div>
-                        <div>
-                            <label style="display:block; margin-bottom:6px; font-size:14px; font-weight:600; color:#111827;">Province <span style="color:#dc2626;">*</span></label>
-                            <input type="text" value="Metro Manila" required style="width:100%; padding:10px 12px; border:1px solid #d1d5db; border-radius:6px; font-size:14px; background:#ffffff;">
-                        </div>
-                        <div>
-                            <label style="display:block; margin-bottom:6px; font-size:14px; font-weight:600; color:#111827;">Zip Code <span style="color:#dc2626;">*</span></label>
-                            <input type="text" value="1000" required style="width:100%; padding:10px 12px; border:1px solid #d1d5db; border-radius:6px; font-size:14px; background:#ffffff;">
-                        </div>
-                    </div>
+                <!-- Footer -->
+                <div style="padding:20px 32px; background:#f9fafb; border-top:1px solid #e5e7eb; border-radius:0 0 16px 16px; display:flex; justify-content:center; gap:16px;">
+                    <button type="button" onclick="window.history.back()" style="padding:12px 32px; border-radius:6px; font-size:14px; font-weight:600; cursor:pointer; background:#ffffff; color:#4b5563; border:1px solid #d1d5db;">Cancel</button>
+                    <button type="button" onclick="showConfirmation()" style="padding:12px 32px; border-radius:6px; font-size:14px; font-weight:600; cursor:pointer; background:#059669; color:#ffffff; border:none;">Save Changes</button>
                 </div>
-
-                <!-- Section 3: Emergency Contact -->
-                <div class="section-white">
-                    <h3 style="font-size:18px; font-weight:800; color:#111827; margin:0 0 24px 0;">Section 3: Emergency Contact Information</h3>
-                    <div style="display:grid; grid-template-columns:repeat(2,1fr); gap:20px;">
-                        <div>
-                            <label style="display:block; margin-bottom:6px; font-size:14px; font-weight:600; color:#111827;">First name <span style="color:#dc2626;">*</span></label>
-                            <input type="text" value="Jane" required style="width:100%; padding:10px 12px; border:1px solid #d1d5db; border-radius:6px; font-size:14px;">
-                        </div>
-                        <div>
-                            <label style="display:block; margin-bottom:6px; font-size:14px; font-weight:600; color:#111827;">Last name <span style="color:#dc2626;">*</span></label>
-                            <input type="text" value="Appleseed" required style="width:100%; padding:10px 12px; border:1px solid #d1d5db; border-radius:6px; font-size:14px;">
-                        </div>
-                        <div>
-                            <label style="display:block; margin-bottom:6px; font-size:14px; font-weight:600; color:#111827;">Middle name</label>
-                            <input type="text" value="Marie" style="width:100%; padding:10px 12px; border:1px solid #d1d5db; border-radius:6px; font-size:14px;">
-                        </div>
-                        <div>
-                            <label style="display:block; margin-bottom:6px; font-size:14px; font-weight:600; color:#111827;">Suffix</label>
-                            <input type="text" value="" style="width:100%; padding:10px 12px; border:1px solid #d1d5db; border-radius:6px; font-size:14px;">
-                        </div>
-                        <div>
-                            <label style="display:block; margin-bottom:6px; font-size:14px; font-weight:600; color:#111827;">Contact Number <span style="color:#dc2626;">*</span></label>
-                            <input type="tel" value="+63 912 345 6788" required style="width:100%; padding:10px 12px; border:1px solid #d1d5db; border-radius:6px; font-size:14px;">
-                        </div>
-                        <div>
-                            <label style="display:block; margin-bottom:6px; font-size:14px; font-weight:600; color:#111827;">Relationship <span style="color:#dc2626;">*</span></label>
-                            <input type="text" value="Mother" required style="width:100%; padding:10px 12px; border:1px solid #d1d5db; border-radius:6px; font-size:14px;">
-                        </div>
-                    </div>
-                </div>
-
-            </div>
-
-            <!-- Footer -->
-            <div style="padding:20px 32px; background:#f9fafb; border-top:1px solid #e5e7eb; border-radius:0 0 16px 16px; display:flex; justify-content:center; gap:16px;">
-                <button onclick="window.history.back()" style="padding:12px 32px; border-radius:6px; font-size:14px; font-weight:600; cursor:pointer; background:#ffffff; color:#4b5563; border:1px solid #d1d5db;">Cancel</button>
-                <button onclick="showConfirmation()" style="padding:12px 32px; border-radius:6px; font-size:14px; font-weight:600; cursor:pointer; background:#059669; color:#ffffff; border:none;">Save Changes</button>
-            </div>
+            </form>
         </div>
     </div>
 
@@ -303,19 +310,8 @@
         }
 
         function confirmSave() {
-            // TODO: Implement actual save functionality
-            closeConfirmation();
-            
-            // Show success message
-            const modal = document.getElementById('confirmationModal');
-            const box = modal.querySelector('.confirmation-box');
-            box.innerHTML = `
-                <div class="confirmation-icon" style="background:#d1fae5;">✓</div>
-                <h3 class="confirmation-title">Changes Saved!</h3>
-                <p class="confirmation-message">The user information has been updated successfully.</p>
-                <button onclick="window.history.back()" style="padding:10px 24px; border-radius:6px; font-size:14px; font-weight:600; cursor:pointer; background:#059669; color:#ffffff; border:none; margin-top:8px;">Close</button>
-            `;
-            modal.classList.add('show');
+            // ✅ CRITICAL: Submit the form
+            document.getElementById('editUserForm').submit();
         }
 
         // Close on ESC key

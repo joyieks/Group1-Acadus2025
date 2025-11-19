@@ -57,6 +57,7 @@ namespace ASI.Basecode.Data.Models
 
         public class ActivityItem
         {
+            public int ActivityId { get; set; }  // Added to identify the activity for submission
             public string Term { get; set; } = string.Empty;
             public string Name { get; set; } = string.Empty;
             public string Description { get; set; } = string.Empty;
@@ -66,6 +67,7 @@ namespace ASI.Basecode.Data.Models
             public DateTime Date { get; set; }
             public string Status { get; set; } = string.Empty;
             public bool CanAppeal { get; set; } = false;
+            public string Feedback { get; set; } = string.Empty; // Teacher's feedback
 
             // Additional properties for the new mock data
             public string Title { get; set; } = string.Empty;

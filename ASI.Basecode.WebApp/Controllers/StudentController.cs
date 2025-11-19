@@ -1,4 +1,5 @@
-﻿﻿using ASI.Basecode.Data.Models;
+﻿using ASI.Basecode.Data.Models;
+using ASI.Basecode.Data.Interfaces;
 using ASI.Basecode.Services.Interfaces;
 using ASI.Basecode.WebApp.Models;
 using Microsoft.AspNetCore.Authorization;
@@ -21,12 +22,14 @@ namespace ASI.Basecode.WebApp.Controllers
         private readonly ISupabaseAuthService _supabaseAuthService;
         private readonly IStudentCourseService _studentCourseService;
         private readonly IStudentService _studentService;
+        private readonly ITeacherCourseActivityRepository _activityRepository;
 
-        public StudentController(ISupabaseAuthService supabaseAuthService, IStudentCourseService studentCourseService, IStudentService studentService)
+        public StudentController(ISupabaseAuthService supabaseAuthService, IStudentCourseService studentCourseService, IStudentService studentService, ITeacherCourseActivityRepository activityRepository)
         {
             _supabaseAuthService = supabaseAuthService;
             _studentCourseService = studentCourseService;
             _studentService = studentService;
+            _activityRepository = activityRepository;
         }
 
         [HttpGet]
@@ -167,6 +170,24 @@ namespace ASI.Basecode.WebApp.Controllers
         }
 
         [HttpGet]
+        public async Task<IActionResult> DownloadGradeReport()
+        {
+            var supabaseUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrWhiteSpace(supabaseUserId))
+                return Unauthorized();
+
+            var studentId = await GetStudentIdFromSupabaseIdAsync(supabaseUserId);
+            if (string.IsNullOrWhiteSpace(studentId))
+                return Unauthorized();
+
+            var reports = await _studentCourseService.GetStudentReportsAsync(studentId);
+
+            var pdfBytes = _studentCourseService.GenerateStudentReportPdf(reports); // You implement this
+            return File(pdfBytes, "application/pdf", "GradeReport.pdf");
+        }
+
+
+        [HttpGet]
         public async Task<IActionResult> Profile()
         {
             var supabaseUserId = HttpContext.Session.GetString("SupabaseUserId");
@@ -299,5 +320,62 @@ namespace ASI.Basecode.WebApp.Controllers
                 return null;
             }
         }
+
+        [HttpPost]
+        public async Task<IActionResult> SubmitActivity(int activityId, int courseId, string submissionContent)
+        {
+            try
+            {
+                // Get the student ID
+                var supabaseUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (string.IsNullOrWhiteSpace(supabaseUserId))
+                    return Unauthorized();
+
+                var studentId = await GetStudentIdFromSupabaseIdAsync(supabaseUserId);
+                if (string.IsNullOrWhiteSpace(studentId))
+                    return Unauthorized();
+
+                // Validate input
+                if (string.IsNullOrWhiteSpace(submissionContent))
+                {
+                    TempData["ErrorMessage"] = "Please provide your answer or work.";
+                    return RedirectToAction("CourseDetails", new { courseId = courseId });
+                }
+
+                // Check if submission already exists
+                var existing = await _activityRepository.GetSubmissionAsync(activityId, studentId);
+
+                var submission = new ActivitySubmissionModel
+                {
+                    ActivityId = activityId,
+                    StudentId = studentId,
+                    SubmissionContent = submissionContent,
+                    SubmissionStatus = existing == null ? "Submitted" : "Submitted",  // Allow resubmission
+                    CreatedAt = DateTime.UtcNow,
+                    Score = existing?.Score ?? 0  // Keep existing score if resubmitting
+                };
+
+                // Debug: Log submission content
+                Console.WriteLine($"=== SubmitActivity ===");
+                Console.WriteLine($"ActivityId: {activityId}, StudentId: {studentId}");
+                Console.WriteLine($"SubmissionContent length: {submissionContent?.Length ?? 0}");
+                Console.WriteLine($"SubmissionContent preview: {submissionContent?.Substring(0, Math.Min(50, submissionContent?.Length ?? 0))}...");
+
+                await _activityRepository.SaveSubmissionAsync(submission);
+                
+                Console.WriteLine($"Submission saved successfully");
+
+                TempData["SuccessMessage"] = "Activity submitted successfully!";
+                return RedirectToAction("CourseDetails", new { courseId = courseId });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error submitting activity: {ex.Message}");
+                Console.WriteLine($"Stack Trace: {ex.StackTrace}");
+                TempData["ErrorMessage"] = "An error occurred while submitting your activity. Please try again.";
+                return RedirectToAction("CourseDetails", new { courseId = courseId });
+            }
+        }
+
     }
 }

@@ -1,0 +1,18 @@
+*   [33mf859023[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mJoyieks/Teacher/RecentActivities[m[33m, [m[1;31morigin/Joyieks/Teacher/RecentActivities[m[33m)[m Merge branch 'student/reports' into Joyieks/Teacher/RecentActivities - Resolved conflicts in repositories and Program.cs
+[31m|[m[32m\[m  
+[31m|[m * [33m65ac649[m[33m ([m[1;31morigin/student/reports[m[33m)[m fixed errors in coursegradebooks and added pdf generation that cant be edited.
+[31m|[m *   [33mf641064[m[33m ([m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m, [m[1;32mmain[m[33m)[m Merge pull request #11 from joyieks/teacher/coursegradebook
+[31m|[m [33m|[m[34m\[m  
+[31m|[m [33m|[m *   [33m31a6494[m[33m ([m[1;31morigin/teacher/coursegradebook[m[33m)[m Merge pull request #10 from joyieks/main
+[31m|[m [33m|[m [35m|[m[33m\[m  
+[31m|[m [33m|[m [35m|[m[33m/[m  
+[31m|[m [33m|[m[33m/[m[35m|[m   
+* [33m|[m [35m|[m [33mc902cc6[m Implement Recent Activities for Teachers with real audit logs from database
+* [33m|[m [35m|[m [33m0fdf3a6[m[33m ([m[1;31morigin/JoyieksAddCourse[m[33m, [m[1;32mJoyieksAddCourse[m[33m)[m Add Course: Auto-generate course codes, change Credits to Units, Level to Year Level, max capacity to 50
+[33m|[m[33m/[m [35m/[m  
+* [35m|[m   [33m067049c[m Merge pull request #9 from joyieks/merged-auth-dev
+[1;31m|[m[1;32m\[m [35m\[m  
+[1;31m|[m * [35m|[m [33m29534c6[m[33m ([m[1;31morigin/merged-auth-dev[m[33m)[m redirect url fix
+* [1;32m|[m [35m|[m [33mc527e44[m Merge pull request #8 from joyieks/merged-auth-dev
+[1;33m|[m[1;32m\[m[1;32m|[m [35m|[m 
+[1;33m|[m * [35m|[m [33m087adf8[m Update UserService.cs
