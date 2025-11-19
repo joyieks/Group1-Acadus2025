@@ -169,7 +169,6 @@ namespace ASI.Basecode.Services.Services
                             columns.ConstantColumn(100);  // Course Code
                             columns.RelativeColumn();     // Title
                             columns.ConstantColumn(100);  // Midterm
-                            columns.ConstantColumn(100);  // Final
                         });
 
                         // Header row - white background with simple text
@@ -181,9 +180,6 @@ namespace ASI.Basecode.Services.Services
                             header.Cell().Background(Colors.White).BorderBottom(1).BorderColor(Colors.Grey.Lighten2)
                                 .PaddingVertical(8).PaddingHorizontal(8)
                                 .Text("Course Title").FontColor(Colors.Black);
-                            header.Cell().Background(Colors.White).BorderBottom(1).BorderColor(Colors.Grey.Lighten2)
-                                .PaddingVertical(8).PaddingHorizontal(8)
-                                .Text("Midterm Grade").FontColor(Colors.Black);
                             header.Cell().Background(Colors.White).BorderBottom(1).BorderColor(Colors.Grey.Lighten2)
                                 .PaddingVertical(8).PaddingHorizontal(8)
                                 .Text("Final Grade").FontColor(Colors.Black);
@@ -198,9 +194,6 @@ namespace ASI.Basecode.Services.Services
                             table.Cell().BorderBottom(1).BorderColor(Colors.Grey.Lighten3)
                                 .PaddingVertical(8).PaddingHorizontal(8)
                                 .Text(item.CourseTitle).FontColor(Colors.Black);
-                            table.Cell().BorderBottom(1).BorderColor(Colors.Grey.Lighten3)
-                                .PaddingVertical(8).PaddingHorizontal(8)
-                                .Text(item.MidtermGrade.ToString("0.#")).FontColor(Colors.Black);
                             table.Cell().BorderBottom(1).BorderColor(Colors.Grey.Lighten3)
                                 .PaddingVertical(8).PaddingHorizontal(8)
                                 .Text(item.FinalGrade.ToString("0.#")).FontColor(Colors.Black);

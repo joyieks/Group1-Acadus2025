@@ -136,8 +136,7 @@ namespace ASI.Basecode.Data.Repositories
                 {
                     CourseCode = course.Code,
                     CourseTitle = course.Name,
-                    MidtermGrade = ConvertPercentageToGPA(average),  // or split by term if needed
-                    FinalGrade = 0,
+                    FinalGrade = ConvertPercentageToGPA(average),
                 });
             }
 

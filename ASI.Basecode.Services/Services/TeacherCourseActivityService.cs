@@ -221,11 +221,11 @@ namespace ASI.Basecode.Services.Services
             // Check if feedback already exists - prevent updating if it does
             var existing = await _repo.GetSubmissionAsync(submission.ActivityId, submission.StudentId);
             if (existing != null && !string.IsNullOrWhiteSpace(existing.Feedback))
-            {
+        {
                 // Feedback already exists - only update score, not feedback
                 Console.WriteLine($"=== GradeActivityAsync: Feedback already exists, only updating score ===");
                 var submissionModel = new ActivitySubmissionModel
-                {
+            {
                     ActivityId = submission.ActivityId,
                     StudentId = submission.StudentId,
                     Score = submission.Score,
@@ -248,7 +248,7 @@ namespace ASI.Basecode.Services.Services
                     Feedback = submission.Feedback,
                     SubmissionContent = existing?.SubmissionContent, // Preserve existing content if any
                     CreatedAt = existing?.CreatedAt ?? DateTime.UtcNow
-                };
+            };
 
                 await _repo.SaveSubmissionAsync(submissionModel);
             }

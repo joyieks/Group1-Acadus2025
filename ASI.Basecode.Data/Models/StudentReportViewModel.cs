@@ -10,9 +10,7 @@ namespace ASI.Basecode.Data.Models
         {
             public string CourseCode { get; set; } = string.Empty;
             public string CourseTitle { get; set; } = string.Empty;
-            public double MidtermGrade { get; set; }
             public double FinalGrade { get; set; }
-
         }
 
 
