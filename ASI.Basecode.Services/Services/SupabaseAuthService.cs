@@ -817,48 +817,47 @@ catch (Exception ex)
         Console.WriteLine($"  - Status Code: {gex.StatusCode}");
        Console.WriteLine($"  - Content: {gex.Content}");
         
-         // ✅ Enhanced error analysis
+         // ✅ Enhanced error analysis and CLEAN RETURN
   if (gex.Message.Contains("Invalid login credentials") || gex.Message.Contains("invalid_credentials"))
               {
               Console.WriteLine($"  → Invalid email or password");
-      Console.WriteLine($"");
- Console.WriteLine($"  🔍 TROUBLESHOOTING STEPS:");
-    Console.WriteLine($"     1. Check if user exists in Supabase Dashboard:");
-        Console.WriteLine($"        → Go to: {url.Replace("https://", "https://app.supabase.com/project/")}/auth/users");
-  Console.WriteLine($"        → Search for: {email}");
-       Console.WriteLine($"     2. If user NOT found:");
-            Console.WriteLine($"    → Create user manually in Dashboard");
-      Console.WriteLine($"        → OR use registration system");
-    Console.WriteLine($"     3. If user found but login fails:");
-       Console.WriteLine($"        → Check 'Email Confirmed' column has a timestamp");
-           Console.WriteLine($"→ Try resetting password in Dashboard");
-      Console.WriteLine($"     → Verify email case matches (should be lowercase)");
-      }
-   else if (gex.Message.Contains("Email not confirmed"))
-       {
-          Console.WriteLine($"  → User email not verified");
-            Console.WriteLine($"  → ACTION: Confirm email in Supabase Dashboard or resend verification email");
-      }
-             else if (gex.Message.Contains("rate limit") || gex.Message.Contains("too many"))
-        {
-          Console.WriteLine($"  → Too many attempts - please wait a few minutes");
-          }
-         
-         throw; // Re-throw to be caught by AuthController
-         }
-            }
-  catch (Supabase.Gotrue.Exceptions.GotrueException)
-  {
-    throw; // Already logged above
-         }
-   catch (Exception ex)
-    {
-             Console.WriteLine($"✗ UNEXPECTED EXCEPTION during sign in:");
-                Console.WriteLine($"  - Type: {ex.GetType().Name}");
-   Console.WriteLine($"  - Message: {ex.Message}");
-         Console.WriteLine($"  - Stack Trace: {ex.StackTrace}");
-                throw;
-         }
+      Console.WriteLine($"  → Returning NULL session (authentication failed)");
+   // ✅ Return null instead of throwing - controller will handle the user-friendly message
+   return null;
         }
-    }
-}
+         else if (gex.Message.Contains("Email not confirmed"))
+        {
+     Console.WriteLine($"  → User email not verified");
+     Console.WriteLine($"  → Returning NULL session (email not confirmed)");
+         return null;
+        }
+      else if (gex.Message.Contains("rate limit") || gex.Message.Contains("too many"))
+        {
+   Console.WriteLine($"  → Too many attempts - please wait a few minutes");
+         Console.WriteLine($"  → Returning NULL session (rate limited)");
+       return null;
+        }
+       
+           // For unexpected errors, log but still return null
+           Console.WriteLine($"  → Unexpected authentication error");
+    Console.WriteLine($"  → Returning NULL session");
+     return null;
+ }
+            }
+      catch (Supabase.Gotrue.Exceptions.GotrueException)
+            {
+             // Already handled above, but just in case
+Console.WriteLine($"✗ Gotrue exception caught in outer handler - returning null");
+         return null;
+            }
+ catch (Exception ex)
+    {
+       Console.WriteLine($"✗ UNEXPECTED EXCEPTION during sign in:");
+   Console.WriteLine($"  - Type: {ex.GetType().Name}");
+    Console.WriteLine($"  - Message: {ex.Message}");
+   Console.WriteLine($"  - Stack Trace: {ex.StackTrace}");
+      // Return null for any unexpected errors too
+       return null;
+            }
+   }
+}}

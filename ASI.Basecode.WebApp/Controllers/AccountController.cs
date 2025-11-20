@@ -137,58 +137,149 @@ Console.WriteLine($"Error loading password reset page: {ex.Message}");
             }
 
             if (model.NewPassword != model.ConfirmPassword)
-            {
-                ModelState.AddModelError(string.Empty, "Passwords do not match.");
-                return View("~/Views/Account/ChangePassword.cshtml", model);
-            }
+{
+ModelState.AddModelError(string.Empty, "Passwords do not match.");
+     return View("~/Views/Account/ChangePassword.cshtml", model);
+  }
 
-            try
-            {
-                // We don't need the email here; we use SupabaseUserId from session
-
-                // Use Admin API to update password for the authenticated user (no email link required)
-                var supabaseUserId = HttpContext.Session.GetString("SupabaseUserId");
-                if (string.IsNullOrWhiteSpace(supabaseUserId))
-                {
-                    ModelState.AddModelError(string.Empty, "Your session is missing required info. Please log in again and retry.");
-                    return View("~/Views/Account/ChangePassword.cshtml", model);
-                }
-
-                var success = await _supabaseAuthService.UpdateUserPasswordAdminAsync(supabaseUserId, model.NewPassword);
-                if (success)
-                {
-                    TempData["SuccessMessage"] = "Password updated successfully. Please log in with your new password.";
-                    return RedirectToAction("Login");
-                }
-
-                ModelState.AddModelError(string.Empty, "Failed to update password. Please try again.");
-                return View("~/Views/Account/ChangePassword.cshtml", model);
-            }
-            catch (System.Exception ex)
-            {
-                ModelState.AddModelError(string.Empty, ex.Message);
-                return View("~/Views/Account/ChangePassword.cshtml", model);
-            }
+            // ✅ VALIDATION: Check password strength requirements
+            var passwordValidation = ValidatePasswordStrength(model.NewPassword);
+    if (!passwordValidation.IsValid)
+{
+        ModelState.AddModelError(string.Empty, passwordValidation.ErrorMessage);
+           return View("~/Views/Account/ChangePassword.cshtml", model);
         }
 
-        public class ChangePasswordRequest
+     try
+            {
+          // Get user email and Supabase ID from session
+ var supabaseUserId = HttpContext.Session.GetString("SupabaseUserId");
+          var userEmail = HttpContext.Session.GetString("UserEmail");
+     
+      if (string.IsNullOrWhiteSpace(supabaseUserId) || string.IsNullOrWhiteSpace(userEmail))
+       {
+                    ModelState.AddModelError(string.Empty, "Your session is missing required info. Please log in again and retry.");
+return View("~/Views/Account/ChangePassword.cshtml", model);
+        }
+
+                // ✅ SECURITY: Verify current password FIRST before any other validation
+          Console.WriteLine($"Verifying current password for user: {userEmail}");
+      var currentPasswordSession = await _supabaseAuthService.SignInAsync(userEmail, model.CurrentPassword);
+ 
+           if (currentPasswordSession == null)
+     {
+          Console.WriteLine($"Current password verification failed for user: {userEmail}");
+        ModelState.AddModelError(string.Empty, "Current password is incorrect.");
+                    return View("~/Views/Account/ChangePassword.cshtml", model);
+           }
+
+       Console.WriteLine($"Current password verified. Checking if new password is different...");
+
+                // ✅ VALIDATION: Ensure new password is different from current password
+  // This check happens AFTER verifying current password is correct
+      if (model.CurrentPassword == model.NewPassword)
+       {
+      Console.WriteLine($"New password is same as current password for user: {userEmail}");
+ ModelState.AddModelError(string.Empty, "New password must be different from your current password.");
+     return View("~/Views/Account/ChangePassword.cshtml", model);
+}
+
+        Console.WriteLine($"All validations passed. Updating to new password...");
+
+        // Update password using Admin API
+                var success = await _supabaseAuthService.UpdateUserPasswordAdminAsync(supabaseUserId, model.NewPassword);
+      if (success)
+ {
+          Console.WriteLine($"Password updated successfully for user: {userEmail}");
+          TempData["SuccessMessage"] = "Password updated successfully. Please log in with your new password.";
+         
+           // Clear session and redirect to login
+      HttpContext.Session.Clear();
+            return RedirectToAction("Login", "Auth");
+ }
+
+        Console.WriteLine($"Failed to update password for user: {userEmail}");
+     ModelState.AddModelError(string.Empty, "Failed to update password. Please try again.");
+                return View("~/Views/Account/ChangePassword.cshtml", model);
+ }
+            catch (System.Exception ex)
+            {
+     Console.WriteLine($"Error in ChangePassword: {ex.Message}");
+        ModelState.AddModelError(string.Empty, ex.Message);
+         return View("~/Views/Account/ChangePassword.cshtml", model);
+      }
+        }
+
+      /// <summary>
+  /// Validates password strength requirements
+/// </summary>
+ private (bool IsValid, string ErrorMessage) ValidatePasswordStrength(string password)
+ {
+      if (string.IsNullOrWhiteSpace(password))
+          {
+           return (false, "Password is required.");
+        }
+
+   var errors = new List<string>();
+
+  // Check minimum length
+      if (password.Length < 8)
+            {
+             errors.Add("at least 8 characters");
+            }
+
+        // Check for uppercase letter
+            if (!password.Any(char.IsUpper))
+            {
+    errors.Add("one uppercase letter (A-Z)");
+            }
+
+ // Check for lowercase letter
+            if (!password.Any(char.IsLower))
+            {
+    errors.Add("one lowercase letter (a-z)");
+            }
+
+       // Check for digit
+ if (!password.Any(char.IsDigit))
+   {
+        errors.Add("one number (0-9)");
+            }
+
+       // Check for special character
+            var specialChars = "!*(),.?\":{}|<>";
+            if (!password.Any(c => specialChars.Contains(c)))
+            {
+errors.Add("one special character (!*(),.?\":{}|<>)");
+     }
+
+     if (errors.Any())
+  {
+       var errorMessage = "Password must contain " + string.Join(", ", errors) + ".";
+ return (false, errorMessage);
+        }
+
+       return (true, string.Empty);
+        }
+
+      public class ChangePasswordRequest
         {
-            [EmailAddress]
-            public string Email { get; set; }
+     [EmailAddress]
+  public string Email { get; set; }
+
+          [Required]
+    public string CurrentPassword { get; set; }
 
             [Required]
-            public string CurrentPassword { get; set; }
-
-            [Required]
-            [MinLength(8)]
+          [MinLength(8)]
             public string NewPassword { get; set; }
 
-            [Required]
-            public string ConfirmPassword { get; set; }
+   [Required]
+          public string ConfirmPassword { get; set; }
         }
 
         /// <summary>
-        /// Handles password update from the setup page with enhanced security
+ /// Handles password update from the setup page with enhanced security
         /// </summary>
         [HttpPost]
         public async Task<IActionResult> UpdatePassword([FromBody] UpdatePasswordRequest request)
@@ -443,60 +534,6 @@ Console.WriteLine($"Error loading password reset page: {ex.Message}");
             
             // In production, write to a secure audit log file or database
             // System.IO.File.AppendAllText("audit_log.txt", logEntry + Environment.NewLine);
-        }
-
-        /// <summary>
-        /// Validate password strength against security requirements
-        /// </summary>
-        private (bool isValid, string message) ValidatePasswordStrength(string password)
-        {
-            if (string.IsNullOrEmpty(password))
-            {
-                return (false, "Password is required");
-            }
-
-            if (password.Length < 8)
-            {
-                return (false, "Password must be at least 8 characters long");
-            }
-
-            if (password.Length > 128)
-            {
-                return (false, "Password must not exceed 128 characters");
-            }
-
-            // Check for uppercase letter
-            if (!Regex.IsMatch(password, @"[A-Z]"))
-            {
-                return (false, "Password must contain at least one uppercase letter (A-Z)");
-            }
-
-            // Check for lowercase letter
-            if (!Regex.IsMatch(password, @"[a-z]"))
-            {
-                return (false, "Password must contain at least one lowercase letter (a-z)");
-            }
-
-            // Check for digit
-            if (!Regex.IsMatch(password, @"\d"))
-            {
-                return (false, "Password must contain at least one number (0-9)");
-            }
-
-            // Check for special character
-            if (!Regex.IsMatch(password, @"[!@#$%^&*(),.?""':{}|<>]"))
-            {
-                return (false, "Password must contain at least one special character (!@#$%^&*(),.?\":{}|<>)");
-            }
-
-            // Check for common weak passwords
-            var commonPasswords = new[] { "Password1!", "Welcome1!", "Admin123!", "Qwerty123!" };
-            if (commonPasswords.Any(p => p.Equals(password, StringComparison.OrdinalIgnoreCase)))
-            {
-                return (false, "This password is too common. Please choose a more unique password");
-            }
-
-            return (true, "Password meets all requirements");
         }
 
         /// <summary>
