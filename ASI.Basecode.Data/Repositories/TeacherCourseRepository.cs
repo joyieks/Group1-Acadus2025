@@ -20,15 +20,19 @@ namespace ASI.Basecode.Data.Repositories
         }
         public async Task<List<ActivityModel>> GetActivitiesByCourseIdAsync(long courseId)
         {
+            // Get all activities for the course (filter IsVisible in memory)
             var res = await _supabaseClient
                 .From<ActivityModel>()
-                .Where(a => a.CourseId == courseId)
-                .Where(a => a.IsArchived == false)
+                .Filter("courseId", Supabase.Postgrest.Constants.Operator.Equals, courseId)
                 .Get();
 
-            return res.Models
+            // Filter out non-visible activities in memory
+            var activities = res.Models
+                .Where(a => a.IsVisible == false)  // Filter in memory
                 .OrderBy(a => a.DueDate)
                 .ToList();
+
+            return activities;
         }
 
         public async Task<List<ActivitySubmissionModel>> GetSubmissionsByStudentAndCourseAsync(string studentId, long courseId)
@@ -93,10 +97,12 @@ namespace ASI.Basecode.Data.Repositories
                 var fullName = studentUser != null
                     ? $"{studentUser.FirstName} {studentUser.LastName}".Trim()
                     : "Unknown Student";
+                var displayId = studentUser?.UserDisplayId ?? "N/A";
 
                 viewModel.Students.Add(new CourseGradebookViewModel.StudentGradeItem
                 {
                     StudentId = enrollment.StudentId,
+                    StudentDisplayId = displayId,
                     Name = fullName,
                     AveragePercentage = average
                 });
@@ -122,6 +128,7 @@ namespace ASI.Basecode.Data.Repositories
             var detail = new StudentGradeDetail
             {
                 StudentId = studentId,
+                StudentDisplayId = user?.UserDisplayId ?? "N/A",
                 Name = $"{user?.FirstName} {user?.LastName}".Trim()
             };
 

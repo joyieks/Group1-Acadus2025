@@ -207,13 +207,30 @@
             }
 
             // ------------------ Global behavior ------------------
-            document.addEventListener('click', function() {
+            document.addEventListener('click', function(e) {
+                // Don't close menus if clicking inside them
+                if (notifPanel && notifPanel.contains(e.target)) return;
+                if (userMenu && userMenu.contains(e.target)) return;
+                // Don't close if clicking the buttons that open them
+                if (notifBtn && notifBtn.contains(e.target)) return;
+                if (userMenuBtn && userMenuBtn.contains(e.target)) return;
+                if (userAvatarBtn && userAvatarBtn.contains(e.target)) return;
+                
                 closeNotif();
                 closeUserMenu();
             });
 
             if (notifPanel) notifPanel.addEventListener('click', function(e) { e.stopPropagation(); });
-            if (userMenu) userMenu.addEventListener('click', function(e) { e.stopPropagation(); });
+            if (userMenu) {
+                userMenu.addEventListener('click', function(e) { 
+                    e.stopPropagation(); 
+                    // Allow Profile link clicks to navigate
+                    if (e.target.tagName === 'A' && e.target.closest('#userMenu')) {
+                        // Let the link navigate normally
+                        return true;
+                    }
+                });
+            }
 
             window.addEventListener('resize', function() { if (notifPanel && !notifPanel.classList.contains('hidden')) positionNotifPanel(); if (userMenu && !userMenu.classList.contains('hidden')) positionUserMenu(); });
             window.addEventListener('scroll', function() { if (notifPanel && !notifPanel.classList.contains('hidden')) positionNotifPanel(); if (userMenu && !userMenu.classList.contains('hidden')) positionUserMenu(); }, true);

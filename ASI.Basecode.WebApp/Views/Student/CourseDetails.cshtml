@@ -6,6 +6,20 @@
 <script src="https://cdn.tailwindcss.com"></script>
 
 <main class="max-w-4xl mx-auto px-4 md:px-8 pt-4 pb-12">
+    <!-- Success/Error Messages -->
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="mb-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative" role="alert">
+            <span class="block sm:inline">@TempData["SuccessMessage"]</span>
+        </div>
+    }
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="mb-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
+            <span class="block sm:inline">@TempData["ErrorMessage"]</span>
+        </div>
+    }
+
     <!-- Header -->
     <section class="text-center mb-12">
         <h1 class="text-4xl font-bold text-[#337D58]  mb-2">@Model.CourseTitle</h1>
@@ -76,7 +90,7 @@
                         <thead class="bg-gray-50 border-b">
                             <tr>
                                 <th class="text-left py-4 px-6 font-semibold text-gray-700">Activity</th>
-                                <th class="text-left py-4 px-6 font-semibold text-gray-700">Due Date</th>
+                                <th class="text-left py-4 px-6 font-semibold text-gray-700">Due Date & Time</th>
                                 <th class="text-left py-4 px-6 font-semibold text-gray-700">Score</th>
                                 <th class="text-left py-4 px-6 font-semibold text-gray-700">Status</th>
                                 <th class="text-left py-4 px-6 font-semibold text-gray-700">Actions</th>
@@ -94,14 +108,7 @@
                                         }
                                     </td>
                                     <td class="py-4 px-6 text-gray-500">
-                                        @if (!string.IsNullOrEmpty(activity.DueDate))
-                                        {
-                                            @activity.DueDate
-                                        }
-                                        else
-                                        {
-                                            @activity.Date.ToString("MMM dd, yyyy")
-                                        }
+                                        @activity.Date.ToString("MMM dd, yyyy hh:mm tt")
                                     </td>
                                     <td class="py-4 px-6">
                                         @if (activity.Score == "0" || string.IsNullOrEmpty(activity.Score))
@@ -117,6 +124,14 @@
                                         @if (activity.Status == "Graded")
                                         {
                                             <span class="bg-green-100 text-green-800 px-3 py-1 rounded-full text-xs font-medium">Completed</span>
+                                        }
+                                        else if (activity.Status == "Late")
+                                        {
+                                            <span class="bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-xs font-medium">Late</span>
+                                        }
+                                        else if (activity.Status == "Submitted")
+                                        {
+                                            <span class="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-xs font-medium">Submitted</span>
                                         }
                                         else if (activity.Status == "In Progress")
                                         {
@@ -136,17 +151,38 @@
                                         }
                                     </td>
                                     <td class="py-4 px-6">
-                                        @if (activity.Status == "Completed" && activity.Score != "0")
+                                        @if (activity.Status == "Completed" || activity.Status == "Graded")
                                         {
-                                            <button class="bg-acadus-green text-white px-3 py-1 rounded text-xs hover:bg-acadus-light-green transition-colors appeal-btn"
+                                            <button class="bg-acadus-green text-white px-3 py-1 rounded text-xs hover:bg-acadus-light-green transition-colors view-grade-btn"
                                                     data-activity="@activity.Title"
-                                                    data-score="@activity.Score">
-                                                Appeal
+                                                    data-score="@activity.Score"
+                                                    data-percentage="@activity.Percentage"
+                                                    data-feedback="@Html.Raw(System.Web.HttpUtility.HtmlAttributeEncode(activity.Feedback ?? ""))"
+                                                    data-max-score="@activity.MaxScore">
+                                                View
+                                            </button>
+                                        }
+                                        else if (activity.Status == "Late")
+                                        {
+                                            <span class="text-yellow-600 text-xs font-medium">Submitted Late</span>
+                                        }
+                                        else if (activity.Status == "Submitted")
+                                        {
+                                            <span class="text-blue-600 text-xs font-medium">Submitted</span>
+                                        }
+                                        else if (activity.Status == "Not Submitted" || activity.Status == "Not Started" || string.IsNullOrEmpty(activity.Status))
+                                        {
+                                            <button class="bg-blue-600 text-white px-3 py-1 rounded text-xs hover:bg-blue-700 transition-colors submit-activity-btn"
+                                                    data-activity-id="@activity.ActivityId"
+                                                    data-activity-title="@activity.Title"
+                                                    data-activity-description="@Html.Raw(System.Web.HttpUtility.HtmlAttributeEncode(activity.Description ?? ""))"
+                                                    data-course-id="@Model.CourseId">
+                                                Submit
                                             </button>
                                         }
                                         else
                                         {
-                                            <span class="text-gray-400 text-xs">-</span>
+                                            <span class="text-gray-400 text-xs">@activity.Status</span>
                                         }
                                     </td>
                                 </tr>
@@ -256,34 +292,86 @@
         </div>
     </div>
 
-    <!-- Appeal Modal -->
-    <div id="appeal-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50">
-        <div class="bg-white rounded-xl shadow-xl w-full max-w-md p-6 relative">
-            <button id="close-appeal" class="absolute top-3 right-3 text-gray-400 hover:text-gray-600 text-xl font-bold">&times;</button>
+    <!-- Submit Activity Modal -->
+    <div id="submit-activity-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50">
+        <div class="bg-white rounded-xl shadow-xl w-full max-w-2xl p-6 relative max-h-[90vh] overflow-y-auto">
+            <button id="close-submit" class="absolute top-3 right-3 text-gray-400 hover:text-gray-600 text-xl font-bold">&times;</button>
 
-            <h2 class="text-2xl font-semibold text-[#337D58] mb-4">Submit an Appeal</h2>
+            <h2 class="text-2xl font-semibold text-[#337D58] mb-4">Submit Activity</h2>
 
-            <form id="appeal-form">
+            <form id="submit-activity-form" method="post" action="@Url.Action("SubmitActivity", "Student")">
+                <input type="hidden" id="submit-activity-id" name="activityId" />
+                <input type="hidden" id="submit-course-id" name="courseId" value="@Model.CourseId" />
+                
                 <div class="mb-4">
                     <label class="block text-sm font-medium text-gray-700 mb-1">Activity</label>
-                    <input type="text" id="appeal-activity" class="w-full border border-gray-300 rounded-lg px-3 py-2 bg-gray-100" readonly />
+                    <input type="text" id="submit-activity-title" class="w-full border border-gray-300 rounded-lg px-3 py-2 bg-gray-100" readonly />
                 </div>
 
                 <div class="mb-4">
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Reason for Appeal</label>
-                    <textarea id="appeal-reason" class="w-full border border-gray-300 rounded-lg px-3 py-2" rows="3" placeholder="Explain your reason..."></textarea>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                    <div id="submit-activity-description" class="w-full border border-gray-300 rounded-lg px-3 py-2 bg-gray-50 min-h-[60px] text-sm text-gray-700 whitespace-pre-wrap">
+                        <em class="text-gray-400">No description provided.</em>
+                    </div>
                 </div>
 
                 <div class="mb-4">
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Additional Notes (optional)</label>
-                    <textarea id="appeal-notes" class="w-full border border-gray-300 rounded-lg px-3 py-2" rows="2" placeholder="Add any extra details..."></textarea>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Your Answer/Work *</label>
+                    <textarea id="submit-answer" name="submissionContent" class="w-full border border-gray-300 rounded-lg px-3 py-2" rows="10" placeholder="Type your answer or paste your work here..." required></textarea>
+                    <p class="text-xs text-gray-500 mt-1">Please provide your complete answer or work for this activity.</p>
                 </div>
 
                 <div class="flex justify-end space-x-3">
-                    <button type="button" id="cancel-appeal" class="px-4 py-2 rounded-lg border border-gray-300 text-gray-600 hover:bg-gray-50">Cancel</button>
-                    <button type="submit" class="px-4 py-2 rounded-lg bg-[#337D58] text-white hover:bg-[#2b6c4d]">Submit</button>
+                    <button type="button" id="cancel-submit" class="px-4 py-2 rounded-lg border border-gray-300 text-gray-600 hover:bg-gray-50">Cancel</button>
+                    <button type="submit" class="px-4 py-2 rounded-lg bg-[#337D58] text-white hover:bg-[#2b6c4d]">Submit Activity</button>
                 </div>
             </form>
+        </div>
+    </div>
+
+    <!-- View Grade Modal -->
+    <div id="view-grade-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50">
+        <div class="bg-white rounded-xl shadow-xl w-full max-w-2xl p-6 relative max-h-[90vh] overflow-y-auto">
+            <button id="close-view-grade" class="absolute top-3 right-3 text-gray-400 hover:text-gray-600 text-xl font-bold">&times;</button>
+
+            <h2 class="text-2xl font-semibold text-[#337D58] mb-4">Activity Grade Details</h2>
+
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Activity</label>
+                    <input type="text" id="view-activity-title" class="w-full border border-gray-300 rounded-lg px-3 py-2 bg-gray-100" readonly />
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Score</label>
+                        <div class="w-full border border-gray-300 rounded-lg px-3 py-2 bg-gray-50">
+                            <span id="view-score" class="text-lg font-semibold text-gray-800">-</span>
+                            <span class="text-gray-500"> / </span>
+                            <span id="view-max-score" class="text-gray-600">-</span>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Percentage</label>
+                        <div class="w-full border border-gray-300 rounded-lg px-3 py-2 bg-gray-50">
+                            <span id="view-percentage" class="text-lg font-semibold text-gray-800">-</span>
+                            <span class="text-gray-500">%</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Teacher's Feedback</label>
+                    <div id="view-feedback" class="w-full border border-gray-300 rounded-lg px-3 py-2 bg-gray-50 min-h-[150px] text-sm text-gray-700 whitespace-pre-wrap">
+                        <em class="text-gray-400">No feedback provided yet.</em>
+                    </div>
+                </div>
+
+                <div class="flex justify-end space-x-3 pt-4 border-t">
+                    <button type="button" id="close-view-grade-btn" class="px-4 py-2 rounded-lg border border-gray-300 text-gray-600 hover:bg-gray-50">Close</button>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -347,50 +435,150 @@
     });
 </script>
 
-<!-- Javascript for Appeal Modal -->
+<!-- Javascript for Submit Activity Modal -->
 <script>
     document.addEventListener("DOMContentLoaded", () => {
-        const modal = document.getElementById("appeal-modal");
-        const closeBtn = document.getElementById("close-appeal");
-        const cancelBtn = document.getElementById("cancel-appeal");
-        const appealButtons = document.querySelectorAll(".appeal-btn");
-        const activityInput = document.getElementById("appeal-activity");
-        const appealForm = document.getElementById("appeal-form");
+        const submitModal = document.getElementById("submit-activity-modal");
+        const closeSubmitBtn = document.getElementById("close-submit");
+        const cancelSubmitBtn = document.getElementById("cancel-submit");
+        const submitButtons = document.querySelectorAll(".submit-activity-btn");
+        const activityIdInput = document.getElementById("submit-activity-id");
+        const activityTitleInput = document.getElementById("submit-activity-title");
+        const submitForm = document.getElementById("submit-activity-form");
 
-        // Open modal when an Appeal button is clicked
-        appealButtons.forEach(btn => {
+        // Open modal when a Submit button is clicked
+        submitButtons.forEach(btn => {
             btn.addEventListener("click", () => {
-                const activityTitle = btn.getAttribute("data-activity");
-                activityInput.value = activityTitle;
+                const activityId = btn.getAttribute("data-activity-id");
+                const activityTitle = btn.getAttribute("data-activity-title");
+                const activityDescription = btn.getAttribute("data-activity-description") || "";
+                
+                activityIdInput.value = activityId;
+                activityTitleInput.value = activityTitle;
+                
+                // Set description (decode HTML entities and preserve line breaks)
+                const descriptionDiv = document.getElementById("submit-activity-description");
+                if (descriptionDiv) {
+                    if (activityDescription && activityDescription.trim() !== "") {
+                        // Decode HTML entities
+                        const decodedDescription = activityDescription
+                            .replace(/&amp;/g, '&')
+                            .replace(/&lt;/g, '<')
+                            .replace(/&gt;/g, '>')
+                            .replace(/&quot;/g, '"')
+                            .replace(/&#39;/g, "'")
+                            .replace(/&#x27;/g, "'")
+                            .replace(/&#x2F;/g, '/');
+                        
+                        // Preserve line breaks
+                        descriptionDiv.innerHTML = decodedDescription.replace(/\n/g, '<br>');
+                        descriptionDiv.classList.remove("text-gray-400");
+                        descriptionDiv.classList.add("text-gray-700");
+                    } else {
+                        descriptionDiv.innerHTML = '<em class="text-gray-400">No description provided.</em>';
+                        descriptionDiv.classList.remove("text-gray-700");
+                        descriptionDiv.classList.add("text-gray-400");
+                    }
+                }
+                
+                submitModal.classList.remove("hidden");
+                document.body.classList.add("overflow-hidden");
+            });
+        });
+
+        // Close modal
+        [closeSubmitBtn, cancelSubmitBtn].forEach(el => {
+            el.addEventListener("click", () => {
+                submitModal.classList.add("hidden");
+                document.body.classList.remove("overflow-hidden");
+                submitForm.reset();
+            });
+        });
+
+        // Close modal when clicking outside
+        submitModal.addEventListener("click", (e) => {
+            if (e.target === submitModal) {
+                submitModal.classList.add("hidden");
+                document.body.classList.remove("overflow-hidden");
+                submitForm.reset();
+            }
+        });
+    });
+</script>
+
+<!-- Javascript for View Grade Modal -->
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+        const modal = document.getElementById("view-grade-modal");
+        const closeBtn = document.getElementById("close-view-grade");
+        const closeBtn2 = document.getElementById("close-view-grade-btn");
+        const viewButtons = document.querySelectorAll(".view-grade-btn");
+        const activityTitleInput = document.getElementById("view-activity-title");
+        const scoreSpan = document.getElementById("view-score");
+        const maxScoreSpan = document.getElementById("view-max-score");
+        const percentageSpan = document.getElementById("view-percentage");
+        const feedbackDiv = document.getElementById("view-feedback");
+
+        // Open modal when a View button is clicked
+        viewButtons.forEach(btn => {
+            btn.addEventListener("click", () => {
+                const activity = btn.getAttribute("data-activity");
+                const score = btn.getAttribute("data-score") || "0";
+                const maxScore = btn.getAttribute("data-max-score") || "0";
+                const percentage = btn.getAttribute("data-percentage") || "0.0";
+                const feedback = btn.getAttribute("data-feedback") || "";
+                
+                // Set activity title
+                activityTitleInput.value = activity;
+                
+                // Set score
+                scoreSpan.textContent = score;
+                maxScoreSpan.textContent = maxScore;
+                
+                // Set percentage
+                percentageSpan.textContent = percentage;
+                
+                // Set feedback (decode HTML entities and preserve line breaks)
+                if (feedback && feedback.trim() !== "") {
+                    const decodedFeedback = feedback
+                        .replace(/&amp;/g, '&')
+                        .replace(/&lt;/g, '<')
+                        .replace(/&gt;/g, '>')
+                        .replace(/&quot;/g, '"')
+                        .replace(/&#39;/g, "'")
+                        .replace(/&#x27;/g, "'")
+                        .replace(/&#x2F;/g, '/');
+                    
+                    feedbackDiv.innerHTML = decodedFeedback.replace(/\n/g, '<br>');
+                    feedbackDiv.classList.remove("text-gray-400");
+                    feedbackDiv.classList.add("text-gray-700");
+                } else {
+                    feedbackDiv.innerHTML = '<em class="text-gray-400">No feedback provided yet.</em>';
+                    feedbackDiv.classList.remove("text-gray-700");
+                    feedbackDiv.classList.add("text-gray-400");
+                }
+                
                 modal.classList.remove("hidden");
                 document.body.classList.add("overflow-hidden");
             });
         });
 
         // Close modal
-        [closeBtn, cancelBtn].forEach(el => {
-            el.addEventListener("click", () => {
-                modal.classList.add("hidden");
-                document.body.classList.remove("overflow-hidden");
-            });
+        [closeBtn, closeBtn2].forEach(el => {
+            if (el) {
+                el.addEventListener("click", () => {
+                    modal.classList.add("hidden");
+                    document.body.classList.remove("overflow-hidden");
+                });
+            }
         });
 
-        // Form submission (mock)
-        appealForm.addEventListener("submit", (e) => {
-            e.preventDefault();
-            const activity = activityInput.value;
-            const reason = document.getElementById("appeal-reason").value;
-
-            if (!reason.trim()) {
-                alert("Please provide a reason for your appeal.");
-                return;
+        // Close modal when clicking outside
+        modal.addEventListener("click", (e) => {
+            if (e.target === modal) {
+                modal.classList.add("hidden");
+                document.body.classList.remove("overflow-hidden");
             }
-
-            // In real app, send via fetch/AJAX to backend
-            alert(`Appeal submitted for: ${activity}\nReason: ${reason}`);
-            modal.classList.add("hidden");
-            appealForm.reset();
-            document.body.classList.remove("overflow-hidden");
         });
     });
 </script>

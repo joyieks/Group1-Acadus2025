@@ -1,359 +1,1145 @@
+@using ASI.Basecode.Data.Models
+@using ASI.Basecode.WebApp.Models
+@model ViewCourseViewModel
+
 @{
-    Layout = null;
+    Layout = "~/Views/Shared/_AuthenticatedLayout.cshtml";
+    ViewData["Title"] = "View Course";
 }
 
-<!DOCTYPE html>
-<html>
-<head>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>View Course</title>
+<script src="https://cdn.tailwindcss.com"></script>
+
+<!-- Hero Section -->
+<section class="bg-green-100 flex items-center justify-center text-center relative py-10">
+    <a href="/Admin/Courses"
+        class="absolute top-5 left-5 bg-white text-green-600 border border-gray-300 rounded-lg px-4 py-2 font-semibold no-underline transition-colors hover:bg-gray-50 flex items-center gap-2">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <path d="M19 12H5"></path>
+            <path d="M12 19l-7-7 7-7"></path>
+        </svg>
+        Back to Courses
+    </a>
+    <div class="max-w-4xl mx-auto px-4">
+        <p class="mb-1 text-gray-600 text-xl">Course Management</p>
+        <h1 class="text-5xl font-bold mb-1 text-gray-900">View Course</h1>
+        <p class="mb-4 text-gray-600 text-lg">View detailed course information.</p>
+    </div>
+</section>
+
+<section class="bg-white">
+    <div class="mx-auto px-4 py-8" style="max-width: 1600px;">
+        <div class="grid gap-6" style="grid-template-columns: repeat(8, minmax(0, 1fr));">
+            <!-- Left Column: General Information (3 columns) -->
+            <div class="col-span-3 bg-gray-50 border border-gray-200 rounded-lg p-6">
+                <h3 class="mb-5 font-bold text-lg text-gray-900">Course Information</h3>
+
+                <!-- Course Name (Full Width) -->
+                <div class="mb-5">
+                    <div class="text-2xl font-bold text-gray-900 mb-1">@Model?.Course?.Name</div>
+                </div>
+
+                <!-- General Information -->
+                <div class="mb-5">
+                    <h4 class="text-base font-bold text-gray-900 mb-3 pb-2 border-b border-gray-200">General Information</h4>
+                    <div class="grid grid-cols-1 gap-3">
+                        <div>
+                            <span class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Course Code</span>
+                            <div class="text-sm text-gray-900 py-1.5">@Model?.Course?.Code</div>
+                        </div>
+                        <div>
+                            <span class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Status</span>
+                            <div class="text-sm text-gray-900 py-1.5">@Model?.Course?.Status</div>
+                        </div>
+                        <div>
+                            <span class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Course Description</span>
+                            <div class="text-sm text-gray-900 py-1.5">@Model?.Course?.Description</div>
+                        </div>
+                        <div>
+                            <span class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Units</span>
+                            <div class="text-sm text-gray-900 py-1.5">@Model?.Course?.Credits</div>
+                        </div>
+                        <div>
+                            <span class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Year Level</span>
+                            <div class="text-sm text-gray-900 py-1.5">@Model?.Course?.Level</div>
+                        </div>
+                        <div>
+                            <span class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Semester</span>
+                            <div class="text-sm text-gray-900 py-1.5">@Model?.Course?.SemesterId</div>
+                        </div>
+                        <div>
+                            <span class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Maximum Capacity</span>
+                            <div class="text-sm text-gray-900 py-1.5">@Model?.Course?.MaxCapacity</div>
+                        </div>
+                        <div>
+                            <span class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Instructor</span>
+                            <div class="text-sm text-gray-900 py-1.5">@(Model?.InstructorName ?? "N/A")</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column: Students Enrolled Table (5 columns) -->
+            <div class="col-span-5 bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="m-0 font-bold text-xl text-gray-900">Students Enrolled</h3>
+                </div>
+
+                <!-- Search and Action Bar -->
+                <div class="flex justify-between items-center gap-4 mb-6">
+                    <!-- Left: Search Bar -->
+                    <form method="get" class="flex gap-2 max-w-[600px]">
+                        <input type="text" 
+                               name="search" 
+                               value="@ViewData["SearchTerm"]"
+                               placeholder="Search by name or ID..." 
+                               class="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+                               style="background:#ffffff; color:#111827;">
+                        <button type="submit" 
+                                class="bg-green-600 text-white px-6 py-2 rounded-lg font-semibold text-sm hover:bg-green-700 transition-colors">
+                            Search
+                        </button>
+                    </form>
+
+                    <!-- Right: Action Buttons -->
+                    <div class="flex gap-2">
+                        <button type="button" onclick="openEditCourseModal()" class="bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold text-sm hover:bg-blue-700 transition-colors">
+                            Edit Course
+                        </button>
+                        <button type="button" id="addStudentBtn" class="bg-green-600 text-white px-4 py-2 rounded-lg font-semibold text-sm hover:bg-green-700 transition-colors">
+                            Add to Course
+                        </button>
+                    </div>
+                </div>
+
+                <table id="enrolledStudentsTable" class="display" style="width:100%; border:1px solid #e5e7eb; border-radius:8px; overflow:hidden;">
+                    <thead style="background:#f9fafb;">
+                        <tr>
+                            <th style="padding:12px; text-align:left; font-weight:600; color:#111827;">ID Number</th>
+                            <th style="padding:12px; text-align:left; font-weight:600; color:#111827;">Name</th>
+                            <th style="padding:12px; text-align:left; font-weight:600; color:#111827;">Status</th>
+                            <th style="padding:12px; text-align:left; font-weight:600; color:#111827;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Model?.EnrolledStudents != null && Model.EnrolledStudents.Count > 0)
+                        {
+                            @foreach (var student in Model.EnrolledStudents)
+                            {
+                                <tr style="background:#E8F9E8;">
+                                    <td style="padding:16px; font-weight:700; color:#111827;">@student.IdNumber</td>
+                                    <td style="padding:16px; color:#6b7280;">@student.FullName</td>
+                                    <td style="padding:16px; color:#6b7280;">@student.Status</td>
+                                    <td style="padding:16px; color:#6b7280;">
+                                        <a href="#" class="view-student-btn" 
+                                           data-student-id="@student.StudentId"
+                                           data-id-number="@student.IdNumber"
+                                           data-full-name="@student.FullName"
+                                           style="color:#059669; text-decoration:none; font-weight:600; font-size:12px; margin-right:12px; cursor:pointer;">View</a>
+                                        <a href="#" class="remove-student-btn" 
+                                           data-student-id="@student.StudentId"
+                                           data-id-number="@student.IdNumber"
+                                           data-full-name="@student.FullName"
+                                           style="color:#dc2626; text-decoration:none; font-weight:600; font-size:12px; cursor:pointer;">Remove</a>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr>
+                                <td style="padding:24px; text-align:center; color:#6b7280;">No students enrolled yet</td>
+                                <td style="padding:24px; text-align:center; color:#6b7280;"></td>
+                                <td style="padding:24px; text-align:center; color:#6b7280;"></td>
+                                <td style="padding:24px; text-align:center; color:#6b7280;"></td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+</section>
+
+@section Scripts {
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+        /* Subtler table outlines */
+        #enrolledStudentsTable {
+            border: none !important;
+        }
+        #enrolledStudentsTable thead th {
+            border-bottom: 1px solid #f3f4f6 !important;
+        }
+        #enrolledStudentsTable tbody td {
+            border-bottom: 1px solid #f3f4f6 !important;
         }
 
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+        /* Pagination button styles to match design */
+        .dataTables_paginate .paginate_button {
+            background: transparent !important;
+            border: none !important;
+            border-radius: 8px !important;
+            padding: 10px !important;
+            color: #374151 !important;
+            cursor: pointer !important;
+            transition: background-color 0.2s !important;
+            margin: 0 2px !important;
+        }
+        .dataTables_paginate .paginate_button:hover {
+            background: #F2F7F2 !important;
+        }
+        .dataTables_paginate .paginate_button.current {
+            background: #E0F0E0 !important;
+            font-weight: bold !important;
+        }
+        .dataTables_paginate .paginate_button        .disabled {
+            opacity: 0.5 !important;
+            cursor: not-allowed !important;
         }
 
-        .modal-backdrop {
+        /* Toast Notification Styles */
+        .toast-container {
             position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.5);
-            backdrop-filter: blur(8px);
-            -webkit-backdrop-filter: blur(8px);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 1000;
-            animation: fadeIn 0.3s ease;
-        }
-
-        @@keyframes fadeIn {
-            from {
-                opacity: 0;
-            }
-            to {
-                opacity: 1;
-            }
-        }
-
-        @@keyframes slideUp {
-            from {
-                transform: translateY(30px);
-                opacity: 0;
-            }
-            to {
-                transform: translateY(0);
-                opacity: 1;
-            }
-        }
-
-        .modal-content {
-            background: #ffffff;
-            border-radius: 16px;
-            width: 90%;
-            max-width: 700px;
-            max-height: 90vh;
-            overflow-y: auto;
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-            animation: slideUp 0.3s ease;
-        }
-
-        .modal-header {
-            background: #E8F9E8;
-            padding: 24px 32px;
-            border-radius: 16px 16px 0 0;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 2px solid #d1fae5;
-        }
-
-        .modal-title {
-            font-size: 24px;
-            font-weight: 800;
-            color: #111827;
-        }
-
-        .close-btn {
-            background: none;
-            border: none;
-            font-size: 28px;
-            color: #6b7280;
-            cursor: pointer;
-            width: 32px;
-            height: 32px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 6px;
-            transition: all 0.2s;
-        }
-
-        .close-btn:hover {
-            background: rgba(0, 0, 0, 0.05);
-            color: #111827;
-        }
-
-        .modal-body {
-            padding: 32px;
-        }
-
-        .section {
-            margin-bottom: 32px;
-        }
-
-        .section:last-child {
-            margin-bottom: 0;
-        }
-
-        .section-title {
-            font-size: 18px;
-            font-weight: 700;
-            color: #111827;
-            margin-bottom: 16px;
-            padding-bottom: 8px;
-            border-bottom: 2px solid #e5e7eb;
-        }
-
-        .info-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 20px;
-        }
-
-        .info-item {
+            top: 20px;
+            right: 20px;
+            z-index: 10000;
             display: flex;
             flex-direction: column;
-        }
-
-        .info-item.full-width {
-            grid-column: 1 / -1;
-        }
-
-        .info-label {
-            font-size: 13px;
-            font-weight: 600;
-            color: #6b7280;
-            margin-bottom: 6px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        .info-value {
-            font-size: 15px;
-            color: #111827;
-            padding: 10px 12px;
-            background: #f9fafb;
-            border-radius: 6px;
-            border: 1px solid #e5e7eb;
-        }
-
-        .status-badge {
-            display: inline-block;
-            padding: 6px 16px;
-            border-radius: 12px;
-            font-size: 13px;
-            font-weight: 600;
-            width: fit-content;
-        }
-
-        .status-badge.active {
-            background: #86efac;
-            color: #065f46;
-        }
-
-        .status-badge.inactive {
-            background: #d1d5db;
-            color: #4b5563;
-        }
-
-        .modal-footer {
-            padding: 20px 32px;
-            background: #f9fafb;
-            border-top: 1px solid #e5e7eb;
-            border-radius: 0 0 16px 16px;
-            display: flex;
-            justify-content: flex-end;
             gap: 12px;
         }
 
-        .btn {
-            padding: 10px 24px;
-            border-radius: 8px;
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            border: none;
-            transition: all 0.2s;
-        }
-
-        .btn-secondary {
+        .toast {
+            min-width: 320px;
+            max-width: 500px;
             background: #ffffff;
-            color: #4b5563;
-            border: 1px solid #d1d5db;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            padding: 16px 20px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            animation: slideInRight 0.3s ease-out;
+            border-left: 4px solid;
         }
 
-        .btn-secondary:hover {
-            background: #f3f4f6;
+        .toast.success {
+            border-left-color: #059669;
         }
 
-        .btn-primary {
-            background: #059669;
-            color: #ffffff;
+        .toast.error {
+            border-left-color: #dc2626;
         }
 
-        .btn-primary:hover {
-            background: #047857;
+        .toast.info {
+            border-left-color: #2563eb;
         }
 
-        .btn-danger {
-            background: #dc2626;
-            color: #ffffff;
+        .toast-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
         }
 
-        .btn-danger:hover {
-            background: #b91c1c;
+        .toast.success .toast-icon {
+            background: #d1fae5;
         }
 
-        @@media (max-width: 640px) {
-            .info-grid {
-                grid-template-columns: 1fr;
+        .toast.error .toast-icon {
+            background: #fee2e2;
+        }
+
+        .toast.info .toast-icon {
+            background: #dbeafe;
+        }
+
+        .toast-content {
+            flex: 1;
+        }
+
+        .toast-title {
+            font-weight: 700;
+            font-size: 16px;
+            color: #111827;
+            margin-bottom: 4px;
+        }
+
+        .toast-message {
+            font-size: 14px;
+            color: #6b7280;
+            line-height: 1.5;
+        }
+
+        .toast-close {
+            background: none;
+            border: none;
+            color: #9ca3af;
+            font-size: 20px;
+            cursor: pointer;
+            padding: 0;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            transition: color 0.2s;
+        }
+
+        .toast-close:hover {
+            color: #374151;
+        }
+
+        @@keyframes slideInRight {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
             }
-
-            .modal-body {
-                padding: 24px 20px;
+            to {
+                transform: translateX(0);
+                opacity: 1;
             }
+        }
 
-            .modal-header {
-                padding: 20px;
+        @@keyframes slideOutRight {
+            from {
+                transform: translateX(0);
+                opacity: 1;
             }
+            to {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+        }
 
-            .modal-footer {
-                padding: 16px 20px;
-                flex-direction: column;
-            }
-
-            .btn {
-                width: 100%;
-            }
+        .toast.hiding {
+            animation: slideOutRight 0.3s ease-out forwards;
         }
     </style>
-</head>
-<body>
-    <div class="modal-backdrop" onclick="closeModal(event)">
-        <div class="modal-content" onclick="event.stopPropagation()">
-            <div class="modal-header">
-                <h2 class="modal-title">Course Details</h2>
-                <button class="close-btn" onclick="window.history.back()">&times;</button>
+    
+    <script>
+        const courseId = @(Model?.Course?.Id ?? 0);
+
+        function openEditCourseModal() {
+            if (!courseId) {
+                alert('Error: Could not determine course ID');
+                return;
+            }
+
+            fetch(`/Admin/EditCourse?id=${courseId}`, {
+                method: 'GET',
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            })
+            .then(response => {
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                return response.text();
+            })
+            .then(html => {
+                const container = document.createElement('div');
+                container.innerHTML = html;
+                document.body.appendChild(container);
+            })
+            .catch(error => {
+                console.error('Error loading edit course modal:', error);
+                alert('Error loading edit course form');
+            });
+        }
+
+        function closeEditCourseModal() {
+            const backdrop = document.getElementById('editCourseModalBackdrop');
+            const container = document.querySelector('.modal-container');
+            if (backdrop) backdrop.remove();
+            if (container) container.remove();
+        }
+
+        console.log('=== ViewCourse.cshtml Script Loading ===');
+        console.log('jQuery available:', typeof $ !== 'undefined');
+        console.log('Course ID from model:', courseId);
+
+        $(document).ready(function() {
+            console.log('=== Document Ready - Initializing ViewCourse ===');
+            
+            // Destroy existing DataTable if it exists
+            // Validate table structure before initializing DataTable
+            var table = $('#enrolledStudentsTable');
+            if (table.length > 0) {
+                var headerCols = table.find('thead th').length;
+                var tbodyRows = table.find('tbody tr');
+                var hasValidStructure = true;
+                
+                // Check if all rows have the correct number of columns
+                tbodyRows.each(function() {
+                    var rowCols = $(this).find('td').length;
+                    if (rowCols !== headerCols && rowCols !== 0) {
+                        hasValidStructure = false;
+                        return false; // break loop
+                    }
+                });
+                
+                if (hasValidStructure && headerCols > 0) {
+                    // Destroy existing DataTable if it exists
+                    if ($.fn.DataTable.isDataTable('#enrolledStudentsTable')) {
+                        $('#enrolledStudentsTable').DataTable().destroy();
+                    }
+                    
+                    // Initialize DataTable
+                    $('#enrolledStudentsTable').DataTable({
+                        paging: true,
+                        pageLength: 5,
+                        searching: false,
+                        ordering: true,
+                        info: false,
+                        lengthChange: false,
+                        deferRender: true,
+                        "language": {
+                            "paginate": {
+                                "previous": "Prev",
+                                "next": "Next"
+                            }
+                        }
+                    });
+                } else {
+                    console.warn('DataTable initialization skipped: Invalid table structure');
+                }
+            }
+
+            console.log('DataTable initialized');
+
+            // Add Student Modal
+            $('#addStudentBtn').on('click', function() {
+                loadAvailableStudents();
+                $('#addStudentModal').css('display', 'flex');
+            });
+
+            $('.modal-close, .modal-backdrop').on('click', function() {
+                $('#addStudentModal').css('display', 'none');
+            });
+
+            // Search in modal
+            $('#modalStudentSearch').on('input', function() {
+                const searchTerm = $(this).val().toLowerCase();
+                $('#availableStudentsList tr').each(function() {
+                    const idNumber = $(this).find('td:eq(0)').text().toLowerCase();
+                    const firstName = $(this).find('td:eq(1)').text().toLowerCase();
+                    const lastName = $(this).find('td:eq(2)').text().toLowerCase();
+                    const matches = idNumber.includes(searchTerm) || 
+                                   firstName.includes(searchTerm) || 
+                                   lastName.includes(searchTerm);
+                    $(this).toggle(matches);
+                });
+            });
+
+            // Select student button click
+            $(document).on('click', '.enroll-student-btn', function() {
+                const studentId = $(this).data('student-id');
+                const idNumber = $(this).data('id-number');
+                const firstName = $(this).data('first-name');
+                const lastName = $(this).data('last-name');
+                const fullName = `${firstName} ${lastName}`.trim();
+                
+                // Show confirmation modal
+                $('#enrollmentConfirmStudentName').text(fullName);
+                $('#enrollmentConfirmStudentId').text(`ID: ${idNumber}`);
+                $('#confirmEnrollBtn').data('student-id', studentId);
+                $('#enrollmentConfirmModal').css('display', 'flex');
+            });
+
+            // Confirm enrollment
+            $('#confirmEnrollBtn').on('click', function() {
+                const studentId = $(this).data('student-id');
+                $('#enrollmentConfirmModal').css('display', 'none');
+                enrollStudent(studentId);
+            });
+
+            // Cancel enrollment
+            $('#cancelEnrollBtn, .enrollment-modal-backdrop').on('click', function() {
+                $('#enrollmentConfirmModal').css('display', 'none');
+            });
+
+            // Remove Student button click
+            $(document).on('click', '.remove-student-btn', function(e) {
+                e.preventDefault();
+                const studentId = $(this).data('student-id');
+                const idNumber = $(this).data('id-number');
+                const fullName = $(this).data('full-name');
+
+                // Show custom removal confirmation modal
+                showRemoveConfirmation(studentId, fullName, idNumber);
+            });
+
+            // Confirm removal from custom modal
+            $(document).on('click', '#confirmRemoveBtn', function() {
+                const studentId = $(this).data('student-id');
+                $('#removeConfirmModal').css('display', 'none');
+                removeStudent(studentId);
+            });
+
+            // Cancel removal from custom modal
+            $(document).on('click', '#cancelRemoveBtn, .remove-modal-backdrop', function() {
+                $('#removeConfirmModal').css('display', 'none');
+            });
+
+            // View Student Button
+            $(document).on('click', '.view-student-btn', function(e) {
+                e.preventDefault();
+                const studentId = $(this).data('student-id');
+                const fullName = $(this).data('full-name');
+                openStudentViewModal(studentId, fullName);
+            });
+
+            // Close Student View Modal
+            $('.student-view-modal-close, .student-view-modal-backdrop').on('click', function() {
+                $('#studentViewModal').css('display', 'none');
+            });
+
+            // Tab Switching
+            $('.student-view-tab').on('click', function() {
+                const tab = $(this).data('tab');
+                switchTab(tab);
+            });
+
+            console.log('=== Event listeners attached ===');
+        });
+
+        // Student View Modal Functions
+        let currentStudentId = null;
+        let currentStudentData = null;
+
+        function openStudentViewModal(studentId, studentName) {
+            currentStudentId = studentId;
+            $('#studentViewModalTitle').text(studentName || 'Student Information');
+            $('#studentViewModal').css('display', 'flex');
+            
+            // Reset to Profile tab
+            switchTab('profile');
+            
+            // Load student data
+            loadStudentDetails(studentId);
+        }
+
+        function switchTab(tab) {
+            // Update tab buttons
+            $('.student-view-tab').each(function() {
+                const tabName = $(this).data('tab');
+                if (tabName === tab) {
+                    $(this).css({
+                        'border-bottom-color': '#059669',
+                        'color': '#059669'
+                    });
+                } else {
+                    $(this).css({
+                        'border-bottom-color': 'transparent',
+                        'color': '#6b7280'
+                    });
+                }
+            });
+
+            // Show/hide tab content
+            $('.student-view-tab-content').hide();
+            if (tab === 'profile') {
+                $('#profileTabContent').show();
+                if (currentStudentData) {
+                    displayProfileData(currentStudentData.profile);
+                }
+            } else if (tab === 'grades') {
+                $('#gradesTabContent').show();
+                if (currentStudentData) {
+                    displayGradesData(currentStudentData.grades);
+                }
+            }
+        }
+
+        async function loadStudentDetails(studentId) {
+            try {
+                // Show loading states
+                $('#profileLoading').show();
+                $('#profileContent').hide();
+                $('#gradesLoading').show();
+                $('#gradesContent').hide();
+
+                const url = `/Admin/GetStudentDetails?studentId=${encodeURIComponent(studentId)}&courseId=${courseId}`;
+                console.log('Loading student details from:', url);
+
+                const response = await fetch(url, {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const contentType = response.headers.get("content-type");
+                if (!contentType || !contentType.includes("application/json")) {
+                    const text = await response.text();
+                    console.error('Response is not JSON. Content:', text.substring(0, 200));
+                    throw new Error('Server returned non-JSON response');
+                }
+
+                const data = await response.json();
+                console.log('Student details loaded:', data);
+                console.log('Data structure:', {
+                    success: data.success,
+                    hasProfile: !!data.profile,
+                    hasGrades: !!data.grades,
+                    profileKeys: data.profile ? Object.keys(data.profile) : [],
+                    gradesKeys: data.grades ? Object.keys(data.grades) : []
+                });
+
+                if (data.success && data.profile && data.grades) {
+                    currentStudentData = data;
+                    displayProfileData(data.profile);
+                    displayGradesData(data.grades);
+                } else {
+                    const errorMsg = data.message || 'Failed to load student details';
+                    console.error('Invalid response structure:', data);
+                    throw new Error(errorMsg);
+                }
+            } catch (error) {
+                console.error('Error loading student details:', error);
+                showToast('error', 'Error', 'Failed to load student details: ' + error.message);
+                
+                // Hide loading, show error
+                $('#profileLoading').hide();
+                $('#gradesLoading').hide();
+                $('#profileContent').html('<div style="text-align:center; padding:40px; color:#dc2626;">Error loading data. Please try again.</div>').show();
+            }
+        }
+
+        function displayProfileData(profile) {
+            $('#profileIdNumber').text(profile.idNumber || 'N/A');
+            $('#profileStatus').text(profile.status || 'N/A');
+            $('#profileFirstName').text(profile.firstName || 'N/A');
+            $('#profileLastName').text(profile.lastName || 'N/A');
+            $('#profileMiddleName').text(profile.middleName || 'N/A');
+            $('#profileSuffix').text(profile.suffix || 'N/A');
+            $('#profileEmail').text(profile.email || 'N/A');
+            $('#profilePhone').text(profile.phoneNumber || 'N/A');
+            $('#profileDepartment').text(profile.department || 'N/A');
+            $('#profileCourse').text(profile.course || 'N/A');
+            $('#profileYearLevel').text(profile.yearLevel || 'N/A');
+
+            $('#profileLoading').hide();
+            $('#profileContent').show();
+        }
+
+        function displayGradesData(grades) {
+            console.log('Displaying grades data:', grades);
+            
+            // Update summary
+            const totalRaw = Math.round(grades.totalRawScore || 0);
+            const totalMax = Math.round(grades.totalMaxScore || 0);
+            const percentage = grades.percentage || 0;
+            
+            $('#gradesTotalScore').text(`${totalRaw} / ${totalMax}`);
+            $('#gradesPercentage').text(`${percentage.toFixed(1)}%`);
+
+            // Update grades table
+            const tbody = $('#gradesTableBody');
+            tbody.empty();
+
+            if (grades.activities && Array.isArray(grades.activities) && grades.activities.length > 0) {
+                console.log(`Displaying ${grades.activities.length} activities`);
+                grades.activities.forEach(function(activity) {
+                    const activityName = activity.activityName || activity.ActivityName || 'N/A';
+                    const rawScore = activity.rawScore || activity.RawScore || 0;
+                    const maxScore = activity.maxScore || activity.MaxScore || 0;
+                    const activityPercentage = activity.percentage || activity.Percentage || 0;
+                    
+                    const row = $('<tr>').css({
+                        'border-bottom': '1px solid #e5e7eb'
+                    });
+                    row.append($('<td>').css({
+                        'padding': '12px 16px',
+                        'color': '#111827'
+                    }).text(activityName));
+                    row.append($('<td>').css({
+                        'padding': '12px 16px',
+                        'text-align': 'center',
+                        'color': '#111827',
+                        'font-weight': '600'
+                    }).text(`${rawScore} / ${maxScore}`));
+                    row.append($('<td>').css({
+                        'padding': '12px 16px',
+                        'text-align': 'center',
+                        'color': '#059669',
+                        'font-weight': '600'
+                    }).text(`${activityPercentage.toFixed(1)}%`));
+                    tbody.append(row);
+                });
+            } else {
+                console.log('No activities found in grades data');
+                tbody.append($('<tr>').append($('<td>').attr('colspan', 3).css({
+                    'padding': '24px',
+                    'text-align': 'center',
+                    'color': '#6b7280'
+                }).text('No grades available')));
+            }
+
+            $('#gradesLoading').hide();
+            $('#gradesContent').show();
+        }
+
+        async function loadAvailableStudents() {
+            try {
+                $('#availableStudentsList').html('<tr><td colspan="4" style="text-align:center; padding:32px; color:#6b7280;">Loading students...</td></tr>');
+                
+                console.log('Loading students for courseId:', courseId);
+                // Use absolute URL to ensure correct routing
+                const url = '@Url.Action("GetAvailableStudentsForCourse", "Admin")' + '?courseId=' + courseId;
+                console.log('Fetching from URL:', url);
+                console.log('CourseId type:', typeof courseId);
+                console.log('CourseId value:', courseId);
+                
+                const response = await fetch(url, {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                });
+
+                console.log('Response status:', response.status);
+                console.log('Response ok:', response.ok);
+
+                // Check content type first
+                const contentType = response.headers.get("content-type");
+                console.log('Response content-type:', contentType);
+                
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    console.error('Response error:', errorText);
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                // Check if response is actually JSON
+                if (!contentType || !contentType.includes("application/json")) {
+                    const text = await response.text();
+                    console.error('Response is not JSON. Content:', text.substring(0, 200));
+                    throw new Error('Server returned HTML instead of JSON. Check server logs for errors.');
+                }
+
+                const data = await response.json();
+                console.log('Response data:', data);
+
+                if (data.success && data.students && data.students.length > 0) {
+                    let html = '';
+                    data.students.forEach(student => {
+                        html += `
+                            <tr style="border-bottom:1px solid #e5e7eb;">
+                                <td style="padding:12px; color:#111827;">${student.idNumber}</td>
+                                <td style="padding:12px; color:#111827;">${student.firstName}</td>
+                                <td style="padding:12px; color:#111827;">${student.lastName}</td>
+                                <td style="padding:12px;">
+                                    <button class="enroll-student-btn" 
+                                            data-student-id="${student.studentId}"
+                                            data-id-number="${student.idNumber}"
+                                            data-first-name="${student.firstName}"
+                                            data-last-name="${student.lastName}"
+                                            style="background:#059669; color:#fff; border:none; border-radius:6px; padding:6px 16px; font-weight:600; cursor:pointer; font-size:13px;">
+                                        Select
+                                    </button>
+                                </td>
+                            </tr>
+                        `;
+                    });
+                    $('#availableStudentsList').html(html);
+                } else {
+                    $('#availableStudentsList').html('<tr><td colspan="4" style="text-align:center; padding:32px; color:#6b7280;">No available students found.</td></tr>');
+                }
+            } catch (error) {
+                console.error('Error loading available students:', error);
+                console.error('Error details:', {
+                    message: error.message,
+                    stack: error.stack
+                });
+                $('#availableStudentsList').html(`<tr><td colspan="4" style="text-align:center; padding:32px; color:#dc2626;">Error loading students: ${error.message}. Please check the console for details.</td></tr>`);
+            }
+        }
+
+        function showRemoveConfirmation(studentId, fullName, idNumber) {
+            $('#removeConfirmStudentName').text(fullName);
+            $('#removeConfirmStudentId').text(idNumber);
+            $('#confirmRemoveBtn').data('student-id', studentId);
+            $('#removeConfirmModal').css('display', 'flex');
+        }
+
+        async function removeStudent(studentId) {
+            try {
+                // Show loading state
+                $('#confirmRemoveBtn').prop('disabled', true).text('Removing...');
+                
+                console.log('Removing student:', { courseId, studentId });
+                
+                const response = await fetch(`/Admin/DropStudent?courseId=${courseId}&studentId=${encodeURIComponent(studentId)}`, {
+                    method: 'POST',
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                });
+
+                console.log('Response status:', response.status);
+                console.log('Response ok:', response.ok);
+
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    console.error('Response error:', errorText);
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                console.log('Response data:', data);
+
+                if (data.success) {
+                    // Show success toast
+                    showToast('success', 'Success', 'Student removed successfully!');
+                    $('#removeConfirmModal').css('display', 'none');
+                    // Small delay before reload to ensure modal is closed
+                    setTimeout(function() {
+                        location.reload();
+                    }, 1500);
+                } else {
+                    showToast('error', 'Error', data.message || 'Failed to remove student');
+                    $('#confirmRemoveBtn').prop('disabled', false).text('Confirm');
+                }
+            } catch (error) {
+                console.error('Error removing student:', error);
+                console.error('Error details:', {
+                    message: error.message,
+                    stack: error.stack
+                });
+                showToast('error', 'Error', 'Error removing student: ' + (error.message || 'Please try again.'));
+                $('#confirmRemoveBtn').prop('disabled', false).text('Confirm');
+            }
+        }
+
+        async function enrollStudent(studentId) {
+            try {
+                const formData = new FormData();
+                formData.append('courseId', courseId);
+                formData.append('studentId', studentId);
+                
+                // Get CSRF token
+                const token = $('input[name="__RequestVerificationToken"]').val() || 
+                             $('input[name="RequestVerificationToken"]').val() || '';
+                if (token) {
+                    formData.append('__RequestVerificationToken', token);
+                }
+                
+                const response = await fetch('/Admin/EnrollStudentInCourse', {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                });
+
+                console.log('Enrollment response status:', response.status);
+                console.log('Enrollment response ok:', response.ok);
+
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    console.error('Enrollment error response:', errorText);
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                // Parse JSON response
+                const data = await response.json();
+                console.log('Enrollment response data:', data);
+
+                if (data.success) {
+                    // Show success toast
+                    showToast('success', 'Success', data.message || 'Student enrolled successfully!');
+                    // Reload the page to show updated student list
+                    setTimeout(function() {
+                        window.location.href = `/Admin/ViewCourse/${courseId}`;
+                    }, 1500);
+                } else {
+                    showToast('error', 'Error', data.message || 'Error enrolling student. Please try again.');
+                }
+            } catch (error) {
+                console.error('Error enrolling student:', error);
+                showToast('error', 'Error', 'Error enrolling student. Please try again.');
+            }
+        }
+    </script>
+}
+
+<!-- Add Student Modal -->
+<div id="addStudentModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:1000; align-items:center; justify-content:center;">
+    <div class="modal-backdrop" style="position:absolute; top:0; left:0; width:100%; height:100%;"></div>
+    <div style="background:#ffffff; border-radius:16px; padding:32px; max-width:800px; width:90%; max-height:90vh; overflow-y:auto; position:relative; z-index:1001; box-shadow:0 20px 25px -5px rgba(0,0,0,0.1);">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px;">
+            <h2 style="margin:0; font-weight:800; font-size:24px; color:#111827;">Add Student to Course</h2>
+            <button class="modal-close" style="background:none; border:none; font-size:24px; color:#6b7280; cursor:pointer; padding:0; width:32px; height:32px; display:flex; align-items:center; justify-content:center;">&times;</button>
+        </div>
+        
+        <div style="margin-bottom:24px;">
+            <input type="text" id="modalStudentSearch" placeholder="Search by ID Number, First Name, or Last Name" style="width:100%; padding:12px 16px; border:1px solid #d1d5db; border-radius:8px; font-size:14px;">
+        </div>
+
+        <div style="border:1px solid #e5e7eb; border-radius:8px; overflow:hidden;">
+            <table style="width:100%; border-collapse:collapse;">
+                <thead>
+                    <tr style="background:#059669;">
+                        <th style="padding:12px 16px; text-align:left; font-weight:700; color:#fff;">ID Number</th>
+                        <th style="padding:12px 16px; text-align:left; font-weight:700; color:#fff;">First Name</th>
+                        <th style="padding:12px 16px; text-align:left; font-weight:700; color:#fff;">Last Name</th>
+                        <th style="padding:12px 16px; text-align:left; font-weight:700; color:#fff;">Action</th>
+                    </tr>
+                </thead>
+                <tbody id="availableStudentsList">
+                    <tr>
+                        <td colspan="4" style="text-align:center; padding:32px; color:#6b7280;">Click "Add to Course" to load students...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Enrollment Confirmation Modal -->
+<div id="enrollmentConfirmModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:2000; align-items:center; justify-content:center;">
+    <div class="enrollment-modal-backdrop" style="position:absolute; top:0; left:0; width:100%; height:100%;"></div>
+    <div style="background:#ffffff; border-radius:16px; padding:32px; max-width:500px; width:90%; position:relative; z-index:2001; box-shadow:0 20px 25px -5px rgba(0,0,0,0.1);">
+        <div style="text-align:center; margin-bottom:24px;">
+            <div style="width:64px; height:64px; background:#d1fae5; border-radius:50%; display:flex; align-items:center; justify-content:center; margin:0 auto 16px;">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                    <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                </svg>
+            </div>
+            <h2 style="margin:0 0 12px 0; font-weight:800; font-size:24px; color:#111827;">Confirm Enrollment</h2>
+            <p style="margin:0; color:#6b7280; font-size:16px; line-height:1.5;">
+                Are you sure you want to enroll<br>
+                <strong style="color:#111827;" id="enrollmentConfirmStudentName"></strong><br>
+                <span style="color:#059669; font-size:14px;" id="enrollmentConfirmStudentId"></span><br>
+                in this course?
+            </p>
+        </div>
+        <div style="display:flex; gap:12px; justify-content:flex-end;">
+            <button id="cancelEnrollBtn" style="background:#f3f4f6; color:#374151; border:none; border-radius:8px; padding:12px 24px; font-weight:600; cursor:pointer; font-size:14px;">
+                Cancel
+            </button>
+            <button id="confirmEnrollBtn" style="background:#059669; color:#fff; border:none; border-radius:8px; padding:12px 24px; font-weight:600; cursor:pointer; font-size:14px;">
+                Confirm
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Remove Student Confirmation Modal -->
+<div id="removeConfirmModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:2000; align-items:center; justify-content:center;">
+    <div class="remove-modal-backdrop" style="position:absolute; top:0; left:0; width:100%; height:100%;"></div>
+    <div style="background:#ffffff; border-radius:16px; padding:32px; max-width:500px; width:90%; position:relative; z-index:2001; box-shadow:0 20px 25px -5px rgba(0,0,0,0.1);">
+        <div style="text-align:center; margin-bottom:24px;">
+            <div style="width:64px; height:64px; background:#fee2e2; border-radius:50%; display:flex; align-items:center; justify-content:center; margin:0 auto 16px;">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M18 6L6 18M6 6l12 12"></path>
+                </svg>
+            </div>
+            <h2 style="margin:0 0 12px 0; font-weight:800; font-size:24px; color:#111827;">Confirm Removal</h2>
+            <p style="margin:0; color:#6b7280; font-size:16px; line-height:1.5;">
+                Are you sure you want to remove<br>
+                <strong style="color:#111827;" id="removeConfirmStudentName"></strong><br>
+                <span style="color:#dc2626; font-size:14px;" id="removeConfirmStudentId"></span><br>
+                from this course?
+            </p>
+        </div>
+        <div style="display:flex; gap:12px; justify-content:flex-end;">
+            <button id="cancelRemoveBtn" style="background:#f3f4f6; color:#374151; border:none; border-radius:8px; padding:12px 24px; font-weight:600; cursor:pointer; font-size:14px;">
+                Cancel
+            </button>
+            <button id="confirmRemoveBtn" style="background:#dc2626; color:#fff; border:none; border-radius:8px; padding:12px 24px; font-weight:600; cursor:pointer; font-size:14px;">
+                Confirm
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Student View Modal -->
+<div id="studentViewModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:2000; align-items:center; justify-content:center;">
+    <div class="student-view-modal-backdrop" style="position:absolute; top:0; left:0; width:100%; height:100%;"></div>
+    <div style="background:#ffffff; border-radius:16px; padding:0; max-width:900px; width:90%; max-height:90vh; overflow:hidden; position:relative; z-index:2001; box-shadow:0 20px 25px -5px rgba(0,0,0,0.1); display:flex; flex-direction:column;">
+        <!-- Modal Header -->
+        <div style="padding:24px 32px; border-bottom:1px solid #e5e7eb; display:flex; justify-content:space-between; align-items:center;">
+            <h2 style="margin:0; font-weight:800; font-size:24px; color:#111827;" id="studentViewModalTitle">Student Information</h2>
+            <button class="student-view-modal-close" style="background:none; border:none; font-size:28px; color:#6b7280; cursor:pointer; padding:0; width:32px; height:32px; display:flex; align-items:center; justify-content:center;">&times;</button>
+        </div>
+
+        <!-- Tabs -->
+        <div style="display:flex; border-bottom:1px solid #e5e7eb; background:#f9fafb;">
+            <button class="student-view-tab" data-tab="profile" style="flex:1; padding:16px; background:none; border:none; border-bottom:3px solid #059669; color:#059669; font-weight:600; font-size:14px; cursor:pointer; transition:all 0.2s;">
+                Profile
+            </button>
+            <button class="student-view-tab" data-tab="grades" style="flex:1; padding:16px; background:none; border:none; border-bottom:3px solid transparent; color:#6b7280; font-weight:600; font-size:14px; cursor:pointer; transition:all 0.2s;">
+                Grades
+            </button>
+        </div>
+
+        <!-- Modal Content -->
+        <div style="flex:1; overflow-y:auto; padding:32px;">
+            <!-- Profile Tab Content -->
+            <div id="profileTabContent" class="student-view-tab-content" style="display:block;">
+                <div id="profileLoading" style="text-align:center; padding:40px; color:#6b7280;">
+                    <div style="margin-bottom:16px;">Loading profile information...</div>
+                </div>
+                <div id="profileContent" style="display:none;">
+                    <div style="display:grid; grid-template-columns:repeat(2, 1fr); gap:20px;">
+                        <div>
+                            <label style="display:block; font-weight:600; color:#374151; margin-bottom:8px; font-size:14px;">ID Number</label>
+                            <div id="profileIdNumber" style="padding:12px; background:#f9fafb; border-radius:8px; color:#111827;">-</div>
+                        </div>
+                        <div>
+                            <label style="display:block; font-weight:600; color:#374151; margin-bottom:8px; font-size:14px;">Status</label>
+                            <div id="profileStatus" style="padding:12px; background:#f9fafb; border-radius:8px; color:#111827;">-</div>
+                        </div>
+                        <div>
+                            <label style="display:block; font-weight:600; color:#374151; margin-bottom:8px; font-size:14px;">First Name</label>
+                            <div id="profileFirstName" style="padding:12px; background:#f9fafb; border-radius:8px; color:#111827;">-</div>
+                        </div>
+                        <div>
+                            <label style="display:block; font-weight:600; color:#374151; margin-bottom:8px; font-size:14px;">Last Name</label>
+                            <div id="profileLastName" style="padding:12px; background:#f9fafb; border-radius:8px; color:#111827;">-</div>
+                        </div>
+                        <div>
+                            <label style="display:block; font-weight:600; color:#374151; margin-bottom:8px; font-size:14px;">Middle Name</label>
+                            <div id="profileMiddleName" style="padding:12px; background:#f9fafb; border-radius:8px; color:#111827;">-</div>
+                        </div>
+                        <div>
+                            <label style="display:block; font-weight:600; color:#374151; margin-bottom:8px; font-size:14px;">Suffix</label>
+                            <div id="profileSuffix" style="padding:12px; background:#f9fafb; border-radius:8px; color:#111827;">-</div>
+                        </div>
+                        <div>
+                            <label style="display:block; font-weight:600; color:#374151; margin-bottom:8px; font-size:14px;">Email</label>
+                            <div id="profileEmail" style="padding:12px; background:#f9fafb; border-radius:8px; color:#111827;">-</div>
+                        </div>
+                        <div>
+                            <label style="display:block; font-weight:600; color:#374151; margin-bottom:8px; font-size:14px;">Phone Number</label>
+                            <div id="profilePhone" style="padding:12px; background:#f9fafb; border-radius:8px; color:#111827;">-</div>
+                        </div>
+                        <div>
+                            <label style="display:block; font-weight:600; color:#374151; margin-bottom:8px; font-size:14px;">Department</label>
+                            <div id="profileDepartment" style="padding:12px; background:#f9fafb; border-radius:8px; color:#111827;">-</div>
+                        </div>
+                        <div>
+                            <label style="display:block; font-weight:600; color:#374151; margin-bottom:8px; font-size:14px;">Course/Program</label>
+                            <div id="profileCourse" style="padding:12px; background:#f9fafb; border-radius:8px; color:#111827;">-</div>
+                        </div>
+                        <div>
+                            <label style="display:block; font-weight:600; color:#374151; margin-bottom:8px; font-size:14px;">Year Level</label>
+                            <div id="profileYearLevel" style="padding:12px; background:#f9fafb; border-radius:8px; color:#111827;">-</div>
+                        </div>
+                    </div>
+                </div>
             </div>
 
-            <div class="modal-body">
-                <!-- Course Information Section -->
-                <div class="section">
-                    <h3 class="section-title">Course Information</h3>
-                    <div class="info-grid">
-                        <div class="info-item">
-                            <span class="info-label">Course Code</span>
-                            <span class="info-value">92322</span>
-                        </div>
-                        <div class="info-item">
-                            <span class="info-label">Status</span>
-                            <span class="status-badge active">Active</span>
-                        </div>
-                        <div class="info-item full-width">
-                            <span class="info-label">Course Name</span>
-                            <span class="info-value">PHP Programming</span>
-                        </div>
-                        <div class="info-item full-width">
-                            <span class="info-label">Description</span>
-                            <span class="info-value">Introduction to PHP programming language covering basic to advanced concepts including web development, database integration, and modern PHP frameworks.</span>
+            <!-- Grades Tab Content -->
+            <div id="gradesTabContent" class="student-view-tab-content" style="display:none;">
+                <div id="gradesLoading" style="text-align:center; padding:40px; color:#6b7280;">
+                    <div style="margin-bottom:16px;">Loading grades...</div>
+                </div>
+                <div id="gradesContent" style="display:none;">
+                    <!-- Overall Grade Summary -->
+                    <div style="background:#f0fdf4; border-radius:12px; padding:24px; margin-bottom:24px; border:1px solid #bbf7d0;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px;">
+                            <div>
+                                <div style="font-size:14px; color:#6b7280; margin-bottom:4px;">Total Score</div>
+                                <div style="font-size:24px; font-weight:700; color:#059669;" id="gradesTotalScore">0 / 0</div>
+                            </div>
+                            <div>
+                                <div style="font-size:14px; color:#6b7280; margin-bottom:4px;">Overall Percentage</div>
+                                <div style="font-size:24px; font-weight:700; color:#059669;" id="gradesPercentage">0%</div>
+                            </div>
                         </div>
                     </div>
-                </div>
 
-                <!-- Enrollment Information Section -->
-                <div class="section">
-                    <h3 class="section-title">Enrollment Information</h3>
-                    <div class="info-grid">
-                        <div class="info-item">
-                            <span class="info-label">Enrolled Students</span>
-                            <span class="info-value">35</span>
-                        </div>
-                        <div class="info-item">
-                            <span class="info-label">Max Capacity</span>
-                            <span class="info-value">40</span>
-                        </div>
-                        <div class="info-item">
-                            <span class="info-label">Department</span>
-                            <span class="info-value">Computer Science</span>
-                        </div>
-                        <div class="info-item">
-                            <span class="info-label">Year Level</span>
-                            <span class="info-value">3rd Year</span>
-                        </div>
+                    <!-- Grades Table -->
+                    <div style="border:1px solid #e5e7eb; border-radius:8px; overflow:hidden;">
+                        <table style="width:100%; border-collapse:collapse;">
+                            <thead style="background:#f9fafb;">
+                                <tr>
+                                    <th style="padding:12px 16px; text-align:left; font-weight:600; color:#111827; font-size:14px;">Activity</th>
+                                    <th style="padding:12px 16px; text-align:center; font-weight:600; color:#111827; font-size:14px;">Score</th>
+                                    <th style="padding:12px 16px; text-align:center; font-weight:600; color:#111827; font-size:14px;">Percentage</th>
+                                </tr>
+                            </thead>
+                            <tbody id="gradesTableBody">
+                                <tr>
+                                    <td colspan="3" style="padding:24px; text-align:center; color:#6b7280;">No grades available</td>
+                                </tr>
+                            </tbody>
+                        </table>
                     </div>
                 </div>
-
-                <!-- Schedule Information Section -->
-                <div class="section">
-                    <h3 class="section-title">Schedule Information</h3>
-                    <div class="info-grid">
-                        <div class="info-item">
-                            <span class="info-label">Schedule</span>
-                            <span class="info-value">MWF 10:00 AM - 11:30 AM</span>
-                        </div>
-                        <div class="info-item">
-                            <span class="info-label">Room</span>
-                            <span class="info-value">CCS Lab 301</span>
-                        </div>
-                        <div class="info-item">
-                            <span class="info-label">Instructor</span>
-                            <span class="info-value">Prof. Juan Dela Cruz</span>
-                        </div>
-                        <div class="info-item">
-                            <span class="info-label">Semester</span>
-                            <span class="info-value">1st Semester, AY 2024-2025</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="modal-footer">
-                <button class="btn btn-secondary" onclick="window.history.back()">Close</button>
-                <a href="@Url.Action("EditCourse", "Admin", new { id = "92322" })" class="btn btn-primary" style="text-decoration:none; display:inline-block;">Edit</a>
-                <button class="btn btn-danger" onclick="deactivateCourse()">Deactivate</button>
             </div>
         </div>
     </div>
+</div>
 
-    <script>
-        function closeModal(event) {
-            if (event.target.classList.contains('modal-backdrop')) {
-                window.history.back();
-            }
+<!-- Toast Notification Container -->
+<div id="toastContainer" class="toast-container"></div>
+
+<script>
+    // Toast Notification Function
+    function showToast(type, title, message) {
+        // Create toast container if it doesn't exist
+        let container = document.getElementById('toastContainer');
+        if (!container) {
+            container = document.createElement('div');
+            container.id = 'toastContainer';
+            container.className = 'toast-container';
+            document.body.appendChild(container);
         }
 
-        function deactivateCourse() {
-            if (confirm('Are you sure you want to deactivate this course?')) {
-                // TODO: Implement deactivate logic
-                alert('Deactivate functionality to be implemented');
-            }
+        // Create toast element
+        const toast = document.createElement('div');
+        toast.className = `toast ${type}`;
+
+        // Icon SVG based on type
+        let iconSvg = '';
+        if (type === 'success') {
+            iconSvg = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>';
+        } else if (type === 'error') {
+            iconSvg = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>';
+        } else {
+            iconSvg = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>';
         }
 
-        // Close modal on ESC key
-        document.addEventListener('keydown', function(event) {
-            if (event.key === 'Escape') {
-                window.history.back();
-            }
-        });
-    </script>
-</body>
-</html>
+        toast.innerHTML = `
+            <div class="toast-icon">
+                ${iconSvg}
+            </div>
+            <div class="toast-content">
+                <div class="toast-title">${title}</div>
+                <div class="toast-message">${message}</div>
+            </div>
+            <button class="toast-close" onclick="this.parentElement.remove()">&times;</button>
+        `;
 
+        // Add to container
+        container.appendChild(toast);
+
+        // Auto-remove after 5 seconds
+        setTimeout(() => {
+            toast.classList.add('hiding');
+            setTimeout(() => {
+                if (toast.parentElement) {
+                    toast.remove();
+                }
+            }, 300);
+        }, 5000);
+    }
+</script>

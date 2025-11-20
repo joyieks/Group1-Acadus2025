@@ -49,15 +49,32 @@ namespace ASI.Basecode.Data.Repositories
 
         public async Task<List<ActivityModel>> GetActivitiesByCourseIdAsync(long courseId)
         {
+            // Get all activities for the course (filter IsVisible in memory)
             var res = await _supabaseClient
                 .From<ActivityModel>()
-                .Where(a => a.CourseId == courseId)
-                .Where(a => a.IsArchived == false)
+                .Filter("courseId", Supabase.Postgrest.Constants.Operator.Equals, courseId)
                 .Get();
 
-            return res.Models
+            var allActivities = res.Models ?? new List<ActivityModel>();
+            Console.WriteLine($"=== GetActivitiesByCourseIdAsync (Student) ===");
+            Console.WriteLine($"CourseId: {courseId}");
+            Console.WriteLine($"Total activities found: {allActivities.Count}");
+            
+            // Log visibility status of all activities
+            foreach (var a in allActivities.Take(5))
+            {
+                Console.WriteLine($"  Activity '{a.Title}': IsVisible={a.IsVisible} (false=visible to students, true=hidden)");
+            }
+
+            // Filter out non-visible activities in memory
+            // In database: IsVisible = false means visible to students, IsVisible = true means hidden
+            var activities = allActivities
+                .Where(a => a.IsVisible == false)  // Only show activities where IsVisible = false (visible to students)
                 .OrderBy(a => a.DueDate)
                 .ToList();
+
+            Console.WriteLine($"Visible activities (IsVisible=false): {activities.Count}");
+            return activities;
         }
 
         public async Task<SupabaseUserNew> GetUserByUserTypeIdAsync(string userTypeId)
@@ -119,8 +136,7 @@ namespace ASI.Basecode.Data.Repositories
                 {
                     CourseCode = course.Code,
                     CourseTitle = course.Name,
-                    MidtermGrade = ConvertPercentageToGPA(average),  // or split by term if needed
-                    FinalGrade = 0,
+                    FinalGrade = ConvertPercentageToGPA(average),
                 });
             }
 
@@ -153,26 +169,29 @@ namespace ASI.Basecode.Data.Repositories
             var courses = await GetCoursesByStudentIdAsync(studentId);
             foreach (var course in courses)
             {
+                // Get ALL visible activities for this course (not just ones with submissions)
                 var activities = await GetActivitiesByCourseIdAsync(course.Id);
                 var submissions = await GetSubmissionsByStudentAndCourseAsync(studentId, course.Id);
 
-                foreach (var submission in submissions)
+                // Show ALL visible activities, not just ones with submissions
+                foreach (var activity in activities)
                 {
-                    var activity = activities.FirstOrDefault(a => a.Id == submission.ActivityId);
-                    if (activity == null) continue;
-
+                    var submission = submissions.FirstOrDefault(s => s.ActivityId == activity.Id);
+                    
                     var task = new StudentDashboardViewModel.TaskItem
                     {
                         Title = activity.Title,
-                        UserAction = submission.SubmissionStatus,
-                        Score = submission.SubmissionStatus == "Graded" ? submission.Score.ToString() : null,
+                        UserAction = submission?.SubmissionStatus ?? "Not Submitted",
+                        Score = submission?.SubmissionStatus == "Graded" ? submission.Score.ToString() : null,
                         DueDate = activity.DueDate,
                         Priority = GetPriority(activity.DueDate),
                         StudentId = int.TryParse(studentId, out var sid) ? sid : null,
-                        CourseId = activity.CourseId
+                        CourseId = activity.CourseId,
+                        CourseCode = course.Code
                     };
 
-                    if (submission.SubmissionStatus == "Graded")
+                    // Categorize: Graded activities go to RecentlyGradedTasks, others go to ToBeGradedTasks
+                    if (submission?.SubmissionStatus == "Graded")
                         dashboard.RecentlyGradedTasks.Add(task);
                     else
                         dashboard.ToBeGradedTasks.Add(task);

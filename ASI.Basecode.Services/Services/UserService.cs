@@ -18,8 +18,8 @@ namespace ASI.Basecode.Services.Services
         private readonly IUserRepository _repository;
         private readonly IMapper _mapper;
         private readonly ISupabaseAuthService _supabaseAuthService;
-        private readonly IStudentService _studentService; 
-        private readonly ITeacherService _teacherService; 
+        private readonly IStudentService _studentService;
+        private readonly ITeacherService _teacherService;
 
         public UserService(ISupabaseAuthService supabaseAuthService, IMapper mapper = null, IUserRepository repository = null, IStudentService studentService = null, ITeacherService teacherService = null)
         {
@@ -27,7 +27,7 @@ namespace ASI.Basecode.Services.Services
             _repository = repository;
             _supabaseAuthService = supabaseAuthService;
             _studentService = studentService;
-            _teacherService = teacherService; 
+            _teacherService = teacherService;
         }
 
         public LoginResult AuthenticateUser(string userId, string password, ref User user)
@@ -87,16 +87,35 @@ namespace ASI.Basecode.Services.Services
         }
 
         /// <summary>
-        /// Retrieves all students (roleId = 1).
+        /// Retrieves all students (users with Student role - roleId = "1").
         /// </summary>
         public async Task<List<SupabaseUserNew>> GetStudentsAsync()
         {
             try
             {
-                var allUsers = await GetAllUsersAsync();
-                var students = allUsers.Where(u => u.UserTypeId == "1" && (u.IsActive == null || u.IsActive == true)).ToList();
+                var client = await _supabaseAuthService.GetSupabaseClientForAuthAsync();
 
-                Console.WriteLine($"Retrieved {students.Count} students from {allUsers.Count} total users");
+                // Get all user_roles where roleId = "1" (Student role)
+                var userRolesQuery = await client
+                    .From<UserRoleModel>()
+                    .Get();
+                
+                var allUserRoles = userRolesQuery?.Models ?? new List<UserRoleModel>();
+                var studentUserTypeIds = allUserRoles
+                    .Where(ur => ur.RoleId == "1")
+                    .Select(ur => ur.UserId)
+                    .Distinct()
+                    .ToList();
+                
+                Console.WriteLine($"Found {studentUserTypeIds.Count} users with Student role (roleId = '1')");
+
+                // Get all users and filter by those with student role
+                var allUsers = await GetAllUsersAsync();
+                var students = allUsers
+                    .Where(u => studentUserTypeIds.Contains(u.UserTypeId) && (u.IsActive == null || u.IsActive == true))
+                    .ToList();
+
+                Console.WriteLine($"Retrieved {students.Count} active students from {allUsers.Count} total users");
                 return students;
             }
             catch (Exception ex)
@@ -137,9 +156,9 @@ namespace ASI.Basecode.Services.Services
             {
                 if (string.IsNullOrWhiteSpace(searchTerm))
                 {
-                    return roleId == null ? await GetAllUsersAsync() : 
-                           roleId == "1" ? await GetStudentsAsync() : 
-                           roleId == "2" ? await GetInstructorsAsync() : 
+                    return roleId == null ? await GetAllUsersAsync() :
+                           roleId == "1" ? await GetStudentsAsync() :
+                           roleId == "2" ? await GetInstructorsAsync() :
                            new List<SupabaseUserNew>();
                 }
 
@@ -218,7 +237,7 @@ namespace ASI.Basecode.Services.Services
                 var userRoles = userRolesQuery?.Models ?? new List<UserRoleModel>();
 
                 Console.WriteLine($"Query user_roles: userId={userTypeId}, found {userRoles.Count} role assignments");
-                
+
                 if (userRoles.Count == 0)
                 {
                     Console.WriteLine($"No roles found for userId {userTypeId}");
@@ -227,7 +246,7 @@ namespace ASI.Basecode.Services.Services
 
                 // Get all roleIds for this user (converting from string to long)
                 var roleIds = userRoles
-                    .Select(ur => 
+                    .Select(ur =>
                     {
                         if (long.TryParse(ur.RoleId, out long roleId))
                             return roleId;
@@ -257,56 +276,56 @@ namespace ASI.Basecode.Services.Services
         /// <summary>
         /// Creates a new student account in Supabase Auth and adds student record to database.
         /// </summary>
-     public async Task<bool> CreateStudentAsync(StudentCreateDto model)
-    {
-    try
-{
-       Console.WriteLine($"=== CreateStudentAsync (UserService) ===");
-     Console.WriteLine($"Creating student: {model.FirstName} {model.LastName} ({model.Email})");
-      Console.WriteLine($"  Program ID: {model.ProgramId}, Department ID: {model.DepartmentId}");
+        public async Task<bool> CreateStudentAsync(StudentCreateDto model)
+        {
+            try
+            {
+                Console.WriteLine($"=== CreateStudentAsync (UserService) ===");
+                Console.WriteLine($"Creating student: {model.FirstName} {model.LastName} ({model.Email})");
+                Console.WriteLine($"  Program ID: {model.ProgramId}, Department ID: {model.DepartmentId}");
 
-    // ✅ FIX: Pass Program and Department as ID strings (they'll be parsed in StudentService)
-      // Convert DTO to StudentViewModel
-var studentViewModel = new StudentViewModel
-{
-          FirstName = model.FirstName,
-         MiddleName = model.MiddleName,
-         LastName = model.LastName,
-        Suffix = model.Suffix,
-   Email = model.Email,
-          ContactNumber = model.ContactNumber,
-          HouseNumber = model.HouseNumber,
-    StreetName = model.StreetName,
-Subdivision = model.Subdivision,
-              Barangay = model.Barangay,
-       City = model.City,
-               Province = model.Province,
-               ZipCode = model.ZipCode,
-         YearLevel = (int)model.YearLevel,  // ✅ Cast decimal to int
-    Program = model.ProgramId,  // ✅ Pass ID as string (will be parsed)
-          Department = model.DepartmentId,  // ✅ Pass ID as string (will be parsed)
-       EmergencyFirstName = model.EmergencyContactFirstName,
-           EmergencyMiddleName = model.EmergencyContactMiddleName,
-              EmergencyLastName = model.EmergencyContactLastName,
-            EmergencySuffix = model.EmergencyContactSuffix,
-            EmergencyContactNumber = model.EmergencyContactNumber,
-Relationship = model.EmergencyContactRelationship
-      };
+                // ✅ FIX: Pass Program and Department as ID strings (they'll be parsed in StudentService)
+                // Convert DTO to StudentViewModel
+                var studentViewModel = new StudentViewModel
+                {
+                    FirstName = model.FirstName,
+                    MiddleName = model.MiddleName,
+                    LastName = model.LastName,
+                    Suffix = model.Suffix,
+                    Email = model.Email,
+                    ContactNumber = model.ContactNumber,
+                    HouseNumber = model.HouseNumber,
+                    StreetName = model.StreetName,
+                    Subdivision = model.Subdivision,
+                    Barangay = model.Barangay,
+                    City = model.City,
+                    Province = model.Province,
+                    ZipCode = model.ZipCode,
+                    YearLevel = (int)model.YearLevel,  // ✅ Cast decimal to int
+                    Program = model.ProgramId,  // ✅ Pass ID as string (will be parsed)
+                    Department = model.DepartmentId,  // ✅ Pass ID as string (will be parsed)
+                    EmergencyFirstName = model.EmergencyContactFirstName,
+                    EmergencyMiddleName = model.EmergencyContactMiddleName,
+                    EmergencyLastName = model.EmergencyContactLastName,
+                    EmergencySuffix = model.EmergencyContactSuffix,
+                    EmergencyContactNumber = model.EmergencyContactNumber,
+                    Relationship = model.EmergencyContactRelationship
+                };
 
-              // Call StudentService to handle the creation
-         var result = await _studentService.CreateStudentAsync(studentViewModel);
+                // Call StudentService to handle the creation
+                var result = await _studentService.CreateStudentAsync(studentViewModel);
 
-         Console.WriteLine($"Student creation result: {result}");
-       Console.WriteLine($"=== End CreateStudentAsync ===\n");
+                Console.WriteLine($"Student creation result: {result}");
+                Console.WriteLine($"=== End CreateStudentAsync ===\n");
 
-         return result;
+                return result;
             }
-       catch (Exception ex)
-      {
-   Console.WriteLine($"Error creating student: {ex.Message}");
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error creating student: {ex.Message}");
                 Console.WriteLine($"Stack Trace: {ex.StackTrace}");
-        return false;
-}
+                return false;
+            }
         }
 
         /// <summary>
@@ -315,44 +334,44 @@ Relationship = model.EmergencyContactRelationship
         public async Task<bool> CreateTeacherAsync(TeacherCreateDto model)
         {
             try
- {
-   Console.WriteLine($"=== CreateTeacherAsync (UserService) ===");
-   Console.WriteLine($"Creating teacher: {model.FirstName} {model.LastName} ({model.Email})");
-      Console.WriteLine($"  Department ID: {model.DepartmentId}");
+            {
+                Console.WriteLine($"=== CreateTeacherAsync (UserService) ===");
+                Console.WriteLine($"Creating teacher: {model.FirstName} {model.LastName} ({model.Email})");
+                Console.WriteLine($"  Department ID: {model.DepartmentId}");
 
-    // ✅ FIX: Map DTO to ViewModel and call TeacherService
-      var teacherViewModel = new TeacherViewModel
-       {
-FirstName = model.FirstName,
-  MiddleName = model.MiddleName,
-  LastName = model.LastName,
-         Suffix = model.Suffix,
-    Email = model.Email,
-   ContactNumber = model.ContactNumber,
-     HouseNumber = model.HouseNumber,
-            StreetName = model.StreetName,
-    Subdivision = model.Subdivision,
-   Barangay = model.Barangay,
-    City = model.City,
-  Province = model.Province,
-   ZipCode = model.ZipCode,
-          Department = model.DepartmentId  // Pass department ID
-   };
+                // ✅ FIX: Map DTO to ViewModel and call TeacherService
+                var teacherViewModel = new TeacherViewModel
+                {
+                    FirstName = model.FirstName,
+                    MiddleName = model.MiddleName,
+                    LastName = model.LastName,
+                    Suffix = model.Suffix,
+                    Email = model.Email,
+                    ContactNumber = model.ContactNumber,
+                    HouseNumber = model.HouseNumber,
+                    StreetName = model.StreetName,
+                    Subdivision = model.Subdivision,
+                    Barangay = model.Barangay,
+                    City = model.City,
+                    Province = model.Province,
+                    ZipCode = model.ZipCode,
+                    Department = model.DepartmentId  // Pass department ID
+                };
 
-   // Call TeacherService to handle the actual creation
-        var result = await _teacherService.CreateTeacherAsync(teacherViewModel);
+                // Call TeacherService to handle the actual creation
+                var result = await _teacherService.CreateTeacherAsync(teacherViewModel);
 
-    Console.WriteLine($"Teacher creation result: {result}");
-  Console.WriteLine($"=== End CreateTeacherAsync ===\n");
+                Console.WriteLine($"Teacher creation result: {result}");
+                Console.WriteLine($"=== End CreateTeacherAsync ===\n");
 
-    return result;
-   }
-   catch (Exception ex)
-    {
-         Console.WriteLine($"✗ Error creating teacher: {ex.Message}");
-     Console.WriteLine($"Stack Trace: {ex.StackTrace}");
-      return false;
-   }
-  }
+                return result;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"✗ Error creating teacher: {ex.Message}");
+                Console.WriteLine($"Stack Trace: {ex.StackTrace}");
+                return false;
+            }
+        }
     }
 }

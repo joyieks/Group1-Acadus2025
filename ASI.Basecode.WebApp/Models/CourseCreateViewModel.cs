@@ -5,10 +5,9 @@ namespace ASI.Basecode.WebApp.Models
 {
     public class CourseCreateViewModel
     {
-        [Required(ErrorMessage = "Course code is required")]
-        [StringLength(50, MinimumLength = 2, ErrorMessage = "Course code must be between 2 and 50 characters")]
+        // Course code is auto-generated, so no validation needed
         [Display(Name = "Course Code")]
-        public string Code { get; set; }
+        public string Code { get; set; } = string.Empty;
 
         [Required(ErrorMessage = "Course name is required")]
         [StringLength(255, MinimumLength = 3, ErrorMessage = "Course name must be between 3 and 255 characters")]
@@ -20,13 +19,13 @@ namespace ASI.Basecode.WebApp.Models
         [Display(Name = "Course Description")]
         public string Description { get; set; }
 
-        [Required(ErrorMessage = "Credits is required")]
-        [Range(1, 6, ErrorMessage = "Credits must be between 1 and 6")]
-        [Display(Name = "Credits")]
+        [Required(ErrorMessage = "Units is required")]
+        [Range(1, 6, ErrorMessage = "Units must be between 1 and 6")]
+        [Display(Name = "Units")]
         public long Credits { get; set; }
 
-        [Required(ErrorMessage = "Course level is required")]
-        [Display(Name = "Course Level")]
+        [Required(ErrorMessage = "Year level is required")]
+        [Display(Name = "Year Level")]
         public string Level { get; set; }
 
         [Required(ErrorMessage = "Semester is required")]
@@ -34,7 +33,7 @@ namespace ASI.Basecode.WebApp.Models
         public long SemesterId { get; set; }
 
         [Required(ErrorMessage = "Maximum capacity is required")]
-        [Range(1, 500, ErrorMessage = "Maximum capacity must be between 1 and 500")]
+        [Range(1, 50, ErrorMessage = "Maximum capacity must be between 1 and 50")]
         [Display(Name = "Maximum Capacity")]
         public decimal MaxCapacity { get; set; }
 

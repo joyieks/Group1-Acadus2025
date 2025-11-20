@@ -98,7 +98,7 @@
     <div class="hidden md:flex items-center gap-4 relative">
 
         <!-- User Info -->
-        <div class="flex items-center gap-3 relative">
+        <div class="flex items-center gap-3">
             <!-- First Name Text -->
             @* <span>@Model.UserName</span> *@
             <button id="userMenuBtn" type="button" class="text-left text-gray-700 hover:text-gray-900 font-medium cursor-pointer">@User.Identity.Name</button>
@@ -111,25 +111,25 @@
             </button>
 
             <!-- User Menu Dropdown -->
-            <div id="userMenu" class="absolute right-0 top-12 z-[9999] bg-white shadow-lg rounded-xl border border-gray-100 w-48">
+            <div id="userMenu" class="hidden fixed z-[9999] bg-white shadow-lg rounded-xl border border-gray-100 w-48" style="top: 70px; right: 20px;">
                 @if (controller == "Admin")
                 {
-                    <a asp-controller="Admin" asp-action="EditProfile" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">Profile</a>
+                    <a asp-controller="Admin" asp-action="Profile" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 no-underline rounded-t-xl">Profile</a>
                 }
                 else if (controller == "Teacher")
                 {
-                    <a asp-controller="Teacher" asp-action="Profile" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">Profile</a>
+                    <a asp-controller="Teacher" asp-action="Profile" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 no-underline rounded-t-xl">Profile</a>
                 }
                 else if (controller == "Student")
                 {
-                    <a asp-controller="Student" asp-action="Profile" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">Profile</a>
+                    <a asp-controller="Student" asp-action="Profile" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 no-underline rounded-t-xl">Profile</a>
                 }
                 else
                 {
-                    <a href="/Home/Profile" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">Profile</a>
+                    <a href="/Home/Profile" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 no-underline rounded-t-xl">Profile</a>
                 }
-                <form asp-controller="Auth" asp-action="Logout" method="post" class="inline">
-                    <button type="submit" class="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-50">Logout</button>
+                <form asp-controller="Auth" asp-action="Logout" method="post" class="inline w-full">
+                    <button type="submit" class="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-50 rounded-b-xl">Logout</button>
                 </form>
             </div>
         </div>

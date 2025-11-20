@@ -1,4 +1,6 @@
 @model ASI.Basecode.WebApp.Models.StudentCreateViewModel
+@model ASI.Basecode.Services.ServiceModels.StudentCreateDto
+
 @{
 	Layout = "~/Views/Shared/_AuthenticatedLayout.cshtml";
 	ViewData["Title"] = "Add Student";
@@ -23,20 +25,21 @@
 				@TempData["SuccessMessage"]
 			</div>
 		}
-
+		
 		@if (!ViewData.ModelState.IsValid)
 		{
 			<div class="bg-red-50 text-red-600 px-4 py-3 rounded-md mb-4 border border-red-200">
 				@Html.ValidationSummary(true, "", new { @class = "m-0" })
 			</div>
 		}
-
+		
 		<form method="post" asp-action="AddStudent" asp-controller="Admin" class="max-w-4xl mx-auto">
 			@Html.AntiForgeryToken()
-
+			
 			<!-- Personal Information Section -->
 			<section class="bg-white p-6 mb-6">
 				<h2 class="text-lg font-bold text-gray-900 mb-6">Section 1: Personal Information</h2>
+				
 
 				<div class="grid grid-cols-1 md:grid-cols-2 gap-5">
 					<!-- First name -->
@@ -44,74 +47,74 @@
 						<label asp-for="FirstName" class="block mb-2 text-sm font-semibold text-gray-900">
 							@Html.DisplayNameFor(m => m.FirstName) <span class="text-red-600">*</span>
 						</label>
-						<input asp-for="FirstName" type="text" required
+
+						<input asp-for="FirstName" type="text" required 
 							   class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-green-500">
 						<span asp-validation-for="FirstName" class="text-red-600 text-xs"></span>
 					</div>
-
+					
 					<!-- Last name -->
 					<div>
 						<label asp-for="LastName" class="block mb-2 text-sm font-semibold text-gray-900">
 							@Html.DisplayNameFor(m => m.LastName) <span class="text-red-600">*</span>
 						</label>
-						<input asp-for="LastName" type="text" required
+						<input asp-for="LastName" type="text" required 
 							   class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-green-500">
 						<span asp-validation-for="LastName" class="text-red-600 text-xs"></span>
 					</div>
-
+					
 					<!-- Middle name -->
 					<div>
 						<label asp-for="MiddleName" class="block mb-2 text-sm font-semibold text-gray-900">
 							@Html.DisplayNameFor(m => m.MiddleName)
 						</label>
-						<input asp-for="MiddleName" type="text"
+						<input asp-for="MiddleName" type="text" 
 							   class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-green-500">
 						<span asp-validation-for="MiddleName" class="text-red-600 text-xs"></span>
 					</div>
+					
 
 					<!-- Suffix -->
 					<div>
 						<label asp-for="Suffix" class="block mb-2 text-sm font-semibold text-gray-900">
 							@Html.DisplayNameFor(m => m.Suffix)
 						</label>
-						<input asp-for="Suffix" type="text"
+						<input asp-for="Suffix" type="text" 
 							   class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-green-500">
 						<span asp-validation-for="Suffix" class="text-red-600 text-xs"></span>
 					</div>
-
 					<!-- Contact Number -->
 					<div>
 						<label asp-for="ContactNumber" class="block mb-2 text-sm font-semibold text-gray-900">
 							@Html.DisplayNameFor(m => m.ContactNumber) <span class="text-red-600">*</span>
 						</label>
-						<input asp-for="ContactNumber" type="tel" required
+						<input asp-for="ContactNumber" type="tel" required 
 							   class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-green-500">
 						<span asp-validation-for="ContactNumber" class="text-red-600 text-xs"></span>
 					</div>
-
+					
 					<!-- Email -->
 					<div>
 						<label asp-for="Email" class="block mb-2 text-sm font-semibold text-gray-900">
 							@Html.DisplayNameFor(m => m.Email) <span class="text-red-600">*</span>
 						</label>
-						<input asp-for="Email" type="email" required
+						<input asp-for="Email" type="email" required 
 							   class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-green-500">
 						<span asp-validation-for="Email" class="text-red-600 text-xs"></span>
 					</div>
 				</div>
 			</section>
-
+			
 			<!-- Student Specific Information Section -->
 			<div class="bg-green-100 p-6 mb-6 max-w-4xl">
 				<h2 class="text-lg font-bold text-gray-900 mb-6">Section 2: Student Specific Information</h2>
-
 				<div class="grid grid-cols-1 md:grid-cols-2 gap-5">
 					<!-- Year Level -->
 					<div>
 						<label asp-for="YearLevel" class="block mb-2 text-sm font-semibold text-gray-900">
 							@Html.DisplayNameFor(m => m.YearLevel) <span class="text-red-600">*</span>
 						</label>
-						<select asp-for="YearLevel" required
+						<select asp-for="YearLevel" required 
 								class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm bg-white focus:outline-none focus:ring-2 focus:ring-green-500">
 							<option value="">Select Year Level</option>
 							<option value="1">1</option>
@@ -127,37 +130,29 @@
 						<label asp-for="ProgramId" class="block mb-2 text-sm font-semibold text-gray-900">
 							@Html.DisplayNameFor(m => m.ProgramId) <span class="text-red-600">*</span>
 						</label>
-						<select asp-for="ProgramId" required
+						<select asp-for="ProgramId" required 
 								class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm bg-white focus:outline-none focus:ring-2 focus:ring-green-500">
 							<option value="">Select Program/Course</option>
 							<option value="BS Computer Science">BS Computer Science</option>
 							<option value="BS Information Technology">BS Information Technology</option>
-							<option value="BS Engineering">BS Engineering</option>
-							<option value="BS Business Administration">BS Business Administration</option>
-							<option value="BS Accountancy">BS Accountancy</option>
-							<option value="BS Psychology">BS Psychology</option>
-							<option value="BS Nursing">BS Nursing</option>
-							<option value="BS Education">BS Education</option>
 						</select>
 						<span asp-validation-for="ProgramId" class="text-red-600 text-xs"></span>
 					</div>
-
 					<!-- Department (Read-only) -->
 					<div class="md:col-span-2">
 						<label asp-for="DepartmentId" class="block mb-2 text-sm font-semibold text-gray-900">
 							@Html.DisplayNameFor(m => m.DepartmentId) <span class="text-red-600">*</span>
 						</label>
-						<input asp-for="DepartmentId" type="text" value="College of Computer Studies" readonly
+						<input asp-for="DepartmentId" type="text" value="College of Computer Studies" readonly 
 							   class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm bg-gray-100 text-gray-600 focus:outline-none cursor-not-allowed">
 						<span asp-validation-for="DepartmentId" class="text-red-600 text-xs"></span>
 					</div>
 				</div>
 			</div>
-
+			
 			<!-- Address Information Section -->
 			<div class="bg-white p-6 mb-6">
 				<h2 class="text-lg font-bold text-gray-900 mb-6">Section 3: Address Information</h2>
-
 				<!-- Full Width Address Fields -->
 				<div class="space-y-5 mb-6">
 					<!-- House/Apt number -->
@@ -165,32 +160,29 @@
 						<label asp-for="HouseNumber" class="block mb-2 text-sm font-semibold text-gray-900">
 							@Html.DisplayNameFor(m => m.HouseNumber)
 						</label>
-						<input asp-for="HouseNumber" type="text"
+						<input asp-for="HouseNumber" type="text" 
 							   class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm bg-white focus:outline-none focus:ring-2 focus:ring-green-500">
 						<span asp-validation-for="HouseNumber" class="text-red-600 text-xs"></span>
 					</div>
-
 					<!-- Street name -->
 					<div>
 						<label asp-for="StreetName" class="block mb-2 text-sm font-semibold text-gray-900">
 							@Html.DisplayNameFor(m => m.StreetName) <span class="text-red-600">*</span>
 						</label>
-						<input asp-for="StreetName" type="text" required
+						<input asp-for="StreetName" type="text" required 
 							   class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm bg-white focus:outline-none focus:ring-2 focus:ring-green-500">
 						<span asp-validation-for="StreetName" class="text-red-600 text-xs"></span>
 					</div>
-
 					<!-- Subdivision/Bldg. -->
 					<div>
 						<label asp-for="Subdivision" class="block mb-2 text-sm font-semibold text-gray-900">
 							@Html.DisplayNameFor(m => m.Subdivision)
 						</label>
-						<input asp-for="Subdivision" type="text"
+						<input asp-for="Subdivision" type="text" 
 							   class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm bg-white focus:outline-none focus:ring-2 focus:ring-green-500">
 						<span asp-validation-for="Subdivision" class="text-red-600 text-xs"></span>
 					</div>
 				</div>
-
 				<!-- Grid Layout for City/Province/etc -->
 				<div class="grid grid-cols-1 md:grid-cols-2 gap-5">
 					<!-- Barangay -->
@@ -198,117 +190,112 @@
 						<label asp-for="Barangay" class="block mb-2 text-sm font-semibold text-gray-900">
 							@Html.DisplayNameFor(m => m.Barangay) <span class="text-red-600">*</span>
 						</label>
-						<input asp-for="Barangay" type="text" required
+						<input asp-for="Barangay" type="text" required 
 							   class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm bg-white focus:outline-none focus:ring-2 focus:ring-green-500">
 						<span asp-validation-for="Barangay" class="text-red-600 text-xs"></span>
 					</div>
-
 					<!-- City -->
 					<div>
 						<label asp-for="City" class="block mb-2 text-sm font-semibold text-gray-900">
 							@Html.DisplayNameFor(m => m.City) <span class="text-red-600">*</span>
 						</label>
-						<input asp-for="City" type="text" required
+						<input asp-for="City" type="text" required 
 							   class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm bg-white focus:outline-none focus:ring-2 focus:ring-green-500">
 						<span asp-validation-for="City" class="text-red-600 text-xs"></span>
 					</div>
-
+					
 					<!-- Province -->
 					<div>
 						<label asp-for="Province" class="block mb-2 text-sm font-semibold text-gray-900">
 							@Html.DisplayNameFor(m => m.Province) <span class="text-red-600">*</span>
 						</label>
-						<input asp-for="Province" type="text" required
+						<input asp-for="Province" type="text" required 
 							   class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm bg-white focus:outline-none focus:ring-2 focus:ring-green-500">
 						<span asp-validation-for="Province" class="text-red-600 text-xs"></span>
 					</div>
-
+					
 					<!-- Zip Code -->
 					<div>
 						<label asp-for="ZipCode" class="block mb-2 text-sm font-semibold text-gray-900">
 							@Html.DisplayNameFor(m => m.ZipCode) <span class="text-red-600">*</span>
 						</label>
-						<input asp-for="ZipCode" type="text" required
+						<input asp-for="ZipCode" type="text" required 
 							   class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm bg-white focus:outline-none focus:ring-2 focus:ring-green-500">
 						<span asp-validation-for="ZipCode" class="text-red-600 text-xs"></span>
 					</div>
 				</div>
 			</div>
-
+			
 			<!-- Emergency Contact Information Section -->
 			<div class="bg-green-100 p-6 mb-6 border border-gray-200 rounded-lg">
 				<h2 class="text-lg font-bold text-gray-900 mb-6">Section 4: Emergency Contact Information</h2>
-
 				<div class="grid grid-cols-1 md:grid-cols-2 gap-5">
 					<!-- First name -->
 					<div>
 						<label asp-for="EmergencyContactFirstName" class="block mb-2 text-sm font-semibold text-gray-900">
 							@Html.DisplayNameFor(m => m.EmergencyContactFirstName) <span class="text-red-600">*</span>
 						</label>
-						<input asp-for="EmergencyContactFirstName" type="text" required
+						<input asp-for="EmergencyContactFirstName" type="text" required 
 							   class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm bg-white focus:outline-none focus:ring-2 focus:ring-green-500">
 						<span asp-validation-for="EmergencyContactFirstName" class="text-red-600 text-xs"></span>
 					</div>
-
 					<!-- Last name -->
 					<div>
 						<label asp-for="EmergencyContactLastName" class="block mb-2 text-sm font-semibold text-gray-900">
 							@Html.DisplayNameFor(m => m.EmergencyContactLastName) <span class="text-red-600">*</span>
 						</label>
-						<input asp-for="EmergencyContactLastName" type="text" required
+						<input asp-for="EmergencyContactLastName" type="text" required 
 							   class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm bg-white focus:outline-none focus:ring-2 focus:ring-green-500">
 						<span asp-validation-for="EmergencyContactLastName" class="text-red-600 text-xs"></span>
 					</div>
-
 					<!-- Middle name -->
 					<div>
 						<label asp-for="EmergencyContactMiddleName" class="block mb-2 text-sm font-semibold text-gray-900">
 							@Html.DisplayNameFor(m => m.EmergencyContactMiddleName)
 						</label>
-						<input asp-for="EmergencyContactMiddleName" type="text"
+						<input asp-for="EmergencyContactMiddleName" type="text" 
 							   class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm bg-white focus:outline-none focus:ring-2 focus:ring-green-500">
 						<span asp-validation-for="EmergencyContactMiddleName" class="text-red-600 text-xs"></span>
 					</div>
-
 					<!-- Suffix -->
 					<div>
 						<label asp-for="EmergencyContactSuffix" class="block mb-2 text-sm font-semibold text-gray-900">
 							@Html.DisplayNameFor(m => m.EmergencyContactSuffix)
 						</label>
-						<input asp-for="EmergencyContactSuffix" type="text"
+						<input asp-for="EmergencyContactSuffix" type="text" 
 							   class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm bg-white focus:outline-none focus:ring-2 focus:ring-green-500">
 						<span asp-validation-for="EmergencyContactSuffix" class="text-red-600 text-xs"></span>
 					</div>
-
+					
 					<!-- Contact Number -->
 					<div>
 						<label asp-for="EmergencyContactNumber" class="block mb-2 text-sm font-semibold text-gray-900">
 							@Html.DisplayNameFor(m => m.EmergencyContactNumber) <span class="text-red-600">*</span>
 						</label>
-						<input asp-for="EmergencyContactNumber" type="tel" required
+						<input asp-for="EmergencyContactNumber" type="tel" required 
 							   class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm bg-white focus:outline-none focus:ring-2 focus:ring-green-500">
 						<span asp-validation-for="EmergencyContactNumber" class="text-red-600 text-xs"></span>
 					</div>
-
+					
 					<!-- Relationship to student -->
 					<div>
 						<label asp-for="EmergencyContactRelationship" class="block mb-2 text-sm font-semibold text-gray-900">
 							@Html.DisplayNameFor(m => m.EmergencyContactRelationship) <span class="text-red-600">*</span>
 						</label>
-						<input asp-for="EmergencyContactRelationship" type="text" required
+						<input asp-for="EmergencyContactRelationship" type="text" required 
 							   class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm bg-white focus:outline-none focus:ring-2 focus:ring-green-500">
 						<span asp-validation-for="EmergencyContactRelationship" class="text-red-600 text-xs"></span>
 					</div>
 				</div>
 			</div>
-
+			
 			<!-- Action Buttons -->
 			<div class="flex justify-center gap-4">
-				<button type="button" onclick="window.location.href='/Admin/Users'"
+				<button type="button" onclick="window.location.href='/Admin/Users'" 
 						class="bg-white text-gray-600 border border-gray-300 px-8 py-2 rounded-md cursor-pointer text-sm font-semibold hover:bg-gray-50 transition">
 					Cancel
 				</button>
-				<button type="submit"
+				<button type="submit" 
 						class="bg-green-600 text-white border-none px-8 py-2 rounded-md cursor-pointer text-sm font-semibold hover:bg-green-700 transition">
 					Register Student
 				</button>
@@ -318,7 +305,5 @@
 </section>
 
 @section Scripts {
-	@{
-		await Html.RenderPartialAsync("_ValidationScriptsPartial");
-	}
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
 }

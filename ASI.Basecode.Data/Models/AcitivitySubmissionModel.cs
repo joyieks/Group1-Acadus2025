@@ -29,5 +29,11 @@ namespace ASI.Basecode.Data.Models
         [Column("feedback")]
         public string Feedback { get; set; }
 
+        [Column("submissionContent")]
+        public string SubmissionContent { get; set; }
+        
+        // Alternative column name mapping (in case database uses different casing)
+        // If the above doesn't work, try: [Column("submission_content")]
+
     }
 }

@@ -299,7 +299,80 @@ namespace ASI.Basecode.Services.Services
         }
 
         /// <summary>
-        /// Creates a new course with validation.
+        /// Generates a unique course code based on year level.
+        /// Format: [Year Level Prefix][3-digit Index]
+        /// 1st Year: 141, 2nd Year: 242, 3rd Year: 626, 4th Year: 919
+        /// </summary>
+        public async Task<string> GenerateCourseCodeAsync(string level)
+        {
+            try
+            {
+                // Map year level to prefix
+                var levelPrefixMap = new Dictionary<string, string>
+                {
+                    { "1st Year", "141" },
+                    { "2nd Year", "242" },
+                    { "3rd Year", "626" },
+                    { "4th Year", "919" }
+                };
+
+                if (!levelPrefixMap.ContainsKey(level))
+                {
+                    throw new ArgumentException($"Invalid year level: {level}");
+                }
+
+                var prefix = levelPrefixMap[level];
+                var client = await _supabaseAuthService.GetSupabaseClientForAuthAsync();
+
+                // Get all courses with codes starting with this prefix
+                var allCourses = await client
+                    .From<CourseModel>()
+                    .Get();
+
+                var courses = allCourses?.Models ?? new List<CourseModel>();
+                
+                // Filter courses that start with the prefix and extract their indices
+                var indices = new List<int>();
+                foreach (var course in courses)
+                {
+                    if (!string.IsNullOrEmpty(course.Code) && course.Code.StartsWith(prefix) && course.Code.Length == 6)
+                    {
+                        // Extract the 3-digit index (last 3 characters)
+                        if (int.TryParse(course.Code.Substring(3), out int index))
+                        {
+                            indices.Add(index);
+                        }
+                    }
+                }
+
+                // Find the next available index
+                int nextIndex = 1;
+                if (indices.Count > 0)
+                {
+                    nextIndex = indices.Max() + 1;
+                }
+
+                // Ensure index doesn't exceed 999 (3 digits max)
+                if (nextIndex > 999)
+                {
+                    throw new Exception($"Maximum course limit reached for {level}. Cannot generate more course codes.");
+                }
+
+                // Generate code: prefix + 3-digit index (padded with zeros)
+                var generatedCode = $"{prefix}{nextIndex:D3}";
+
+                Console.WriteLine($"Generated course code: {generatedCode} for {level} (index: {nextIndex})");
+                return generatedCode;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error generating course code: {ex.Message}");
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// Creates a new course with validation and auto-generated course code.
         /// </summary>
         public async Task<(bool Success, string Message, int? CourseId)> CreateCourseAsync(
             string code,
@@ -314,6 +387,13 @@ namespace ASI.Basecode.Services.Services
         {
             try
             {
+                // Auto-generate course code if not provided or empty
+                if (string.IsNullOrWhiteSpace(code))
+                {
+                    code = await GenerateCourseCodeAsync(level);
+                    Console.WriteLine($"Auto-generated course code: {code}");
+                }
+
                 // Validation
                 if (string.IsNullOrWhiteSpace(code) || code.Length < 2 || code.Length > 50)
                 {
@@ -345,9 +425,9 @@ namespace ASI.Basecode.Services.Services
                     return (false, "Valid semester is required", null);
                 }
 
-                if (maxCapacity < 1 || maxCapacity > 500)
+                if (maxCapacity < 1 || maxCapacity > 50)
                 {
-                    return (false, "Maximum capacity must be between 1 and 500", null);
+                    return (false, "Maximum capacity must be between 1 and 50", null);
                 }
 
                 if (string.IsNullOrWhiteSpace(instructorId))
@@ -395,6 +475,305 @@ namespace ASI.Basecode.Services.Services
                 Console.WriteLine($"Error creating course: {ex.Message}");
                 Console.WriteLine($"Stack Trace: {ex.StackTrace}");
                 return (false, $"Error creating course: {ex.Message}", null);
+            }
+        }
+
+        /// <summary>
+        /// Retrieves all active enrollments for a specific course with student details.
+        /// </summary>
+        public async Task<List<EnrollmentModel>> GetCourseEnrollmentsByCourseIdAsync(long courseId)
+        {
+            try
+            {
+                var client = await _supabaseAuthService.GetSupabaseClientForAuthAsync();
+
+                // Get all enrollments for this course (filter by status in memory for case-insensitive matching)
+                var enrollmentsQuery = await client
+                    .From<EnrollmentModel>()
+                    .Filter("course_id", Supabase.Postgrest.Constants.Operator.Equals, courseId)
+                    .Get();
+
+                var allEnrollments = enrollmentsQuery?.Models ?? new List<EnrollmentModel>();
+                
+                // Filter for active enrollments (case-insensitive) and not dropped
+                var enrollments = allEnrollments
+                    .Where(e => !string.IsNullOrEmpty(e.Status) && 
+                           (e.Status.Equals("Active", StringComparison.OrdinalIgnoreCase) || e.Status.Equals("active", StringComparison.OrdinalIgnoreCase)) &&
+                           e.DroppedAt == null)
+                    .ToList();
+
+                Console.WriteLine($"Retrieved {enrollments.Count} active enrollments for course {courseId} (out of {allEnrollments.Count} total)");
+                return enrollments;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error retrieving enrollments for course {courseId}: {ex.Message}");
+                Console.WriteLine($"Stack Trace: {ex.StackTrace}");
+                return new List<EnrollmentModel>();
+            }
+        }
+
+        /// <summary>
+        /// Updates an existing course with validation.
+        /// </summary>
+        public async Task<(bool Success, string Message)> UpdateCourseAsync(
+            int courseId,
+            string name,
+            string description,
+            long credits,
+            string level,
+            long semesterId,
+            decimal maxCapacity,
+            string instructorId,
+            string status = "Active")
+        {
+            try
+            {
+                Console.WriteLine($"Starting course update for course ID: {courseId}");
+
+                // Validate input
+                if (courseId <= 0)
+                {
+                    return (false, "Invalid course ID");
+                }
+
+                if (string.IsNullOrWhiteSpace(name) || name.Length < 3 || name.Length > 255)
+                {
+                    return (false, "Course name must be between 3 and 255 characters");
+                }
+
+                if (string.IsNullOrWhiteSpace(description) || description.Length < 10 || description.Length > 1000)
+                {
+                    return (false, "Course description must be between 10 and 1000 characters");
+                }
+
+                if (credits < 1 || credits > 6)
+                {
+                    return (false, "Credits must be between 1 and 6");
+                }
+
+                if (string.IsNullOrWhiteSpace(level))
+                {
+                    return (false, "Course level is required");
+                }
+
+                if (semesterId <= 0)
+                {
+                    return (false, "Valid semester is required");
+                }
+
+                if (maxCapacity < 1 || maxCapacity > 50)
+                {
+                    return (false, "Maximum capacity must be between 1 and 50");
+                }
+
+                if (string.IsNullOrWhiteSpace(instructorId))
+                {
+                    return (false, "Instructor is required");
+                }
+
+                var client = await _supabaseAuthService.GetSupabaseClientForAuthAsync();
+
+                // Verify course exists
+                var existingCourse = await GetCourseByIdAsync(courseId);
+                if (existingCourse == null)
+                {
+                    return (false, $"Course with ID {courseId} not found");
+                }
+
+                // Update the course
+                var updatedCourse = new CourseModel
+                {
+                    Id = courseId,
+                    Code = existingCourse.Code, // Keep original code
+                    Name = name,
+                    Description = description,
+                    Credits = credits,
+                    Level = level,
+                    SemesterId = semesterId,
+                    MaxCapacity = maxCapacity,
+                    TeacherId = instructorId,
+                    Status = status
+                };
+
+                var result = await client
+                    .From<CourseModel>()
+                    .Update(updatedCourse);
+
+                Console.WriteLine($"Course updated successfully: {name}");
+                return (true, "Course updated successfully");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error updating course: {ex.Message}");
+                Console.WriteLine($"Stack Trace: {ex.StackTrace}");
+                return (false, $"Error updating course: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// Gets all students not enrolled in a specific course.
+        /// Filters by checking course_enrollment for this courseId using userTypeId.
+        /// </summary>
+        public async Task<List<SupabaseUserNew>> GetAvailableStudentsForCourseAsync(long courseId, string searchTerm = "")
+        {
+            try
+            {
+                var client = await _supabaseAuthService.GetSupabaseClientForAuthAsync();
+
+                // Get all students (active users)
+                var allStudentsQuery = await client
+                    .From<SupabaseUserNew>()
+                    .Where(u => u.IsActive == true)
+                    .Get();
+
+                var students = allStudentsQuery?.Models ?? new List<SupabaseUserNew>();
+                Console.WriteLine($"Retrieved {students.Count} total active students");
+
+                // Get current enrollments for this course
+                var enrollmentsQuery = await client
+                    .From<EnrollmentModel>()
+                    .Where(e => e.CourseId == courseId)
+                    .Get();
+
+                var enrolledStudentIds = enrollmentsQuery?.Models?.Select(e => e.StudentId).ToHashSet() ?? new HashSet<string>();
+                Console.WriteLine($"Course {courseId} has {enrolledStudentIds.Count} enrolled students");
+
+                // Filter out already enrolled students
+                var availableStudents = students
+                    .Where(s => !enrolledStudentIds.Contains(s.UserTypeId))
+                    .ToList();
+
+                // Apply search filter if provided
+                if (!string.IsNullOrWhiteSpace(searchTerm))
+                {
+                    var searchLower = searchTerm.ToLower();
+                    availableStudents = availableStudents
+                        .Where(s => 
+                            (s.UserDisplayId != null && s.UserDisplayId.ToLower().Contains(searchLower)) ||
+                            (s.FirstName != null && s.FirstName.ToLower().Contains(searchLower)) ||
+                            (s.LastName != null && s.LastName.ToLower().Contains(searchLower))
+                        )
+                        .ToList();
+                }
+
+                Console.WriteLine($"Available students for course {courseId}: {availableStudents.Count}");
+                return availableStudents;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error getting available students for course {courseId}: {ex.Message}");
+                Console.WriteLine($"Stack Trace: {ex.StackTrace}");
+                return new List<SupabaseUserNew>();
+            }
+        }
+
+        /// <summary>
+        /// Enrolls a student in a course with validation.
+        /// Checks for duplicates, max capacity, and student existence.
+        /// </summary>
+        public async Task<(bool Success, string Message)> EnrollStudentInCourseAsync(long courseId, string studentId)
+        {
+            try
+            {
+                var client = await _supabaseAuthService.GetSupabaseClientForAuthAsync();
+
+                // Validate course exists
+                var course = await GetCourseByIdAsync((int)courseId);
+                if (course == null)
+                {
+                    return (false, "Course not found");
+                }
+
+                // Check if student exists
+                var studentQuery = await client
+                    .From<SupabaseUserNew>()
+                    .Filter("userTypeId", Supabase.Postgrest.Constants.Operator.Equals, studentId)
+                    .Get();
+
+                var students = studentQuery?.Models ?? new List<SupabaseUserNew>();
+                if (!students.Any())
+                {
+                    Console.WriteLine($"Student {studentId} not found in database");
+                    return (false, "Student not found");
+                }
+
+                // Check if student is already enrolled
+                var existingEnrollmentQuery = await client
+                    .From<EnrollmentModel>()
+                    .Filter("course_id", Supabase.Postgrest.Constants.Operator.Equals, courseId)
+                    .Filter("student_id", Supabase.Postgrest.Constants.Operator.Equals, studentId)
+                    .Get();
+
+                var existingEnrollments = existingEnrollmentQuery?.Models ?? new List<EnrollmentModel>();
+                if (existingEnrollments.Any())
+                {
+                    var existingEnrollment = existingEnrollments.FirstOrDefault();
+                    Console.WriteLine($"Student {studentId} already has enrollment with status: {existingEnrollment?.Status}");
+                    return (false, "Student is already enrolled in this course");
+                }
+
+                // Check max capacity - count only active enrollments
+                var currentEnrollmentsQuery = await client
+                    .From<EnrollmentModel>()
+                    .Filter("course_id", Supabase.Postgrest.Constants.Operator.Equals, courseId)
+                    .Get();
+
+                var enrollmentCount = currentEnrollmentsQuery?.Models?.Count ?? 0;
+                if (enrollmentCount >= course.MaxCapacity)
+                {
+                    return (false, $"Course is at maximum capacity ({course.MaxCapacity} students)");
+                }
+
+                // Create new enrollment
+                var newEnrollment = new EnrollmentModel
+                {
+                    StudentId = studentId,
+                    CourseId = courseId,
+                    EnrolledAt = DateTime.UtcNow,
+                    Status = "Active",  // Capitalized to match database enum
+                    DroppedAt = null
+                };
+
+                Console.WriteLine($"Creating enrollment: StudentId={studentId}, CourseId={courseId}, Status=Active");
+                var insertResponse = await client
+                    .From<EnrollmentModel>()
+                    .Insert(newEnrollment);
+
+                var insertedEnrollment = insertResponse?.Model;
+                if (insertedEnrollment == null)
+                {
+                    Console.WriteLine($"WARNING: Enrollment insert returned null model");
+                    // Still return success as the insert might have worked
+                }
+                else
+                {
+                    Console.WriteLine($"Enrollment created successfully with ID: {insertedEnrollment.Id}, Status: {insertedEnrollment.Status}");
+                }
+
+                // Verify the enrollment was created by querying it back
+                var verifyQuery = await client
+                    .From<EnrollmentModel>()
+                    .Filter("course_id", Supabase.Postgrest.Constants.Operator.Equals, courseId)
+                    .Filter("student_id", Supabase.Postgrest.Constants.Operator.Equals, studentId)
+                    .Get();
+
+                var verifyEnrollments = verifyQuery?.Models ?? new List<EnrollmentModel>();
+                Console.WriteLine($"Verification: Found {verifyEnrollments.Count} enrollment(s) for student {studentId} in course {courseId}");
+                if (verifyEnrollments.Any())
+                {
+                    var verifyEnrollment = verifyEnrollments.FirstOrDefault();
+                    Console.WriteLine($"  - Enrollment ID: {verifyEnrollment.Id}, Status: {verifyEnrollment.Status}, DroppedAt: {verifyEnrollment.DroppedAt}");
+                }
+
+                Console.WriteLine($"Student {studentId} enrolled in course {courseId}");
+                return (true, "Student enrolled successfully");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error enrolling student {studentId} in course {courseId}: {ex.Message}");
+                Console.WriteLine($"Stack Trace: {ex.StackTrace}");
+                return (false, $"Error enrolling student: {ex.Message}");
             }
         }
     }

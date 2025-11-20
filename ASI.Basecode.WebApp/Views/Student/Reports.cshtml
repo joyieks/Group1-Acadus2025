@@ -4,89 +4,185 @@
     ViewData["Title"] = "Reports";
 }
 
-<div class="p-8 font-[Poppins]">
-    <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6 print:hidden gap-4">
-        <h2 class="text-2xl font-bold text-[#337D58]">Grade Reports</h2>
+<div class="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-4 sm:p-6 lg:p-8 font-[Poppins]">
+    <div class="max-w-6xl mx-auto">
+        <!-- Header Section -->
+        <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-8 print:hidden gap-4">
+            <div>
+                <h1 class="text-3xl sm:text-4xl font-bold text-[#337D58] mb-2">Grade Reports</h1>
+                <p class="text-gray-600 text-sm sm:text-base">View your academic performance across all courses</p>
+            </div>
 
-        <div class="flex flex-col sm:flex-row items-center gap-3">
-            @* <!-- School Year Dropdown -->
-            <select id="schoolYear" class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#337D58] focus:outline-none">
-                <option value="">Select School Year</option>
-                <option value="2024-2025">2024–2025</option>
-                <option value="2023-2024">2023–2024</option>
-                <option value="2022-2023">2022–2023</option>
-            </select>
-
-            <!-- Term Dropdown -->
-            <select id="term" class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#337D58] focus:outline-none">
-                <option value="">Select Term</option>
-                <option value="1st Sem">1st Semester</option>
-                <option value="2nd Sem">2nd Semester</option>
-                <option value="Summer">Summer</option>
-            </select> *@
-
-            <!-- Print Button -->
-            <button onclick="window.print()"
-                    class="flex items-center gap-2 bg-[#337D58] text-white px-5 py-2 rounded-lg text-sm font-medium hover:bg-[#2a6648] transition-all duration-200 shadow-sm active:scale-95">
-                <img src="@Url.Content("~/img/printer.png")" alt="Print Icon" class="w-5 h-5" />
-                Print Grades
-            </button>
+            <div class="flex items-center gap-3">
+                <!-- Download PDF Button -->
+                <a href="@Url.Action("DownloadGradeReport", "Student")"
+                   class="flex items-center gap-2 bg-[#337D58] text-white px-6 py-3 rounded-xl text-sm font-semibold hover:bg-[#2a6648] transition-all duration-200 shadow-lg hover:shadow-xl active:scale-95 transform">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path>
+                    </svg>
+                    Download PDF Report
+                </a>
+            </div>
         </div>
-    </div>
 
-    <div class="bg-white shadow-md rounded-2xl p-6">
+        <!-- Reports Table Card -->
+        <div class="bg-white shadow-xl rounded-2xl overflow-hidden border border-gray-100">
+            @if (Model.Reports != null && Model.Reports.Any())
+            {
+                <div class="overflow-x-auto">
+                    <table class="w-full border-collapse" id="reportTable">
+                        <thead>
+                            <tr style="background: linear-gradient(to right, #337D58, #2a6648) !important;">
+                                <th class="py-4 px-6 text-left font-semibold text-sm uppercase tracking-wider" style="background: transparent !important; color: #ffffff !important;">
+                                    <div class="flex items-center gap-2" style="color: #ffffff !important;">
+                                        <svg class="w-4 h-4" fill="none" stroke="#ffffff" viewBox="0 0 24 24" style="stroke: #ffffff !important;">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+                                        </svg>
+                                        <span style="color: #ffffff !important;">Course Code</span>
+                                    </div>
+                                </th>
+                                <th class="py-4 px-6 text-left font-semibold text-sm uppercase tracking-wider" style="background: transparent !important; color: #ffffff !important;">
+                                    <div class="flex items-center gap-2" style="color: #ffffff !important;">
+                                        <svg class="w-4 h-4" fill="none" stroke="#ffffff" viewBox="0 0 24 24" style="stroke: #ffffff !important;">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                        </svg>
+                                        <span style="color: #ffffff !important;">Course Title</span>
+                                    </div>
+                                </th>
+                                <th class="py-4 px-6 text-center font-semibold text-sm uppercase tracking-wider" style="background: transparent !important; color: #ffffff !important;">
+                                    <div class="flex items-center justify-center gap-2" style="color: #ffffff !important;">
+                                        <svg class="w-4 h-4" fill="none" stroke="#ffffff" viewBox="0 0 24 24" style="stroke: #ffffff !important;">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"></path>
+                                        </svg>
+                                        <span style="color: #ffffff !important;">Final Grade</span>
+                                    </div>
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-200">
+                            @foreach (var item in Model.Reports)
+                            {
+                                <tr class="hover:bg-gradient-to-r hover:from-green-50 hover:to-emerald-50 transition-all duration-200 group">
+                                    <td class="py-5 px-6">
+                                        <div class="font-semibold text-gray-900 text-base">@item.CourseCode</div>
+                                    </td>
+                                    <td class="py-5 px-6">
+                                        <div class="text-gray-700 text-base">@item.CourseTitle</div>
+                                    </td>
+                                    <td class="py-5 px-6 text-center">
+                                        @{
+                                            var grade = item.FinalGrade;
+                                            var gradeClass = grade <= 1.75 ? "bg-green-100 text-green-800 border-green-200" :
+                                                             grade <= 2.75 ? "bg-blue-100 text-blue-800 border-blue-200" :
+                                                             grade <= 3.0 ? "bg-yellow-100 text-yellow-800 border-yellow-200" :
+                                                             "bg-red-100 text-red-800 border-red-200";
+                                        }
+                                        <span class="inline-flex items-center justify-center px-4 py-2 rounded-lg font-bold text-base border-2 @gradeClass min-w-[80px]">
+                                            @grade.ToString("0.00")
+                                        </span>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            else
+            {
+                <div class="flex flex-col items-center justify-center py-16 px-6 text-gray-500">
+                    <div class="bg-gray-100 rounded-full p-6 mb-4">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-16 h-16 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                    </div>
+                    <h3 class="text-xl font-semibold text-gray-700 mb-2">No Report Data Available</h3>
+                    <p class="text-base text-gray-500 text-center max-w-md">Your grades will appear here once your instructors have graded your activities and assignments.</p>
+                </div>
+            }
+        </div>
+
+        <!-- Summary Card (Optional - can be added later) -->
         @if (Model.Reports != null && Model.Reports.Any())
         {
-            <table class="w-full border-collapse text-sm" id="reportTable">
-                <thead class="bg-[#337D58] text-white">
-                    <tr>
-                        <th class="py-3 px-4 text-left rounded-tl-2xl">Course Code</th>
-                        <th class="py-3 px-4 text-left">Course Title</th>
-                        <th class="py-3 px-4 text-left">Midterm Grade</th>
-                        <th class="py-3 px-4 text-left rounded-tr-2xl">Final Grade</th>
-                    </tr>
-                </thead>
-                <tbody class="text-gray-700">
-                    @foreach (var item in Model.Reports)
-                    {
-                        <tr class="border-b hover:bg-gray-50 transition">
-                            <td class="py-3 px-4 font-medium">@item.CourseCode</td>
-                            <td class="py-3 px-4">@item.CourseTitle</td>
-                            <td class="py-3 px-4">@item.MidtermGrade</td>
-                            <td class="py-3 px-4">@item.FinalGrade</td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
-        }
-        else
-        {
-            <div class="flex flex-col items-center justify-center py-10 text-gray-500">
-                <svg xmlns="http://www.w3.org/2000/svg" class="w-12 h-12 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
-                          d="M9 13h6m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h7l5 5v13a2 2 0 01-2 2z" />
-                </svg>
-                <p class="text-lg">No report data available yet.</p>
-                <p class="text-sm text-gray-400">Your grades will appear here once available.</p>
+            <div class="mt-6 shadow-lg rounded-2xl p-6" style="background: linear-gradient(to right, #337D58, #2a6648) !important; border: 1px solid #337D58 !important;">
+                <div class="flex flex-wrap items-center justify-between gap-4">
+                    <div class="flex items-center gap-3">
+                        <div class="rounded-lg p-3" style="background: rgba(255, 255, 255, 0.2) !important;">
+                            <svg class="w-6 h-6" fill="none" stroke="#ffffff" viewBox="0 0 24 24" style="color: #ffffff !important; stroke: #ffffff !important;">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                        </div>
+                        <div>
+                            <p class="text-sm font-medium" style="color: #ffffff !important;">Total Courses</p>
+                            <p class="text-2xl font-bold" style="color: #ffffff !important;">@Model.Reports.Count</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <div class="rounded-lg p-3" style="background: rgba(255, 255, 255, 0.2) !important;">
+                            <svg class="w-6 h-6" fill="none" stroke="#ffffff" viewBox="0 0 24 24" style="color: #ffffff !important; stroke: #ffffff !important;">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
+                            </svg>
+                        </div>
+                        <div>
+                            <p class="text-sm font-medium" style="color: #ffffff !important;">Average Grade</p>
+                            <p class="text-2xl font-bold" style="color: #ffffff !important;">
+                                @{
+                                    var avgGrade = Model.Reports.Average(r => r.FinalGrade);
+                                }
+                                @avgGrade.ToString("0.00")
+                            </p>
+                        </div>
+                    </div>
+                </div>
             </div>
         }
     </div>
 </div>
 
-<script>
-    // Optional: Handle filtering (demo only)
-    document.querySelectorAll('#schoolYear, #term').forEach(select => {
-        select.addEventListener('change', () => {
-            const year = document.getElementById('schoolYear').value;
-            const term = document.getElementById('term').value;
-
-            // You can later replace this with an AJAX call or page reload
-            console.log(`Filter applied: ${year} - ${term}`);
-        });
-    });
-</script>
-
 <style>
+    /* Ensure table header has green background and white text */
+    thead tr {
+        background: linear-gradient(to right, #337D58, #2a6648) !important;
+    }
+    
+    thead th {
+        background: transparent !important;
+        color: #ffffff !important;
+    }
+    
+    thead th,
+    thead th *,
+    thead th span,
+    thead th div {
+        color: #ffffff !important;
+        background: transparent !important;
+    }
+    
+    thead th svg {
+        stroke: #ffffff !important;
+        color: #ffffff !important;
+        background: transparent !important;
+    }
+    
+    /* Ensure summary card has green background and white text */
+    .mt-6.shadow-lg.rounded-2xl {
+        background: linear-gradient(to right, #337D58, #2a6648) !important;
+    }
+    
+    .mt-6.shadow-lg.rounded-2xl * {
+        color: #ffffff !important;
+    }
+    
+    .mt-6.shadow-lg.rounded-2xl p {
+        color: #ffffff !important;
+    }
+    
+    .mt-6.shadow-lg.rounded-2xl svg {
+        stroke: #ffffff !important;
+        color: #ffffff !important;
+    }
+
     @@media print {
         footer, nav, #mobileMenuBtn, #mobileMenu, #notifPanel, #userMenu, .print\:hidden {
             display: none !important;
@@ -97,18 +193,33 @@
             padding: 0 !important;
         }
 
+        .min-h-screen {
+            min-height: auto !important;
+            padding: 0 !important;
+        }
+
+        .bg-gradient-to-br {
+            background: white !important;
+        }
+
         table {
             page-break-inside: auto;
             border-collapse: collapse;
             width: 100% !important;
         }
 
+        tr {
+            page-break-inside: avoid;
+            page-break-after: auto;
+        }
+
         th, td {
             -webkit-print-color-adjust: exact;
             print-color-adjust: exact;
+            border: 1px solid #e5e7eb !important;
         }
 
-        .shadow, .shadow-md, .rounded-2xl {
+        .shadow-xl, .shadow-lg, .rounded-2xl {
             box-shadow: none !important;
             border-radius: 0 !important;
         }

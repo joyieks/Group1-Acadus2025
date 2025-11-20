@@ -1,4 +1,4 @@
-@model ASI.Basecode.WebApp.Models.TeacherCourseViewModel
+@model ASI.Basecode.Services.ServiceModels.TeacherCourseModel
 @{
     Layout = "~/Views/Shared/_AuthenticatedLayout.cshtml";
     ViewData["Title"] = "Course Activities";
@@ -44,24 +44,30 @@
                         <thead style="background:#059669;">
                             <tr>
                                 <th style="padding:12px 16px; text-align:left; font-weight:700; color:#fff;">Activity</th>
+                                <th style="padding:12px 16px; text-align:left; font-weight:700; color:#fff;">Due Date & Time</th>
                             </tr>
                         </thead>
                         <tbody>
-                            <tr style="border-bottom:1px solid #e5e7eb; cursor:pointer;" onclick="selectActivity('Quiz 1: Introduction to Programming')">
-                                <td style="padding:16px; color:#111827; font-weight:500;">Quiz 1: Introduction to Programming</td>
-                            </tr>
-                            <tr style="background:#f9fafb; border-bottom:1px solid #e5e7eb; cursor:pointer;" onclick="selectActivity('Assignment 1: Hello World Program')">
-                                <td style="padding:16px; color:#111827; font-weight:500;">Assignment 1: Hello World Program</td>
-                            </tr>
-                            <tr style="border-bottom:1px solid #e5e7eb; cursor:pointer;" onclick="selectActivity('Midterm Exam')">
-                                <td style="padding:16px; color:#111827; font-weight:500;">Midterm Exam</td>
-                            </tr>
-                            <tr style="background:#f9fafb; border-bottom:1px solid #e5e7eb; cursor:pointer;" onclick="selectActivity('Lab Exercise 1: Variables & Data Types')">
-                                <td style="padding:16px; color:#111827; font-weight:500;">Lab Exercise 1: Variables & Data Types</td>
-                            </tr>
-                            <tr style="border-bottom:1px solid #e5e7eb; cursor:pointer;" onclick="selectActivity('Project 1: Calculator Application')">
-                                <td style="padding:16px; color:#111827; font-weight:500;">Project 1: Calculator Application</td>
-                            </tr>
+                            @if (Model.Activities != null && Model.Activities.Any())
+                            {
+                                @foreach (var activity in Model.Activities)
+                                {
+                                    var rowClass = Model.Activities.IndexOf(activity) % 2 == 0 ? "" : "background:#f9fafb;";
+                                    var isSelected = ViewBag.SelectedActivity?.Id == activity.Id;
+                                    var selectedStyle = isSelected ? "background-color:#e0f2fe !important; border-left:4px solid #059669 !important;" : "";
+                                    <tr style="border-bottom:1px solid #e5e7eb; cursor:pointer; @rowClass @selectedStyle" onclick="selectActivity(@activity.Id, '@activity.Title')">
+                                        <td style="padding:16px; color:#111827; font-weight:500;">@activity.Title</td>
+                                        <td style="padding:16px; color:#6b7280; font-size:14px;">@activity.DueDate.ToString("MMM dd, yyyy hh:mm tt")</td>
+                                    </tr>
+                                }
+                            }
+                            else
+                            {
+                                <tr>
+                                    <td style="padding:16px; color:#6b7280; text-align:center;">No activities yet. Click "Activity" to add one.</td>
+                                    <td style="padding:16px; color:#6b7280; text-align:center;"></td>
+                                </tr>
+                            }
                         </tbody>
                     </table>
                 </div>
@@ -75,50 +81,73 @@
                 </div>
 
                 <div style="background:#f9fafb; border:1px solid #e5e7eb; border-radius:8px; padding:24px;">
-                    <div style="margin-bottom:20px;">
-                        <label style="display:block; font-weight:600; color:#374151; margin-bottom:8px;">Name</label>
-                        <div id="nameDisplay" style="color:#111827; font-size:16px;">Quiz 1: Introduction to Programming</div>
-                        <input id="nameInput" type="text" value="Quiz 1: Introduction to Programming" style="width:100%; padding:8px 12px; border:1px solid #d1d5db; border-radius:6px; font-size:16px; display:none;">
-                    </div>
+                    @if (ViewBag.SelectedActivity != null)
+                    {
+                        var activity = ViewBag.SelectedActivity as ASI.Basecode.Services.ServiceModels.TeacherActivityModel;
+                        <div style="margin-bottom:20px;">
+                            <label style="display:block; font-weight:600; color:#374151; margin-bottom:8px;">Name</label>
+                            <div id="nameDisplay" style="color:#111827; font-size:16px;">@activity.Title</div>
+                            <input id="nameInput" type="text" value="@activity.Title" style="width:100%; padding:8px 12px; border:1px solid #d1d5db; border-radius:6px; font-size:16px; display:none;">
+                            <input type="hidden" id="activityId" value="@activity.Id" />
+                        </div>
 
-                    <div style="margin-bottom:20px;">
-                        <label style="display:block; font-weight:600; color:#374151; margin-bottom:8px;">Description</label>
-                        <div id="descriptionDisplay" style="color:#111827; font-size:14px; line-height:1.5;">This quiz covers the fundamental concepts of programming including variables, data types, and basic control structures. Students should be familiar with the course materials from the first two weeks.</div>
-                        <textarea id="descriptionInput" rows="4" style="width:100%; padding:8px 12px; border:1px solid #d1d5db; border-radius:6px; font-size:14px; line-height:1.5; display:none;">This quiz covers the fundamental concepts of programming including variables, data types, and basic control structures. Students should be familiar with the course materials from the first two weeks.</textarea>
-                    </div>
+                        <div style="margin-bottom:20px;">
+                            <label style="display:block; font-weight:600; color:#374151; margin-bottom:8px;">Description</label>
+                            <div id="descriptionDisplay" style="color:#111827; font-size:14px; line-height:1.5;">@(string.IsNullOrEmpty(activity.Description) ? "No description provided." : activity.Description)</div>
+                            <textarea id="descriptionInput" rows="4" style="width:100%; padding:8px 12px; border:1px solid #d1d5db; border-radius:6px; font-size:14px; line-height:1.5; display:none;">@activity.Description</textarea>
+                        </div>
 
-                    <div style="margin-bottom:20px;">
-                        <label style="display:block; font-weight:600; color:#374151; margin-bottom:8px;">Due Date</label>
-                        <div id="dueDateDisplay" style="color:#111827; font-size:16px;">November 20, 2025 - 11:59 PM</div>
-                        <input id="dueDateInput" type="datetime-local" value="2025-11-20T23:59" style="width:100%; padding:8px 12px; border:1px solid #d1d5db; border-radius:6px; font-size:16px; display:none;">
-                    </div>
+                        <div style="margin-bottom:20px;">
+                            <label style="display:block; font-weight:600; color:#374151; margin-bottom:8px;">Due Date & Time</label>
+                            <div id="dueDateDisplay" style="color:#111827; font-size:16px;">@activity.DueDate.ToString("MMMM dd, yyyy - hh:mm tt")</div>
+                            <div id="dueDateInputContainer" style="display:none;">
+                                <div style="display:flex; gap:12px; align-items:end;">
+                                    <div style="flex:1;">
+                                        <label style="display:block; font-weight:500; color:#6b7280; margin-bottom:4px; font-size:14px;">Date</label>
+                                        <input id="dueDateInput" type="date" value="@activity.DueDate.ToString("yyyy-MM-dd")" min="@DateTime.Now.ToString("yyyy-MM-dd")" style="width:100%; padding:8px 12px; border:1px solid #d1d5db; border-radius:6px; font-size:16px;">
+                                    </div>
+                                    <div style="flex:1;">
+                                        <label style="display:block; font-weight:500; color:#6b7280; margin-bottom:4px; font-size:14px;">Time</label>
+                                        <input id="dueTimeInput" type="time" value="@activity.DueDate.ToString("HH:mm")" style="width:100%; padding:8px 12px; border:1px solid #d1d5db; border-radius:6px; font-size:16px;">
+                                    </div>
+                                </div>
+                                <small style="color:#6b7280; font-size:12px; margin-top:4px; display:block;">Cannot set due date in the past.</small>
+                            </div>
+                        </div>
 
-                    <div style="margin-bottom:20px;">
-                        <label style="display:block; font-weight:600; color:#374151; margin-bottom:8px;">Maximum Score</label>
-                        <div id="maxScoreDisplay" style="color:#111827; font-size:16px;">50 points</div>
-                        <input id="maxScoreInput" type="number" value="50" min="0" style="width:100%; padding:8px 12px; border:1px solid #d1d5db; border-radius:6px; font-size:16px; display:none;">
-                    </div>
+                        <div style="margin-bottom:20px;">
+                            <label style="display:block; font-weight:600; color:#374151; margin-bottom:8px;">Maximum Score</label>
+                            <div id="maxScoreDisplay" style="color:#111827; font-size:16px;">@activity.MaxScore points</div>
+                            <input id="maxScoreInput" type="number" value="@activity.MaxScore" min="0" style="width:100%; padding:8px 12px; border:1px solid #d1d5db; border-radius:6px; font-size:16px; display:none;">
+                        </div>
+                    }
+                    else
+                    {
+                        <div style="text-align:center; padding:40px; color:#6b7280;">
+                            <p>Select an activity from the list to view details.</p>
+                        </div>
+                    }
 
                     <div style="display:flex; justify-content:space-between; align-items:center;">
                         <div>
                             <label style="display:block; font-weight:600; color:#374151; margin-bottom:8px;">Visibility</label>
                             <div id="visibilityDisplay" style="display:flex; align-items:center; gap:12px;">
-                                <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
-                                    <input type="radio" name="visibility" value="visible" checked style="margin:0;">
+                                <label style="display:flex; align-items:center; gap:8px; cursor:default;">
+                                    <input type="radio" name="visibility" value="visible" @(ViewBag.SelectedActivity != null && ((ASI.Basecode.Services.ServiceModels.TeacherActivityModel)ViewBag.SelectedActivity).IsVisible == true ? "checked" : "") disabled style="margin:0; cursor:not-allowed;">
                                     <span style="color:#111827; font-size:14px;">Visible to students</span>
                                 </label>
-                                <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
-                                    <input type="radio" name="visibility" value="hidden" style="margin:0;">
+                                <label style="display:flex; align-items:center; gap:8px; cursor:default;">
+                                    <input type="radio" name="visibility" value="hidden" @(ViewBag.SelectedActivity != null && ((ASI.Basecode.Services.ServiceModels.TeacherActivityModel)ViewBag.SelectedActivity).IsVisible == false ? "checked" : "") disabled style="margin:0; cursor:not-allowed;">
                                     <span style="color:#111827; font-size:14px;">Hidden from students</span>
                                 </label>
                             </div>
                             <div id="visibilityEdit" style="display:flex; align-items:center; gap:12px; display:none;">
                                 <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
-                                    <input type="radio" name="visibilityEdit" value="visible" checked style="margin:0;">
+                                    <input type="radio" name="visibilityEdit" value="visible" @(ViewBag.SelectedActivity != null && ((ASI.Basecode.Services.ServiceModels.TeacherActivityModel)ViewBag.SelectedActivity).IsVisible == true ? "checked" : "") style="margin:0; cursor:pointer;">
                                     <span style="color:#111827; font-size:14px;">Visible to students</span>
                                 </label>
                                 <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
-                                    <input type="radio" name="visibilityEdit" value="hidden" style="margin:0;">
+                                    <input type="radio" name="visibilityEdit" value="hidden" @(ViewBag.SelectedActivity != null && ((ASI.Basecode.Services.ServiceModels.TeacherActivityModel)ViewBag.SelectedActivity).IsVisible == false ? "checked" : "") style="margin:0; cursor:pointer;">
                                     <span style="color:#111827; font-size:14px;">Hidden from students</span>
                                 </label>
                             </div>
@@ -151,125 +180,94 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <tr style="border-bottom:1px solid #e5e7eb;">
-                        <td style="padding:16px; color:#111827; font-weight:500;">John</td>
-                        <td style="padding:16px; color:#111827; font-weight:500;">Smith</td>
-                        <td style="padding:16px;" id="grade-john-smith">
-                            <span class="grade-display">45/50 (90%)</span>
-                            <input type="number" class="grade-input" min="0" max="50" value="45" style="display:none; width:80px; padding:4px; border:1px solid #d1d5db; border-radius:4px; text-align:center;">
-                            <button onclick="saveGrade('john-smith')" class="save-grade-btn" style="display:none; background:#059669; color:#ffffff; border:none; border-radius:4px; padding:2px 6px; font-size:12px; font-weight:600; cursor:pointer; margin-left:4px;">Save</button>
-                            <button onclick="cancelGrade('john-smith')" class="cancel-grade-btn" style="display:none; background:#dc2626; color:#ffffff; border:none; border-radius:4px; padding:2px 6px; font-size:12px; font-weight:600; cursor:pointer; margin-left:4px;">Cancel</button>
-                        </td>
-                        <td style="padding:16px;">
-                            <span style="background:#d1fae5; color:#065f46; padding:4px 8px; border-radius:4px; font-size:12px; font-weight:600;">Submitted</span>
-                        </td>
-                        <td style="padding:16px;">
-                            <button onclick="openGradeModal('John Smith', 'Quiz 1: Introduction to Programming')" style="background:#059669; color:#ffffff; border:none; border-radius:6px; padding:6px 12px; font-weight:600; cursor:pointer; margin-right:8px;">Grade Activity</button>
-                            <button onclick="editGrade('john-smith')" style="background:#6b7280; color:#ffffff; border:none; border-radius:6px; padding:6px 12px; font-weight:600; cursor:pointer;">Edit Grade</button>
-                        </td>
-                    </tr>
-                    <tr style="background:#f9fafb; border-bottom:1px solid #e5e7eb;">
-                        <td style="padding:16px; color:#111827; font-weight:500;">Jane</td>
-                        <td style="padding:16px; color:#111827; font-weight:500;">Doe</td>
-                        <td style="padding:16px;" id="grade-jane-doe">
-                            <span class="grade-display">42/50 (84%)</span>
-                            <input type="number" class="grade-input" min="0" max="50" value="42" style="display:none; width:80px; padding:4px; border:1px solid #d1d5db; border-radius:4px; text-align:center;">
-                            <button onclick="saveGrade('jane-doe')" class="save-grade-btn" style="display:none; background:#059669; color:#ffffff; border:none; border-radius:4px; padding:2px 6px; font-size:12px; font-weight:600; cursor:pointer; margin-left:4px;">Save</button>
-                            <button onclick="cancelGrade('jane-doe')" class="cancel-grade-btn" style="display:none; background:#dc2626; color:#ffffff; border:none; border-radius:4px; padding:2px 6px; font-size:12px; font-weight:600; cursor:pointer; margin-left:4px;">Cancel</button>
-                        </td>
-                        <td style="padding:16px;">
-                            <span style="background:#fed7aa; color:#9a3412; padding:4px 8px; border-radius:4px; font-size:12px; font-weight:600;">Late</span>
-                        </td>
-                        <td style="padding:16px;">
-                            <button onclick="openGradeModal('Jane Doe', 'Quiz 1: Introduction to Programming')" style="background:#059669; color:#ffffff; border:none; border-radius:6px; padding:6px 12px; font-weight:600; cursor:pointer; margin-right:8px;">Grade Activity</button>
-                            <button onclick="editGrade('jane-doe')" style="background:#6b7280; color:#ffffff; border:none; border-radius:6px; padding:6px 12px; font-weight:600; cursor:pointer;">Edit Grade</button>
-                        </td>
-                    </tr>
-                    <tr style="border-bottom:1px solid #e5e7eb;">
-                        <td style="padding:16px; color:#111827; font-weight:500;">Bob</td>
-                        <td style="padding:16px; color:#111827; font-weight:500;">Johnson</td>
-                        <td style="padding:16px;" id="grade-bob-johnson">
-                            <span class="grade-display">35/50 (70%)</span>
-                            <input type="number" class="grade-input" min="0" max="50" value="35" style="display:none; width:80px; padding:4px; border:1px solid #d1d5db; border-radius:4px; text-align:center;">
-                            <button onclick="saveGrade('bob-johnson')" class="save-grade-btn" style="display:none; background:#059669; color:#ffffff; border:none; border-radius:4px; padding:2px 6px; font-size:12px; font-weight:600; cursor:pointer; margin-left:4px;">Save</button>
-                            <button onclick="cancelGrade('bob-johnson')" class="cancel-grade-btn" style="display:none; background:#dc2626; color:#ffffff; border:none; border-radius:4px; padding:2px 6px; font-size:12px; font-weight:600; cursor:pointer; margin-left:4px;">Cancel</button>
-                        </td>
-                        <td style="padding:16px;">
-                            <span style="background:#d1fae5; color:#065f46; padding:4px 8px; border-radius:4px; font-size:12px; font-weight:600;">Graded</span>
-                        </td>
-                        <td style="padding:16px;">
-                            <button onclick="openGradeModal('Bob Johnson', 'Quiz 1: Introduction to Programming')" style="background:#059669; color:#ffffff; border:none; border-radius:6px; padding:6px 12px; font-weight:600; cursor:pointer; margin-right:8px;">Grade Activity</button>
-                            <button onclick="editGrade('bob-johnson')" style="background:#6b7280; color:#ffffff; border:none; border-radius:6px; padding:6px 12px; font-weight:600; cursor:pointer;">Edit Grade</button>
-                        </td>
-                    </tr>
-                    <tr style="background:#f9fafb; border-bottom:1px solid #e5e7eb;">
-                        <td style="padding:16px; color:#111827; font-weight:500;">Alice</td>
-                        <td style="padding:16px; color:#111827; font-weight:500;">Brown</td>
-                        <td style="padding:16px;" id="grade-alice-brown">
-                            <span class="grade-display">Not graded</span>
-                            <input type="number" class="grade-input" min="0" max="50" placeholder="0" style="display:none; width:80px; padding:4px; border:1px solid #d1d5db; border-radius:4px; text-align:center;">
-                            <button onclick="saveGrade('alice-brown')" class="save-grade-btn" style="display:none; background:#059669; color:#ffffff; border:none; border-radius:4px; padding:2px 6px; font-size:12px; font-weight:600; cursor:pointer; margin-left:4px;">Save</button>
-                            <button onclick="cancelGrade('alice-brown')" class="cancel-grade-btn" style="display:none; background:#dc2626; color:#ffffff; border:none; border-radius:4px; padding:2px 6px; font-size:12px; font-weight:600; cursor:pointer; margin-left:4px;">Cancel</button>
-                        </td>
-                        <td style="padding:16px;">
-                            <span style="background:#e5e7eb; color:#374151; padding:4px 8px; border-radius:4px; font-size:12px; font-weight:600;">Submitted</span>
-                        </td>
-                        <td style="padding:16px;">
-                            <button onclick="openGradeModal('Alice Brown', 'Quiz 1: Introduction to Programming')" style="background:#059669; color:#ffffff; border:none; border-radius:6px; padding:6px 12px; font-weight:600; cursor:pointer; margin-right:8px;">Grade Activity</button>
-                            <button onclick="editGrade('alice-brown')" style="background:#6b7280; color:#ffffff; border:none; border-radius:6px; padding:6px 12px; font-weight:600; cursor:pointer;">Edit Grade</button>
-                        </td>
-                    </tr>
-                    <tr style="border-bottom:1px solid #e5e7eb;">
-                        <td style="padding:16px; color:#111827; font-weight:500;">Charlie</td>
-                        <td style="padding:16px; color:#111827; font-weight:500;">Wilson</td>
-                        <td style="padding:16px;" id="grade-charlie-wilson">
-                            <span class="grade-display">48/50 (96%)</span>
-                            <input type="number" class="grade-input" min="0" max="50" value="48" style="display:none; width:80px; padding:4px; border:1px solid #d1d5db; border-radius:4px; text-align:center;">
-                            <button onclick="saveGrade('charlie-wilson')" class="save-grade-btn" style="display:none; background:#059669; color:#ffffff; border:none; border-radius:4px; padding:2px 6px; font-size:12px; font-weight:600; cursor:pointer; margin-left:4px;">Save</button>
-                            <button onclick="cancelGrade('charlie-wilson')" class="cancel-grade-btn" style="display:none; background:#dc2626; color:#ffffff; border:none; border-radius:4px; padding:2px 6px; font-size:12px; font-weight:600; cursor:pointer; margin-left:4px;">Cancel</button>
-                        </td>
-                        <td style="padding:16px;">
-                            <span style="background:#d1fae5; color:#065f46; padding:4px 8px; border-radius:4px; font-size:12px; font-weight:600;">Graded</span>
-                        </td>
-                        <td style="padding:16px;">
-                            <button onclick="openGradeModal('Charlie Wilson', 'Quiz 1: Introduction to Programming')" style="background:#059669; color:#ffffff; border:none; border-radius:6px; padding:6px 12px; font-weight:600; cursor:pointer; margin-right:8px;">Grade Activity</button>
-                            <button onclick="editGrade('charlie-wilson')" style="background:#6b7280; color:#ffffff; border:none; border-radius:6px; padding:6px 12px; font-weight:600; cursor:pointer;">Edit Grade</button>
-                        </td>
-                    </tr>
-                    <tr style="background:#f9fafb; border-bottom:1px solid #e5e7eb;">
-                        <td style="padding:16px; color:#111827; font-weight:500;">David</td>
-                        <td style="padding:16px; color:#111827; font-weight:500;">Lee</td>
-                        <td style="padding:16px;" id="grade-david-lee">
-                            <span class="grade-display">Not graded</span>
-                            <input type="number" class="grade-input" min="0" max="50" placeholder="0" style="display:none; width:80px; padding:4px; border:1px solid #d1d5db; border-radius:4px; text-align:center;">
-                            <button onclick="saveGrade('david-lee')" class="save-grade-btn" style="display:none; background:#059669; color:#ffffff; border:none; border-radius:4px; padding:2px 6px; font-size:12px; font-weight:600; cursor:pointer; margin-left:4px;">Save</button>
-                            <button onclick="cancelGrade('david-lee')" class="cancel-grade-btn" style="display:none; background:#dc2626; color:#ffffff; border:none; border-radius:4px; padding:2px 6px; font-size:12px; font-weight:600; cursor:pointer; margin-left:4px;">Cancel</button>
-                        </td>
-                        <td style="padding:16px;">
-                            <span style="background:#fed7aa; color:#9a3412; padding:4px 8px; border-radius:4px; font-size:12px; font-weight:600;">Late</span>
-                        </td>
-                        <td style="padding:16px;">
-                            <button onclick="openGradeModal('David Lee', 'Quiz 1: Introduction to Programming')" style="background:#059669; color:#ffffff; border:none; border-radius:6px; padding:6px 12px; font-weight:600; cursor:pointer; margin-right:8px;">Grade Activity</button>
-                            <button onclick="editGrade('david-lee')" style="background:#6b7280; color:#ffffff; border:none; border-radius:6px; padding:6px 12px; font-weight:600; cursor:pointer;">Edit Grade</button>
-                        </td>
-                    </tr>
-                    <tr style="border-bottom:1px solid #e5e7eb;">
-                        <td style="padding:16px; color:#111827; font-weight:500;">Emma</td>
-                        <td style="padding:16px; color:#111827; font-weight:500;">Davis</td>
-                        <td style="padding:16px;" id="grade-emma-davis">
-                            <span class="grade-display">38/50 (76%)</span>
-                            <input type="number" class="grade-input" min="0" max="50" value="38" style="display:none; width:80px; padding:4px; border:1px solid #d1d5db; border-radius:4px; text-align:center;">
-                            <button onclick="saveGrade('emma-davis')" class="save-grade-btn" style="display:none; background:#059669; color:#ffffff; border:none; border-radius:4px; padding:2px 6px; font-size:12px; font-weight:600; cursor:pointer; margin-left:4px;">Save</button>
-                            <button onclick="cancelGrade('emma-davis')" class="cancel-grade-btn" style="display:none; background:#dc2626; color:#ffffff; border:none; border-radius:4px; padding:2px 6px; font-size:12px; font-weight:600; cursor:pointer; margin-left:4px;">Cancel</button>
-                        </td>
-                        <td style="padding:16px;">
-                            <span style="background:#d1fae5; color:#065f46; padding:4px 8px; border-radius:4px; font-size:12px; font-weight:600;">Submitted</span>
-                        </td>
-                        <td style="padding:16px;">
-                            <button onclick="openGradeModal('Emma Davis', 'Quiz 1: Introduction to Programming')" style="background:#059669; color:#ffffff; border:none; border-radius:6px; padding:6px 12px; font-weight:600; cursor:pointer; margin-right:8px;">Grade Activity</button>
-                            <button onclick="editGrade('emma-davis')" style="background:#6b7280; color:#ffffff; border:none; border-radius:6px; padding:6px 12px; font-weight:600; cursor:pointer;">Edit Grade</button>
-                        </td>
-                    </tr>
+                    @{
+                        var students = ViewBag.Students as System.Collections.Generic.List<object>;
+                        var selectedActivity = ViewBag.SelectedActivity as ASI.Basecode.Services.ServiceModels.TeacherActivityModel;
+                        var maxScore = selectedActivity?.MaxScore ?? 100;
+                    }
+                    @if (students != null && students.Any())
+                    {
+                        @foreach (var studentObj in students)
+                        {
+                            var student = studentObj as System.Collections.Generic.Dictionary<string, object>;
+                            if (student == null) continue;
+                            
+                            var rowIndex = students.IndexOf(studentObj);
+                            var rowClass = rowIndex % 2 == 0 ? "" : "background:#f9fafb;";
+                            var studentId = student["Id"]?.ToString()?.Replace("-", "") ?? "";
+                            var firstName = student["FirstName"]?.ToString() ?? "";
+                            var lastName = student["LastName"]?.ToString() ?? "";
+                            var fullName = $"{firstName} {lastName}";
+                            // Get grade - handle both int and float, and check if submission exists
+                            var gradeValue = student["Grade"];
+                            int? grade = null;
+                            if (gradeValue != null)
+                            {
+                                if (gradeValue is int intGrade)
+                                {
+                                    grade = intGrade;
+                                }
+                                else if (gradeValue is float floatGrade)
+                                {
+                                    grade = (int)floatGrade;
+                                }
+                                else if (int.TryParse(gradeValue.ToString(), out int parsedGrade))
+                                {
+                                    grade = parsedGrade;
+                                }
+                            }
+                            
+                            var status = student["Status"]?.ToString() ?? "Not submitted";
+                            var statusClass = status == "Graded" ? "background:#d1fae5; color:#065f46;" : 
+                                            status == "Submitted" ? "background:#e5e7eb; color:#374151;" : 
+                                            status == "Late" ? "background:#fed7aa; color:#9a3412;" : 
+                                            "background:#e5e7eb; color:#374151;";
+                            
+                            // Show grade if it exists (even if 0), or "Not graded" if no submission
+                            var gradeDisplay = grade.HasValue ? $"{grade.Value}/{maxScore} ({Math.Round((double)grade.Value / maxScore * 100)}%)" : "Not graded";
+                            
+                            <tr style="border-bottom:1px solid #e5e7eb; @rowClass">
+                                <td style="padding:16px; color:#111827; font-weight:500;">@firstName</td>
+                                <td style="padding:16px; color:#111827; font-weight:500;">@lastName</td>
+                                <td style="padding:16px;" id="grade-@studentId">
+                                    <div style="display:flex; align-items:center; gap:4px;">
+                                        <span class="grade-display">@gradeDisplay</span>
+                                        <input type="number" class="grade-input" min="0" max="@maxScore" value="@(grade ?? 0)" data-student-id="@student["Id"]" data-activity-id="@(selectedActivity?.Id ?? 0)" style="display:none !important; width:80px; padding:4px; border:1px solid #d1d5db; border-radius:4px; text-align:center;">
+                                        <button onclick="saveGrade('@studentId', '@student["Id"]', @(selectedActivity?.Id ?? 0))" class="save-grade-btn" style="display:none !important; background:#059669; color:#ffffff; border:none; border-radius:50%; width:24px; height:24px; padding:0; cursor:pointer; margin-left:4px; align-items:center; justify-content:center; font-size:14px; font-weight:bold;" title="Save">✓</button>
+                                        <button onclick="cancelGrade('@studentId')" class="cancel-grade-btn" style="display:none !important; background:#dc2626; color:#ffffff; border:none; border-radius:50%; width:24px; height:24px; padding:0; cursor:pointer; margin-left:4px; align-items:center; justify-content:center; font-size:14px; font-weight:bold;" title="Cancel">×</button>
+                                    </div>
+                                </td>
+                                <td style="padding:16px;">
+                                    <span style="@statusClass padding:4px 8px; border-radius:4px; font-size:12px; font-weight:600;">@status</span>
+                                </td>
+                                <td style="padding:16px;">
+                                    @{
+                                        var submissionContent = student.ContainsKey("SubmissionContent") ? student["SubmissionContent"]?.ToString() ?? "" : "";
+                                        var feedback = student.ContainsKey("Feedback") ? student["Feedback"]?.ToString() ?? "" : "";
+                                        var hasFeedback = !string.IsNullOrEmpty(feedback);
+                                        var feedbackDate = student.ContainsKey("FeedbackDate") ? student["FeedbackDate"]?.ToString() ?? "" : "";
+                                    }
+                                    <button onclick="openGradeModal('@fullName', '@(selectedActivity?.Title ?? "Activity")', '@student["Id"]', @(selectedActivity?.Id ?? 0), this)" 
+                                            data-submission-content="@Html.Raw(System.Web.HttpUtility.HtmlAttributeEncode(submissionContent))"
+                                            data-feedback="@Html.Raw(System.Web.HttpUtility.HtmlAttributeEncode(feedback))"
+                                            data-has-feedback="@(hasFeedback ? "true" : "false")"
+                                            data-feedback-date="@feedbackDate"
+                                            style="background:#059669; color:#ffffff; border:none; border-radius:6px; padding:6px 12px; font-weight:600; cursor:pointer; margin-right:8px;">Grade Activity</button>
+                                    <button onclick="editGrade('@studentId', @maxScore)" style="background:#6b7280; color:#ffffff; border:none; border-radius:6px; padding:6px 12px; font-weight:600; cursor:pointer;">Edit Grade</button>
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td style="padding:16px; color:#6b7280; text-align:center;"></td>
+                            <td style="padding:16px; color:#6b7280; text-align:center;"></td>
+                            <td style="padding:16px; color:#6b7280; text-align:center;">No students enrolled in this course.</td>
+                            <td style="padding:16px; color:#6b7280; text-align:center;"></td>
+                            <td style="padding:16px; color:#6b7280; text-align:center;"></td>
+                        </tr>
+                    }
                 </tbody>
             </table>
         </div>
@@ -289,12 +287,37 @@
                     <strong id="studentNameDisplay">Student Name</strong> answered <strong id="activityNameDisplay">Activity Name</strong>
                 </div>
                 <div style="margin-bottom:20px;">
+                    <label style="display:block; font-weight:600; color:#374151; margin-bottom:8px;">Student's Answer</label>
+                    <div id="submissionContentDisplay" style="background:#f9fafb; border:1px solid #e5e7eb; border-radius:8px; padding:16px; min-height:100px; max-height:300px; overflow-y:auto; white-space:pre-wrap; word-wrap:break-word; font-size:14px; line-height:1.6; color:#111827;">
+                        <em style="color:#9ca3af;">No submission content available.</em>
+                    </div>
+                </div>
+                <!-- Existing Feedback Display (like a post) -->
+                <div id="existingFeedbackContainer" style="margin-bottom:20px; display:none;">
+                    <label style="display:block; font-weight:600; color:#374151; margin-bottom:8px;">Feedback</label>
+                    <div id="existingFeedbackDisplay" style="background:#f9fafb; border:1px solid #e5e7eb; border-radius:8px; padding:16px; margin-bottom:12px;">
+                        <div style="display:flex; align-items:center; margin-bottom:8px;">
+                            <div style="width:32px; height:32px; background:#059669; border-radius:50%; display:flex; align-items:center; justify-content:center; color:#ffffff; font-weight:bold; margin-right:12px; font-size:14px;">T</div>
+                            <div>
+                                <div style="font-weight:600; color:#111827; font-size:14px;">Teacher</div>
+                                <div style="font-size:12px; color:#6b7280;" id="feedbackDateDisplay"></div>
+                            </div>
+                        </div>
+                        <div id="existingFeedbackText" style="color:#111827; font-size:14px; line-height:1.6; white-space:pre-wrap; word-wrap:break-word;"></div>
+                    </div>
+                    <div style="padding:12px; background:#fef3c7; border:1px solid #fbbf24; border-radius:6px; color:#92400e; font-size:13px;">
+                        <strong>Note:</strong> Feedback has already been provided. You cannot modify it.
+                    </div>
+                </div>
+                
+                <!-- New Feedback Input (only shown if no feedback exists) -->
+                <div id="newFeedbackContainer" style="margin-bottom:20px;">
                     <label style="display:block; font-weight:600; color:#374151; margin-bottom:8px;">Feedback</label>
                     <textarea id="feedbackInput" rows="4" placeholder="Provide feedback for the student's work..." style="width:100%; padding:12px; border:1px solid #d1d5db; border-radius:8px; font-size:14px; line-height:1.5; resize:vertical;"></textarea>
                 </div>
                 <div class="grade-modal-actions">
-                    <button onclick="closeGradeModal()" style="padding:10px 24px; border-radius:8px; font-size:14px; font-weight:600; cursor:pointer; background:#ffffff; color:#6b7280; border:1px solid #d1d5db;">Cancel</button>
-                    <button onclick="confirmGrade()" style="padding:10px 24px; border-radius:8px; font-size:14px; font-weight:600; cursor:pointer; background:#059669; color:#ffffff; border:none;">Confirm</button>
+                    <button onclick="closeGradeModal()" style="padding:10px 24px; border-radius:8px; font-size:14px; font-weight:600; cursor:pointer; background:#ffffff; color:#6b7280; border:1px solid #d1d5db;">Close</button>
+                    <button id="confirmGradeBtn" onclick="confirmGrade()" style="padding:10px 24px; border-radius:8px; font-size:14px; font-weight:600; cursor:pointer; background:#059669; color:#ffffff; border:none;">Confirm</button>
                 </div>
             </div>
         </div>
@@ -332,8 +355,18 @@
             </div>
 
             <div style="margin-bottom:20px;">
-                <label style="display:block; font-weight:600; color:#374151; margin-bottom:8px;">Due Date</label>
-                <input id="addActivityDueDate" type="datetime-local" style="width:100%; padding:8px 12px; border:1px solid #d1d5db; border-radius:6px; font-size:16px;">
+                <label style="display:block; font-weight:600; color:#374151; margin-bottom:8px;">Due Date & Time *</label>
+                <div style="display:flex; gap:12px; align-items:end;">
+                    <div style="flex:1;">
+                        <label style="display:block; font-weight:500; color:#6b7280; margin-bottom:4px; font-size:14px;">Date</label>
+                        <input id="addActivityDueDate" type="date" min="@DateTime.Now.ToString("yyyy-MM-dd")" style="width:100%; padding:8px 12px; border:1px solid #d1d5db; border-radius:6px; font-size:16px;">
+                    </div>
+                    <div style="flex:1;">
+                        <label style="display:block; font-weight:500; color:#6b7280; margin-bottom:4px; font-size:14px;">Time</label>
+                        <input id="addActivityDueTime" type="time" style="width:100%; padding:8px 12px; border:1px solid #d1d5db; border-radius:6px; font-size:16px;">
+                    </div>
+                </div>
+                <small style="color:#6b7280; font-size:12px; margin-top:4px; display:block;">Cannot set due date in the past. Default is set to tomorrow at 11:59 PM.</small>
             </div>
 
             <div style="margin-bottom:20px;">
@@ -645,46 +678,72 @@
     </style>
     <script>
         $(document).ready(function() {
-            $('#activitiesTable').DataTable({
-                "pageLength": 10,
-                "lengthChange": false,
-                "searching": false,
-                "ordering": true,
-                "info": true,
-                "paging": true,
-                "language": {
-                    "paginate": {
-                        "previous": "Prev",
-                        "next": "Next"
+            // Initialize DataTable only if table has correct structure
+            var activitiesTable = $('#activitiesTable');
+            if (activitiesTable.length > 0) {
+                var tbodyRows = activitiesTable.find('tbody tr');
+                var headerCols = activitiesTable.find('thead th').length;
+                
+                // Check if all rows have the correct number of columns
+                var hasValidStructure = true;
+                tbodyRows.each(function() {
+                    var rowCols = $(this).find('td').length;
+                    if (rowCols !== headerCols && rowCols !== 0) {
+                        hasValidStructure = false;
+                        return false; // break loop
                     }
+                });
+                
+                if (hasValidStructure && headerCols > 0) {
+                    activitiesTable.DataTable({
+                        "pageLength": 10,
+                        "lengthChange": false,
+                        "searching": false,
+                        "ordering": true,
+                        "info": true,
+                        "paging": true,
+                        "language": {
+                            "paginate": {
+                                "previous": "Prev",
+                                "next": "Next"
+                            }
+                        }
+                    });
                 }
-            });
+            }
 
-            $('#performanceTable').DataTable({
-                "pageLength": 10,
-                "lengthChange": false,
-                "searching": true,
-                "ordering": true,
-                "info": true,
-                "paging": true,
-                "language": {
-                    "paginate": {
-                        "previous": "Prev",
-                        "next": "Next"
+            // Initialize DataTables for performance table
+            // Check if table has actual data rows (not just the empty message)
+            var performanceTable = $('#performanceTable');
+            var tbodyRows = performanceTable.find('tbody tr');
+            var hasDataRows = tbodyRows.length > 0 && 
+                             tbodyRows.first().find('td').length === 5 &&
+                             !tbodyRows.first().text().trim().includes('No students enrolled');
+            
+            if (hasDataRows) {
+                performanceTable.DataTable({
+                    "pageLength": 10,
+                    "lengthChange": false,
+                    "searching": true,
+                    "ordering": true,
+                    "info": true,
+                    "paging": true,
+                    "language": {
+                        "paginate": {
+                            "previous": "Prev",
+                            "next": "Next"
+                        }
                     }
-                }
-            });
+                });
+            } else {
+                // If no data, just ensure the table displays properly without DataTables
+                performanceTable.css('display', 'table');
+            }
         });
 
-        function selectActivity(activityName) {
-            // Remove selected class from all rows
-            $('#activitiesTable tbody tr').removeClass('selected-activity');
-
-            // Add selected class to clicked row
-            event.currentTarget.classList.add('selected-activity');
-
-            // Here you would typically update the right panel with the selected activity details
-            console.log('Selected activity:', activityName);
+        function selectActivity(activityId, activityName) {
+            // Redirect to the same page with activityId parameter
+            window.location.href = '@Url.Action("CourseActivities", "Teacher", new { id = Model.CourseId })?activityId=' + activityId;
         }
 
         let isEditMode = false;
@@ -708,13 +767,30 @@
                 document.getElementById('descriptionInput').style.display = 'block';
 
                 document.getElementById('dueDateDisplay').style.display = 'none';
-                document.getElementById('dueDateInput').style.display = 'block';
+                document.getElementById('dueDateInputContainer').style.display = 'block';
+                
+                // Update min attribute to current date when editing
+                const now = new Date();
+                const nowYear = now.getFullYear();
+                const nowMonth = String(now.getMonth() + 1).padStart(2, '0');
+                const nowDay = String(now.getDate()).padStart(2, '0');
+                const minDate = `${nowYear}-${nowMonth}-${nowDay}`;
+                document.getElementById('dueDateInput').setAttribute('min', minDate);
 
                 document.getElementById('maxScoreDisplay').style.display = 'none';
                 document.getElementById('maxScoreInput').style.display = 'block';
 
                 document.getElementById('visibilityDisplay').style.display = 'none';
                 document.getElementById('visibilityEdit').style.display = 'flex';
+                
+                // Preserve current visibility state when entering edit mode
+                const currentVisibility = document.querySelector('input[name="visibility"]:checked');
+                if (currentVisibility) {
+                    const visibilityEditRadio = document.querySelector(`input[name="visibilityEdit"][value="${currentVisibility.value}"]`);
+                    if (visibilityEditRadio) {
+                        visibilityEditRadio.checked = true;
+                    }
+                }
             } else {
                 // Switch back to view mode
                 cancelEdit();
@@ -722,38 +798,46 @@
         }
 
         function saveChanges() {
-            // Get values from input fields
+            const activityId = document.getElementById('activityId').value;
+            const courseId = @Model.CourseId;
             const name = document.getElementById('nameInput').value;
             const description = document.getElementById('descriptionInput').value;
-            const dueDate = new Date(document.getElementById('dueDateInput').value);
+            const dueDate = document.getElementById('dueDateInput').value;
+            const dueTime = document.getElementById('dueTimeInput').value;
             const maxScore = document.getElementById('maxScoreInput').value;
             const visibility = document.querySelector('input[name="visibilityEdit"]:checked').value;
 
-            // Update display fields
-            document.getElementById('nameDisplay').textContent = name;
-            document.getElementById('descriptionDisplay').textContent = description;
-            document.getElementById('dueDateDisplay').textContent = dueDate.toLocaleDateString('en-US', {
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric'
-            }) + ' - ' + dueDate.toLocaleTimeString('en-US', {
-                hour: 'numeric',
-                minute: '2-digit',
-                hour12: true
-            });
-            document.getElementById('maxScoreDisplay').textContent = maxScore + ' points';
+            // Combine date and time
+            const combinedDateTime = dueDate && dueTime ? `${dueDate}T${dueTime}` : dueDate;
 
-            // Update visibility display
-            const visibilityInputs = document.querySelectorAll('input[name="visibility"]');
-            visibilityInputs.forEach(input => {
-                input.checked = (input.value === visibility);
-            });
+            // Validate that due date is not in the past
+            if (combinedDateTime) {
+                const selectedDate = new Date(combinedDateTime);
+                const now = new Date();
+                if (selectedDate < now) {
+                    alert('Due date cannot be in the past. Please select a future date and time.');
+                    document.getElementById('dueDateInput').focus();
+                    return;
+                }
+            }
 
-            // Switch back to view mode
-            toggleEditMode();
-
-            // Here you would typically send the data to the server
-            console.log('Saved changes:', { name, description, dueDate, maxScore, visibility });
+            // Submit form to server
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = '@Url.Action("UpdateActivity", "Teacher")';
+            
+            form.innerHTML = `
+                <input type="hidden" name="id" value="${courseId}" />
+                <input type="hidden" name="activityId" value="${activityId}" />
+                <input type="hidden" name="Title" value="${name}" />
+                <input type="hidden" name="Description" value="${description}" />
+                <input type="hidden" name="DueDate" value="${combinedDateTime}" />
+                <input type="hidden" name="MaxScore" value="${maxScore}" />
+                <input type="hidden" name="IsVisible" value="${visibility === 'visible' ? 'true' : 'false'}" />
+            `;
+            
+            document.body.appendChild(form);
+            form.submit();
         }
 
         function cancelEdit() {
@@ -774,21 +858,84 @@
             document.getElementById('descriptionInput').style.display = 'none';
 
             document.getElementById('dueDateDisplay').style.display = 'block';
-            document.getElementById('dueDateInput').style.display = 'none';
+            document.getElementById('dueDateInputContainer').style.display = 'none';
 
             document.getElementById('maxScoreDisplay').style.display = 'block';
             document.getElementById('maxScoreInput').style.display = 'none';
 
             document.getElementById('visibilityDisplay').style.display = 'flex';
             document.getElementById('visibilityEdit').style.display = 'none';
+            
+            // Re-enable display mode radio buttons (they should be disabled/read-only)
+            const displayRadios = document.querySelectorAll('input[name="visibility"]');
+            displayRadios.forEach(radio => {
+                radio.disabled = true;
+            });
         }
 
+        let currentStudentId = '';
+        let currentActivityId = 0;
+
         // Grade Activity Modal Functions
-        function openGradeModal(studentName, activityName) {
+        function openGradeModal(studentName, activityName, studentId, activityId, buttonElement) {
+            currentStudentId = studentId;
+            currentActivityId = activityId;
             document.getElementById('studentNameDisplay').textContent = studentName;
             document.getElementById('activityNameDisplay').textContent = activityName;
             document.getElementById('modalActivityTitle').textContent = 'Grade: ' + activityName;
-            document.getElementById('feedbackInput').value = '';
+            
+            // Get data from button attributes
+            const submissionContent = buttonElement ? buttonElement.getAttribute('data-submission-content') || '' : '';
+            const feedback = buttonElement ? buttonElement.getAttribute('data-feedback') || '' : '';
+            const hasFeedback = buttonElement ? buttonElement.getAttribute('data-has-feedback') === 'true' : false;
+            
+            // Display student's submission content
+            const submissionDisplay = document.getElementById('submissionContentDisplay');
+            if (submissionContent && submissionContent.trim() !== '') {
+                // Decode HTML entities and preserve line breaks
+                const formattedContent = submissionContent
+                    .replace(/&amp;/g, '&')
+                    .replace(/&lt;/g, '<')
+                    .replace(/&gt;/g, '>')
+                    .replace(/&quot;/g, '"')
+                    .replace(/&#39;/g, "'")
+                    .replace(/\n/g, '<br>');
+                submissionDisplay.innerHTML = formattedContent;
+                submissionDisplay.style.color = '#111827';
+            } else {
+                submissionDisplay.innerHTML = '<em style="color:#9ca3af;">No submission content available.</em>';
+            }
+            
+            // Handle feedback display
+            const existingFeedbackContainer = document.getElementById('existingFeedbackContainer');
+            const newFeedbackContainer = document.getElementById('newFeedbackContainer');
+            const confirmBtn = document.getElementById('confirmGradeBtn');
+            
+            if (hasFeedback && feedback && feedback.trim() !== '') {
+                // Show existing feedback (like a post)
+                const feedbackText = feedback
+                    .replace(/&amp;/g, '&')
+                    .replace(/&lt;/g, '<')
+                    .replace(/&gt;/g, '>')
+                    .replace(/&quot;/g, '"')
+                    .replace(/&#39;/g, "'")
+                    .replace(/\n/g, '<br>');
+                
+                document.getElementById('existingFeedbackText').innerHTML = feedbackText;
+                const feedbackDate = buttonElement ? buttonElement.getAttribute('data-feedback-date') || '' : '';
+                document.getElementById('feedbackDateDisplay').textContent = feedbackDate || new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+                
+                existingFeedbackContainer.style.display = 'block';
+                newFeedbackContainer.style.display = 'none';
+                confirmBtn.style.display = 'none'; // Hide confirm button if feedback exists
+            } else {
+                // Show new feedback input
+                document.getElementById('feedbackInput').value = '';
+                existingFeedbackContainer.style.display = 'none';
+                newFeedbackContainer.style.display = 'block';
+                confirmBtn.style.display = 'inline-block';
+            }
+            
             document.getElementById('gradeActivityModal').classList.add('show');
         }
 
@@ -797,44 +944,88 @@
         }
 
         function confirmGrade() {
-            const feedback = document.getElementById('feedbackInput').value;
-            const studentName = document.getElementById('studentNameDisplay').textContent;
-            const activityName = document.getElementById('activityNameDisplay').textContent;
+            const feedbackInput = document.getElementById('feedbackInput');
+            const feedback = feedbackInput ? feedbackInput.value.trim() : '';
+            
+            // Check if feedback already exists (shouldn't happen, but double-check)
+            const existingFeedbackContainer = document.getElementById('existingFeedbackContainer');
+            if (existingFeedbackContainer && existingFeedbackContainer.style.display !== 'none') {
+                alert('Feedback has already been provided for this student.');
+                return;
+            }
+            
+            if (!feedback) {
+                alert('Please provide feedback before confirming.');
+                if (feedbackInput) feedbackInput.focus();
+                return;
+            }
+            
+            // Hide the textarea and show feedback as a post immediately
+            const newFeedbackContainer = document.getElementById('newFeedbackContainer');
+            const confirmBtn = document.getElementById('confirmGradeBtn');
+            
+            // Hide textarea and confirm button
+            newFeedbackContainer.style.display = 'none';
+            confirmBtn.style.display = 'none';
+            
+            // Show existing feedback container with the new feedback
+            const feedbackText = feedback
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;')
+                .replace(/\n/g, '<br>');
+            
+            document.getElementById('existingFeedbackText').innerHTML = '<strong>Feedback:</strong> ' + feedbackText;
+            const now = new Date();
+            document.getElementById('feedbackDateDisplay').textContent = now.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) + ' at ' + now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+            existingFeedbackContainer.style.display = 'block';
+            
+            const score = document.querySelector('.grade-input[data-student-id="' + currentStudentId + '"]')?.value || 0;
+            const courseId = @Model.CourseId;
 
-            // Close grade modal
-            closeGradeModal();
-
-            // Show success modal
-            document.getElementById('successModal').classList.add('show');
-
-            // Here you would typically send the grade and feedback to the server
-            console.log('Graded activity:', { studentName, activityName, feedback });
+            // Submit form to server
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = '@Url.Action("GradeActivity", "Teacher")';
+            
+            form.innerHTML = `
+                <input type="hidden" name="id" value="${courseId}" />
+                <input type="hidden" name="ActivityId" value="${currentActivityId}" />
+                <input type="hidden" name="StudentId" value="${currentStudentId}" />
+                <input type="hidden" name="Score" value="${score}" />
+                <input type="hidden" name="Feedback" value="${feedback}" />
+                <input type="hidden" name="SubmissionStatus" value="Graded" />
+            `;
+            
+            document.body.appendChild(form);
+            form.submit();
         }
 
         function closeSuccessModal() {
             document.getElementById('successModal').classList.remove('show');
         }
 
-        function editGrade(studentId) {
+        function editGrade(studentId, maxScore) {
             const gradeCell = document.querySelector(`#grade-${studentId}`);
             const gradeDisplay = gradeCell.querySelector('.grade-display');
             const gradeInput = gradeCell.querySelector('.grade-input');
-            const editBtn = gradeCell.querySelector('.edit-grade-btn');
             const saveBtn = gradeCell.querySelector('.save-grade-btn');
             const cancelBtn = gradeCell.querySelector('.cancel-grade-btn');
 
-            // Hide display and edit button, show input and action buttons
+            // Hide display, show input and action buttons
             gradeDisplay.style.display = 'none';
-            editBtn.style.display = 'none';
-            gradeInput.style.display = 'inline-block';
-            saveBtn.style.display = 'inline-block';
-            cancelBtn.style.display = 'inline-block';
+            gradeInput.style.setProperty('display', 'inline-block', 'important');
+            saveBtn.style.setProperty('display', 'flex', 'important');
+            cancelBtn.style.setProperty('display', 'flex', 'important');
 
             // Set input value to current grade (extract number from "45/50 (90%)" format)
             const currentGradeText = gradeDisplay.textContent.trim();
             const gradeMatch = currentGradeText.match(/^(\d+)/);
             const currentGrade = gradeMatch ? gradeMatch[1] : '';
             gradeInput.value = currentGrade;
+            gradeInput.max = maxScore;
 
             // Focus on input
             gradeInput.focus();
@@ -842,41 +1033,131 @@
             // Handle Enter key to save, Escape to cancel
             gradeInput.onkeydown = function(e) {
                 if (e.key === 'Enter') {
-                    saveGrade(studentId);
+                    const studentIdAttr = gradeInput.getAttribute('data-student-id');
+                    const activityIdAttr = gradeInput.getAttribute('data-activity-id');
+                    saveGrade(studentId, studentIdAttr, parseInt(activityIdAttr), maxScore);
                 } else if (e.key === 'Escape') {
                     cancelGrade(studentId);
                 }
             };
         }
 
-        function saveGrade(studentId) {
+        function saveGrade(studentId, studentIdAttr, activityId, maxScore) {
             const gradeCell = document.querySelector(`#grade-${studentId}`);
             const gradeDisplay = gradeCell.querySelector('.grade-display');
             const gradeInput = gradeCell.querySelector('.grade-input');
-            const editBtn = gradeCell.querySelector('.edit-grade-btn');
             const saveBtn = gradeCell.querySelector('.save-grade-btn');
             const cancelBtn = gradeCell.querySelector('.cancel-grade-btn');
 
             // Get the new grade value
             const newGrade = gradeInput.value.trim();
-            const maxScore = 50; // This should come from the activity data
+            const courseId = @Model.CourseId;
+
+            // Validate grade
+            if (!newGrade || isNaN(newGrade) || parseInt(newGrade) < 0 || parseInt(newGrade) > maxScore) {
+                alert(`Please enter a valid grade between 0 and ${maxScore}`);
+                gradeInput.focus();
+                return;
+            }
 
             // Calculate percentage
             const percentage = newGrade ? Math.round((parseInt(newGrade) / maxScore) * 100) : 0;
-            const displayText = newGrade ? `${newGrade}/${maxScore} (${percentage}%)` : '-';
+            const displayText = newGrade ? `${newGrade}/${maxScore} (${percentage}%)` : 'Not graded';
 
-            // Update display with new grade
+            // Update display with new grade IMMEDIATELY (optimistic update)
             gradeDisplay.textContent = displayText;
-
-            // Hide input and action buttons, show display and edit button
             gradeDisplay.style.display = 'inline';
-            editBtn.style.display = 'inline-block';
-            gradeInput.style.display = 'none';
-            saveBtn.style.display = 'none';
-            cancelBtn.style.display = 'none';
+            gradeInput.style.setProperty('display', 'none', 'important');
+            saveBtn.style.setProperty('display', 'none', 'important');
+            cancelBtn.style.setProperty('display', 'none', 'important');
 
-            // Here you would typically send the update to the server
-            console.log(`Grade updated for student ${studentId}: ${newGrade}/${maxScore} (${percentage}%)`);
+            // Submit to server using AJAX to avoid page reload
+            const formData = new FormData();
+            formData.append('id', courseId);
+            formData.append('ActivityId', activityId);
+            formData.append('StudentId', studentIdAttr);
+            formData.append('Score', newGrade);
+            formData.append('SubmissionStatus', 'Graded');
+            formData.append('Feedback', ''); // Empty feedback - backend will preserve existing
+            
+            // Get CSRF token
+            const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value || 
+                         document.querySelector('input[name="RequestVerificationToken"]')?.value ||
+                         '';
+            
+            if (token) {
+                formData.append('__RequestVerificationToken', token);
+            }
+
+            fetch('@Url.Action("GradeActivity", "Teacher")', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                credentials: 'same-origin'
+            })
+            .then(async response => {
+                console.log('Response status:', response.status);
+                console.log('Response headers:', response.headers);
+                
+                // Check content type
+                const contentType = response.headers.get('content-type');
+                console.log('Content-Type:', contentType);
+                
+                if (response.ok) {
+                    if (contentType && contentType.includes('application/json')) {
+                        return await response.json();
+                    } else {
+                        // Response might be HTML or redirect - this means it worked but returned HTML
+                        console.log('Got non-JSON response, assuming success');
+                        return { success: true, message: 'Grade updated successfully' };
+                    }
+                } else {
+                    // Try to get error message from response
+                    let errorMessage = `Server error: ${response.status} ${response.statusText}`;
+                    try {
+                        if (contentType && contentType.includes('application/json')) {
+                            const errorData = await response.json();
+                            errorMessage = errorData.message || errorMessage;
+                        } else {
+                            const text = await response.text();
+                            console.error('Error response text:', text);
+                            errorMessage = 'Failed to save grade. Please check the console for details.';
+                        }
+                    } catch (e) {
+                        console.error('Error parsing error response:', e);
+                    }
+                    throw new Error(errorMessage);
+                }
+            })
+            .then(data => {
+                if (data && data.success) {
+                    // Success - grade is already updated in UI
+                    console.log('Grade updated successfully:', data.message || 'Grade saved');
+                    // Update status cell
+                    const statusCell = gradeCell.closest('tr').querySelector('td:nth-child(4)');
+                    if (statusCell) {
+                        const statusSpan = statusCell.querySelector('span');
+                        if (statusSpan) {
+                            statusSpan.textContent = 'Graded';
+                            statusSpan.style.background = '#d1fae5';
+                            statusSpan.style.color = '#065f46';
+                        }
+                    }
+                } else {
+                    throw new Error(data?.message || 'Failed to save grade');
+                }
+            })
+            .catch(error => {
+                console.error('Error saving grade:', error);
+                console.error('Error details:', {
+                    message: error.message,
+                    stack: error.stack
+                });
+                alert('Error: ' + (error.message || 'An error occurred while saving the grade. Please try again.'));
+                cancelGrade(studentId);
+            });
         }
 
         function cancelGrade(studentId) {
@@ -887,12 +1168,11 @@
             const saveBtn = gradeCell.querySelector('.save-grade-btn');
             const cancelBtn = gradeCell.querySelector('.cancel-grade-btn');
 
-            // Hide input and action buttons, show display and edit button
+            // Hide input and action buttons, show display
             gradeDisplay.style.display = 'inline';
-            editBtn.style.display = 'inline-block';
-            gradeInput.style.display = 'none';
-            saveBtn.style.display = 'none';
-            cancelBtn.style.display = 'none';
+            gradeInput.style.setProperty('display', 'none', 'important');
+            saveBtn.style.setProperty('display', 'none', 'important');
+            cancelBtn.style.setProperty('display', 'none', 'important');
         }
 
         // Close modals when clicking outside
@@ -922,9 +1202,33 @@
             // Reset form fields
             document.getElementById('addActivityName').value = '';
             document.getElementById('addActivityDescription').value = '';
-            document.getElementById('addActivityDueDate').value = '';
             document.getElementById('addActivityMaxScore').value = '';
             document.querySelector('input[name="addActivityVisibility"][value="visible"]').checked = true;
+
+            // Set default due date to tomorrow at 11:59 PM
+            const tomorrow = new Date();
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            tomorrow.setHours(23, 59, 0, 0);
+            
+            // Format date and time separately
+            const year = tomorrow.getFullYear();
+            const month = String(tomorrow.getMonth() + 1).padStart(2, '0');
+            const day = String(tomorrow.getDate()).padStart(2, '0');
+            const hours = String(tomorrow.getHours()).padStart(2, '0');
+            const minutes = String(tomorrow.getMinutes()).padStart(2, '0');
+            const defaultDate = `${year}-${month}-${day}`;
+            const defaultTime = `${hours}:${minutes}`;
+            
+            document.getElementById('addActivityDueDate').value = defaultDate;
+            document.getElementById('addActivityDueTime').value = defaultTime;
+            
+            // Update min attribute to current date
+            const now = new Date();
+            const nowYear = now.getFullYear();
+            const nowMonth = String(now.getMonth() + 1).padStart(2, '0');
+            const nowDay = String(now.getDate()).padStart(2, '0');
+            const minDate = `${nowYear}-${nowMonth}-${nowDay}`;
+            document.getElementById('addActivityDueDate').setAttribute('min', minDate);
 
             // Show modal
             document.getElementById('addActivityModal').classList.add('show');
@@ -939,8 +1243,10 @@
             const name = document.getElementById('addActivityName').value.trim();
             const description = document.getElementById('addActivityDescription').value.trim();
             const dueDate = document.getElementById('addActivityDueDate').value;
+            const dueTime = document.getElementById('addActivityDueTime').value;
             const maxScore = document.getElementById('addActivityMaxScore').value;
             const visibility = document.querySelector('input[name="addActivityVisibility"]:checked').value;
+            const courseId = @Model.CourseId;
 
             // Basic validation
             if (!name) {
@@ -948,20 +1254,49 @@
                 return;
             }
 
-            // Here you would typically send the data to the server
-            console.log('Adding new activity:', {
-                name: name,
-                description: description,
-                dueDate: dueDate,
-                maxScore: maxScore,
-                visibility: visibility
-            });
+            if (!dueDate) {
+                alert('Please enter a due date.');
+                return;
+            }
 
-            // Close modal
-            closeAddActivityModal();
+            if (!dueTime) {
+                alert('Please enter a due time.');
+                return;
+            }
 
-            // Show success message (you could implement a success modal here)
-            alert('Activity added successfully!');
+            // Combine date and time
+            const combinedDateTime = `${dueDate}T${dueTime}`;
+
+            // Validate that due date is not in the past
+            const selectedDate = new Date(combinedDateTime);
+            const now = new Date();
+            if (selectedDate < now) {
+                alert('Due date cannot be in the past. Please select a future date and time.');
+                document.getElementById('addActivityDueDate').focus();
+                return;
+            }
+
+            if (!maxScore || parseInt(maxScore) <= 0) {
+                alert('Please enter a valid maximum score.');
+                return;
+            }
+
+            // Submit form to server
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = '@Url.Action("CreateActivity", "Teacher")';
+            
+            form.innerHTML = `
+                <input type="hidden" name="id" value="${courseId}" />
+                <input type="hidden" name="Title" value="${name}" />
+                <input type="hidden" name="Description" value="${description}" />
+                <input type="hidden" name="DueDate" value="${combinedDateTime}" />
+                <input type="hidden" name="MaxScore" value="${maxScore}" />
+                <input type="hidden" name="IsVisible" value="${visibility === 'visible' ? 'true' : 'false'}" />
+            `;
+            
+            document.body.appendChild(form);
+            form.submit();
         }
 
         // Close add activity modal when clicking outside

@@ -177,53 +177,9 @@
     </div>
 </div>
 
-<script>
-    (function(){
-        const form = document.querySelector('form[asp-controller="Admin"][asp-action="AddTeacher"]');
-        if (!form) return;
-
-        const submitButton = form.querySelector('button[type="submit"]');
-        const confirmModal = document.getElementById('confirmModal');
-        const confirmBackdrop = document.getElementById('confirmModalBackdrop');
-        const confirmSummary = document.getElementById('confirmSummary');
-        const confirmCancel = document.getElementById('confirmCancel');
-        const confirmProceed = document.getElementById('confirmProceed');
-
-        function showConfirm() {
-            // Build a summary from teacher fields
-            const firstName = form.querySelector('[asp-for="FirstName"]').value || '';
-            const lastName = form.querySelector('[asp-for="LastName"]').value || '';
-            const email = form.querySelector('[asp-for="Email"]').value || '';
-            const dept = form.querySelector('[asp-for="DepartmentId"]').value || '';
-            confirmSummary.textContent = `${firstName} ${lastName} (${email}) — Department: ${dept}`;
-            confirmModal.style.display = 'block';
-            confirmBackdrop.style.display = 'block';
-        }
-
-        function hideConfirm() {
-            confirmModal.style.display = 'none';
-            confirmBackdrop.style.display = 'none';
-        }
-
-        // Intercept submit
-        submitButton.addEventListener('click', function (e) {
-            // If HTML5 form validation fails, don't show the modal
-            if (!form.checkValidity()) return; 
-            e.preventDefault();
-            showConfirm();
-        });
-
-        confirmCancel.addEventListener('click', function(){ hideConfirm(); });
-        confirmBackdrop.addEventListener('click', function(){ hideConfirm(); });
-
-        // When user confirms, submit the form programmatically
-        confirmProceed.addEventListener('click', function(){
-            // remove listeners to avoid re-intercept on actual submit
-            hideConfirm();
-            form.submit();
-        });
-    })();
-</script>
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}
 
 <style>
     .modal-backdrop {

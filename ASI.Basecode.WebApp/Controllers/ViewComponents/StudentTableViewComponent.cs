@@ -1,5 +1,10 @@
 using Microsoft.AspNetCore.Mvc;
+using ASI.Basecode.Services.Interfaces;
+using ASI.Basecode.Data.Models;
+using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace ASI.Basecode.WebApp.Controllers.ViewComponents
 {
@@ -8,36 +13,71 @@ namespace ASI.Basecode.WebApp.Controllers.ViewComponents
     /// </summary>
     public class StudentTableViewComponent : ViewComponent
     {
+        private readonly ISupabaseAuthService _supabaseAuthService;
+        private readonly IUserService _userService;
+
+        public StudentTableViewComponent(ISupabaseAuthService supabaseAuthService, IUserService userService)
+        {
+            _supabaseAuthService = supabaseAuthService;
+            _userService = userService;
+        }
+
         /// <summary>
         /// Invokes the StudentTable ViewComponent to render the student table.
         /// </summary>
+        /// <param name="courseId">The course ID to get enrolled students for.</param>
         /// <returns>The ViewComponent result containing the student table.</returns>
-        public IViewComponentResult Invoke()
+        public async Task<IViewComponentResult> InvokeAsync(int? courseId)
         {
-            // Fallback sample data for students
-            var students = new List<StudentViewModel>
+            var students = new List<StudentViewModel>();
+
+            if (courseId.HasValue)
             {
-                new StudentViewModel { IdNumber = "123456", LastName = "Doe", FirstName = "John" },
-                new StudentViewModel { IdNumber = "123457", LastName = "Smith", FirstName = "Jane" },
-                new StudentViewModel { IdNumber = "123458", LastName = "Johnson", FirstName = "Alice" },
-                new StudentViewModel { IdNumber = "123459", LastName = "Williams", FirstName = "Bob" },
-                new StudentViewModel { IdNumber = "123460", LastName = "Brown", FirstName = "Charlie" },
-                new StudentViewModel { IdNumber = "123461", LastName = "Jones", FirstName = "Diana" },
-                new StudentViewModel { IdNumber = "123462", LastName = "Garcia", FirstName = "Eve" },
-                new StudentViewModel { IdNumber = "123463", LastName = "Miller", FirstName = "Frank" },
-                new StudentViewModel { IdNumber = "123464", LastName = "Davis", FirstName = "Grace" },
-                new StudentViewModel { IdNumber = "123465", LastName = "Rodriguez", FirstName = "Henry" },
-                new StudentViewModel { IdNumber = "123466", LastName = "Martinez", FirstName = "Ivy" },
-                new StudentViewModel { IdNumber = "123467", LastName = "Hernandez", FirstName = "Jack" },
-                new StudentViewModel { IdNumber = "123468", LastName = "Lopez", FirstName = "Kate" },
-                new StudentViewModel { IdNumber = "123469", LastName = "Gonzalez", FirstName = "Liam" },
-                new StudentViewModel { IdNumber = "123470", LastName = "Wilson", FirstName = "Mia" },
-                new StudentViewModel { IdNumber = "123471", LastName = "Anderson", FirstName = "Noah" },
-                new StudentViewModel { IdNumber = "123472", LastName = "Thomas", FirstName = "Olivia" },
-                new StudentViewModel { IdNumber = "123473", LastName = "Taylor", FirstName = "Peter" },
-                new StudentViewModel { IdNumber = "123474", LastName = "Moore", FirstName = "Quinn" },
-                new StudentViewModel { IdNumber = "123475", LastName = "Jackson", FirstName = "Ryan" }
-            };
+                try
+                {
+                    var client = await _supabaseAuthService.GetSupabaseClientForAuthAsync();
+
+                    // Get all enrollments for this course (filter active in memory to avoid PostgREST issues)
+                    var enrollmentsResponse = await client
+                        .From<EnrollmentModel>()
+                        .Filter("course_id", Supabase.Postgrest.Constants.Operator.Equals, courseId.Value)
+                        .Get();
+                    
+                    // Filter for active status in memory (check for "Active" enum value)
+                    var allEnrollments = enrollmentsResponse?.Models ?? new List<EnrollmentModel>();
+                    var enrollments = allEnrollments
+                        .Where(e => !string.IsNullOrEmpty(e.Status) && 
+                                   (e.Status == "Active" || e.Status.Equals("active", StringComparison.OrdinalIgnoreCase)))
+                        .ToList();
+
+                    // Get all students (users with student role)
+                    var allStudents = await _userService.GetStudentsAsync();
+
+                    // Map enrollments to student view models
+                    foreach (var enrollment in enrollments)
+                    {
+                        var student = allStudents.FirstOrDefault(s => s.UserTypeId == enrollment.StudentId);
+                        if (student != null)
+                        {
+                            students.Add(new StudentViewModel
+                            {
+                                IdNumber = student.UserDisplayId ?? "N/A",
+                                FirstName = student.FirstName ?? "",
+                                LastName = student.LastName ?? "",
+                                Status = enrollment.Status ?? "Active",
+                                StudentId = student.UserTypeId
+                            });
+                        }
+                    }
+
+                    Console.WriteLine($"StudentTableViewComponent: Found {students.Count} enrolled students for course {courseId}");
+                }
+                catch (System.Exception ex)
+                {
+                    Console.WriteLine($"Error loading enrolled students: {ex.Message}");
+                    Console.WriteLine($"Stack Trace: {ex.StackTrace}");
+                }
+            }
 
             return View(students);
         }
@@ -49,7 +89,7 @@ namespace ASI.Basecode.WebApp.Controllers.ViewComponents
     public class StudentViewModel
     {
         /// <summary>
-        /// Gets or sets the student's ID number.
+        /// Gets or sets the student's ID number (UserDisplayId).
         /// </summary>
         public string IdNumber { get; set; }
 
@@ -62,5 +102,15 @@ namespace ASI.Basecode.WebApp.Controllers.ViewComponents
         /// Gets or sets the student's first name.
         /// </summary>
         public string FirstName { get; set; }
+
+        /// <summary>
+        /// Gets or sets the enrollment status.
+        /// </summary>
+        public string Status { get; set; }
+
+        /// <summary>
+        /// Gets or sets the student's UserTypeId (UUID).
+        /// </summary>
+        public string StudentId { get; set; }
     }
 }
