@@ -116,7 +116,19 @@
 						int rowNumber = 1;
 						foreach (var entry in Model.DisplayedUsersWithRoles)
 						{
-							<tr style="border-bottom:1px solid #e5e7eb;" data-user-id="@entry.User.Id">
+							var debugUserTypeId = entry.User.UserTypeId ?? "NULL";
+							var userDisplay = $"{entry.User.FirstName} {entry.User.LastName}";
+							Console.WriteLine($"🔍 ROW DEBUG - User: {userDisplay}, UserTypeId: '{debugUserTypeId}', Length: {debugUserTypeId.Length}");
+							
+							if (string.IsNullOrWhiteSpace(entry.User.UserTypeId))
+							{
+								Console.WriteLine($"   ⚠️  WARNING: UserTypeId is NULL/EMPTY for {userDisplay}");
+							}
+							else
+							{
+								Console.WriteLine($"   ✅ UserTypeId is valid for {userDisplay}");
+							}
+							<tr style="border-bottom:1px solid #e5e7eb;" data-user-id="@entry.User.Id" data-user-type-id="@(string.IsNullOrWhiteSpace(entry.User.UserTypeId) ? "" : entry.User.UserTypeId)">
 								<td style="padding:16px; color:#111827;">
 									@if (!string.IsNullOrWhiteSpace(entry.User.UserDisplayId))
 									{
@@ -144,13 +156,17 @@
 									<div class="action-menu" style="display:none; position:absolute; right:40px; top:50%; transform:translateY(-50%); background:#fff; border:1px solid #e5e7eb; border-radius:8px; box-shadow:0 4px 12px rgba(0,0,0,0.15); min-width:130px; z-index:10;">
 										<button style="display:block; width:100%; padding:10px 16px; border:none; background:transparent; text-align:left; cursor:pointer; color:#111827; font-size:14px;" onclick="navigateToView(this)">View</button>
 										<button style="display:block; width:100%; padding:10px 16px; border:none; background:transparent; text-align:left; cursor:pointer; color:#111827; font-size:14px;" onclick="navigateToEdit(this)">Edit</button>
+										@{
+											var hasValidUserTypeId = !string.IsNullOrWhiteSpace(entry.User.UserTypeId);
+											var disabledStyle = !hasValidUserTypeId ? "opacity:0.5; cursor:not-allowed;" : "";
+										}
 										@if (entry.User.IsActive == true)
 										{
-											<button class="deactivate-action" style="display:block; width:100%; padding:10px 16px; border:none; background:transparent; text-align:left; cursor:pointer; color:#dc2626; font-size:14px;" onclick="showDeactivateModal(this)">Deactivate</button>
+											<button class="deactivate-action" style="display:block; width:100%; padding:10px 16px; border:none; background:transparent; text-align:left; cursor:@(hasValidUserTypeId ? "pointer" : "not-allowed"); color:#dc2626; font-size:14px; @disabledStyle" onclick="@(hasValidUserTypeId ? "showDeactivateModal(this)" : "alert('Cannot deactivate: User has invalid/missing Supabase ID')")" title="@(!hasValidUserTypeId ? "This user cannot be deactivated due to missing Supabase ID" : "")">Deactivate</button>
 										}
 										else
 										{
-											<button class="reactivate-action" style="display:block; width:100%; padding:10px 16px; border:none; background:transparent; text-align:left; cursor:pointer; color:#059669; font-size:14px;" onclick="showReactivateModal(this)">Reactivate</button>
+											<button class="reactivate-action" style="display:block; width:100%; padding:10px 16px; border:none; background:transparent; text-align:left; cursor:@(hasValidUserTypeId ? "pointer" : "not-allowed"); color:#059669; font-size:14px; @disabledStyle" onclick="@(hasValidUserTypeId ? "showReactivateModal(this)" : "alert('Cannot reactivate: User has invalid/missing Supabase ID')")" title="@(!hasValidUserTypeId ? "This user cannot be reactivated due to missing Supabase ID" : "")">Reactivate</button>
 										}
 									</div>
 								</td>
@@ -278,6 +294,24 @@ function filterByStatus() {
     </div>
 </div>
 
+<!-- Success Modal -->
+<div id="successModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:1000; align-items:center; justify-content:center;">
+    <div style="background:#ffffff; border-radius:12px; padding:32px; max-width:400px; width:90%; margin:20px; box-shadow:0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04);">
+        <div style="text-align:center; margin-bottom:24px;">
+            <div style="width:64px; height:64px; border-radius:9999px; background:#d1fae5; display:flex; align-items:center; justify-content:center; margin:0 auto 16px auto;">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="20,6 9,17 4,12"></polyline>
+                </svg>
+            </div>
+            <h3 style="font-size:18px; font-weight:700; color:#111827; margin:0 0 8px 0;">Success</h3>
+            <p style="color:#6b7280; font-size:14px; margin:0;" id="successModalText">Operation completed successfully.</p>
+        </div>
+        <div style="display:flex; justify-content:center;">
+            <button onclick="closeSuccessModal()" style="flex:1; background:#059669; color:#ffffff; border:none; border-radius:6px; padding:12px; font-weight:600; cursor:pointer;">Close</button>
+        </div>
+    </div>
+</div>
+
 <script>
 	function navigateToView(button) {
 		const row = button.closest('tr');
@@ -333,9 +367,20 @@ function filterByStatus() {
 	let currentActionRow = null;
 	
 	function showDeactivateModal(button) {
+		console.log('🔵 showDeactivateModal called');
 		currentActionRow = button.closest('tr');
 		const nameCell = currentActionRow.cells[1];
 		const name = nameCell ? nameCell.textContent.trim() : 'this user';
+		
+		// DEBUG: Log all data attributes on the row
+		console.log('Current action row attributes:');
+		for (let attr of currentActionRow.attributes) {
+			console.log(`  ${attr.name}: "${attr.value}"`);
+		}
+		
+		console.log('🔍 Data attributes directly:');
+		console.log('  data-user-id:', currentActionRow.getAttribute('data-user-id'));
+		console.log('  data-user-type-id:', currentActionRow.getAttribute('data-user-type-id'));
 		
 		document.getElementById('deactivateModalText').textContent = `Are you sure you want to deactivate ${name}? This action will prevent them from accessing the system.`;
 		document.getElementById('deactivateModal').style.display = 'flex';
@@ -348,28 +393,22 @@ function filterByStatus() {
 	
 	function confirmDeactivate() {
 		if (currentActionRow) {
-			const userId = currentActionRow.getAttribute('data-user-id');
+			const userTypeId = currentActionRow.getAttribute('data-user-type-id');
+			const debugUserTypeId = currentActionRow.getAttribute('data-debug-user-type-id');
 			const nameCell = currentActionRow.cells[1];
 			const name = nameCell ? nameCell.textContent.trim() : 'this user';
 			
 			// ✅ ADDED: Validation and logging
-			console.log('=== DEACTIVATE DEBUG ===');
-			console.log('Row:', currentActionRow);
-			console.log('User ID (raw):', userId);
-			console.log('User ID (parsed):', parseInt(userId));
+			console.log('╔══════════════════════════════════════════════════════════╗');
+			console.log('║         confirmDeactivate                               ║');
+			console.log('╚══════════════════════════════════════════════════════════╝');
+			console.log('User TypeID (UUID) from data-user-type-id:', userTypeId);
+			console.log('User TypeID (UUID) from data-debug-user-type-id:', debugUserTypeId);
 			console.log('User Name:', name);
 			
-			if (!userId || userId === 'null' || userId === 'undefined' || userId === '0') {
-				console.error('❌ Invalid user ID:', userId);
-				alert('Error: Invalid user ID. Cannot deactivate user.');
-				hideDeactivateModal();
-				return;
-			}
-			
-			const userIdInt = parseInt(userId);
-			if (isNaN(userIdInt) || userIdInt <= 0) {
-				console.error('❌ Invalid user ID after parsing:', userIdInt);
-				alert('Error: Invalid user ID. Cannot deactivate user.');
+			if (!userTypeId || userTypeId === 'null' || userTypeId === 'undefined' || userTypeId === '') {
+				console.error('❌ Invalid user TypeID:', userTypeId);
+				alert(`❌ ERROR: Cannot deactivate "${name}"\n\nThis user does not have a valid Supabase ID in the database. This is a data integrity issue.\n\nPlease contact an administrator to fix this user's record.`);
 				hideDeactivateModal();
 				return;
 			}
@@ -379,14 +418,18 @@ function filterByStatus() {
 			fetch('/Admin/SetUserStatus', {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ id: userIdInt, isActive: false })
+				body: JSON.stringify({ id: userTypeId, isActive: false })
 			})
 			.then(response => {
 				console.log('Response status:', response.status);
+				console.log('Response statusText:', response.statusText);
 				return response.json();
 			})
 			.then(data => {
 				console.log('Response data:', data);
+				console.log('Response data.success:', data.success);
+				console.log('Response data.message:', data.message);
+				console.log('Full response object:', JSON.stringify(data, null, 2));
 				if (data.success) {
 					const statusCell = currentActionRow.cells[3];
 					const statusSpan = statusCell.querySelector('span');
@@ -401,7 +444,7 @@ function filterByStatus() {
 					reactivateBtn.style.display = 'block';
 					
 					console.log('✅ User deactivated successfully');
-					alert(`${name} has been deactivated successfully.`);
+					showSuccessModal(`${name} has been deactivated successfully.`);
 				} else {
 					console.error('❌ Deactivation failed:', data.message);
 					alert(data.message || 'Failed to deactivate user.');
@@ -430,31 +473,32 @@ function filterByStatus() {
 		document.getElementById('reactivateModal').style.display = 'none';
 		currentActionRow = null;
 	}
+
+	function showSuccessModal(message) {
+		document.getElementById('successModalText').textContent = message;
+		document.getElementById('successModal').style.display = 'flex';
+	}
+
+	function closeSuccessModal() {
+		document.getElementById('successModal').style.display = 'none';
+	}
 	
 	function confirmReactivate() {
 		if (currentActionRow) {
-			const userId = currentActionRow.getAttribute('data-user-id');
+			const userTypeId = currentActionRow.getAttribute('data-user-type-id');
 			const nameCell = currentActionRow.cells[1];
 			const name = nameCell ? nameCell.textContent.trim() : 'this user';
 			
 			// ✅ ADDED: Validation and logging
-			console.log('=== REACTIVATE DEBUG ===');
-			console.log('Row:', currentActionRow);
-			console.log('User ID (raw):', userId);
-			console.log('User ID (parsed):', parseInt(userId));
+			console.log('╔══════════════════════════════════════════════════════════╗');
+			console.log('║         confirmReactivate                               ║');
+			console.log('╚══════════════════════════════════════════════════════════╝');
+			console.log('User TypeID (UUID):', userTypeId);
 			console.log('User Name:', name);
 			
-			if (!userId || userId === 'null' || userId === 'undefined' || userId === '0') {
-				console.error('❌ Invalid user ID:', userId);
-				alert('Error: Invalid user ID. Cannot reactivate user.');
-				hideReactivateModal();
-				return;
-			}
-			
-			const userIdInt = parseInt(userId);
-			if (isNaN(userIdInt) || userIdInt <= 0) {
-				console.error('❌ Invalid user ID after parsing:', userIdInt);
-				alert('Error: Invalid user ID. Cannot reactivate user.');
+			if (!userTypeId || userTypeId === 'null' || userTypeId === 'undefined' || userTypeId === '') {
+				console.error('❌ Invalid user TypeID:', userTypeId);
+				alert(`❌ ERROR: Cannot reactivate "${name}"\n\nThis user does not have a valid Supabase ID in the database. This is a data integrity issue.\n\nPlease contact an administrator to fix this user's record.`);
 				hideReactivateModal();
 				return;
 			}
@@ -464,7 +508,7 @@ function filterByStatus() {
 			fetch('/Admin/SetUserStatus', {
 				method: 'POST',
 			 headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ id: userIdInt, isActive: true })
+				body: JSON.stringify({ id: userTypeId, isActive: true })
 			})
 			.then(response => {
 				console.log('Response status:', response.status);
@@ -486,7 +530,7 @@ function filterByStatus() {
 					deactivateBtn.style.display = 'block';
 					
 					console.log('✅ User reactivated successfully');
-					alert(`${name} has been reactivated successfully.`);
+					showSuccessModal(`${name} has been reactivated successfully.`);
 				} else {
 					console.error('❌ Reactivation failed:', data.message);
 					alert(data.message || 'Failed to reactivate user.');
