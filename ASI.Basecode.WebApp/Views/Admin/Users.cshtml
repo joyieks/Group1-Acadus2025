@@ -392,10 +392,11 @@ function filterByStatus() {
 	}
 	
 	function confirmDeactivate() {
-		if (currentActionRow) {
-			const userTypeId = currentActionRow.getAttribute('data-user-type-id');
-			const debugUserTypeId = currentActionRow.getAttribute('data-debug-user-type-id');
-			const nameCell = currentActionRow.cells[1];
+		const rowToUpdate = currentActionRow; // Capture local reference
+		if (rowToUpdate) {
+			const userTypeId = rowToUpdate.getAttribute('data-user-type-id');
+			const debugUserTypeId = rowToUpdate.getAttribute('data-debug-user-type-id');
+			const nameCell = rowToUpdate.cells[1];
 			const name = nameCell ? nameCell.textContent.trim() : 'this user';
 			
 			// ✅ ADDED: Validation and logging
@@ -415,6 +416,21 @@ function filterByStatus() {
 			
 			console.log('✅ Validation passed. Sending request...');
 			
+			// ⚡ OPTIMISTIC UPDATE: Update UI immediately
+			const statusCell = rowToUpdate.cells[3];
+			const statusSpan = statusCell.querySelector('span');
+			const deactivateBtn = rowToUpdate.querySelector('.deactivate-action');
+			const reactivateBtn = rowToUpdate.querySelector('.reactivate-action');
+			
+			if (statusSpan) {
+				statusSpan.textContent = 'Inactive';
+				statusSpan.style.background = '#e5e7eb';
+				statusSpan.style.color = '#4b5563';
+			}
+			
+			if (deactivateBtn) deactivateBtn.style.display = 'none';
+			if (reactivateBtn) reactivateBtn.style.display = 'block';
+			
 			fetch('/Admin/SetUserStatus', {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
@@ -427,32 +443,35 @@ function filterByStatus() {
 			})
 			.then(data => {
 				console.log('Response data:', data);
-				console.log('Response data.success:', data.success);
-				console.log('Response data.message:', data.message);
-				console.log('Full response object:', JSON.stringify(data, null, 2));
 				if (data.success) {
-					const statusCell = currentActionRow.cells[3];
-					const statusSpan = statusCell.querySelector('span');
-					const deactivateBtn = currentActionRow.querySelector('.deactivate-action');
-					const reactivateBtn = currentActionRow.querySelector('.reactivate-action');
-					
-					statusSpan.textContent = 'Inactive';
-					statusSpan.style.background = '#e5e7eb';
-					statusSpan.style.color = '#4b5563';
-					
-					deactivateBtn.style.display = 'none';
-					reactivateBtn.style.display = 'block';
-					
-					console.log('✅ User deactivated successfully');
+					console.log('✅ User deactivated successfully (Server confirmed)');
 					showSuccessModal(`${name} has been deactivated successfully.`);
 				} else {
 					console.error('❌ Deactivation failed:', data.message);
+					// Revert UI changes
+					if (statusSpan) {
+						statusSpan.textContent = 'Active';
+						statusSpan.style.background = '#d1fae5';
+						statusSpan.style.color = '#065f46';
+					}
+					if (deactivateBtn) deactivateBtn.style.display = 'block';
+					if (reactivateBtn) reactivateBtn.style.display = 'none';
+					
 					alert(data.message || 'Failed to deactivate user.');
 				}
 			})
 			.catch(error => {
 				console.error('❌ Error during fetch:', error);
-				alert('An error occurred. Please try again.');
+				// Revert UI changes
+				if (statusSpan) {
+					statusSpan.textContent = 'Active';
+					statusSpan.style.background = '#d1fae5';
+					statusSpan.style.color = '#065f46';
+				}
+				if (deactivateBtn) deactivateBtn.style.display = 'block';
+				if (reactivateBtn) reactivateBtn.style.display = 'none';
+				
+				alert('An error occurred: ' + error.message);
 			});
 		} else {
 			console.error('❌ No current action row found');
@@ -484,9 +503,10 @@ function filterByStatus() {
 	}
 	
 	function confirmReactivate() {
-		if (currentActionRow) {
-			const userTypeId = currentActionRow.getAttribute('data-user-type-id');
-			const nameCell = currentActionRow.cells[1];
+		const rowToUpdate = currentActionRow; // Capture local reference
+		if (rowToUpdate) {
+			const userTypeId = rowToUpdate.getAttribute('data-user-type-id');
+			const nameCell = rowToUpdate.cells[1];
 			const name = nameCell ? nameCell.textContent.trim() : 'this user';
 			
 			// ✅ ADDED: Validation and logging
@@ -505,9 +525,24 @@ function filterByStatus() {
 			
 			console.log('✅ Validation passed. Sending request...');
 			
+			// ⚡ OPTIMISTIC UPDATE: Update UI immediately
+			const statusCell = rowToUpdate.cells[3];
+			const statusSpan = statusCell.querySelector('span');
+			const deactivateBtn = rowToUpdate.querySelector('.deactivate-action');
+			const reactivateBtn = rowToUpdate.querySelector('.reactivate-action');
+			
+			if (statusSpan) {
+				statusSpan.textContent = 'Active';
+				statusSpan.style.background = '#d1fae5';
+				statusSpan.style.color = '#065f46';
+			}
+			
+			if (reactivateBtn) reactivateBtn.style.display = 'none';
+			if (deactivateBtn) deactivateBtn.style.display = 'block';
+			
 			fetch('/Admin/SetUserStatus', {
 				method: 'POST',
-			 headers: { 'Content-Type': 'application/json' },
+				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({ id: userTypeId, isActive: true })
 			})
 			.then(response => {
@@ -517,28 +552,34 @@ function filterByStatus() {
 			.then(data => {
 				console.log('Response data:', data);
 				if (data.success) {
-					const statusCell = currentActionRow.cells[3];
-					const statusSpan = statusCell.querySelector('span');
-					const deactivateBtn = currentActionRow.querySelector('.deactivate-action');
-					const reactivateBtn = currentActionRow.querySelector('.reactivate-action');
-					
-					statusSpan.textContent = 'Active';
-					statusSpan.style.background = '#d1fae5';
-					statusSpan.style.color = '#065f46';
-					
-					reactivateBtn.style.display = 'none';
-					deactivateBtn.style.display = 'block';
-					
-					console.log('✅ User reactivated successfully');
+					console.log('✅ User reactivated successfully (Server confirmed)');
 					showSuccessModal(`${name} has been reactivated successfully.`);
 				} else {
 					console.error('❌ Reactivation failed:', data.message);
+					// Revert UI changes
+					if (statusSpan) {
+						statusSpan.textContent = 'Inactive';
+						statusSpan.style.background = '#e5e7eb';
+						statusSpan.style.color = '#4b5563';
+					}
+					if (reactivateBtn) reactivateBtn.style.display = 'block';
+					if (deactivateBtn) deactivateBtn.style.display = 'none';
+					
 					alert(data.message || 'Failed to reactivate user.');
 				}
 			})
 			.catch(error => {
 				console.error('❌ Error during fetch:', error);
-				alert('An error occurred. Please try again.');
+				// Revert UI changes
+				if (statusSpan) {
+					statusSpan.textContent = 'Inactive';
+					statusSpan.style.background = '#e5e7eb';
+					statusSpan.style.color = '#4b5563';
+				}
+				if (reactivateBtn) reactivateBtn.style.display = 'block';
+				if (deactivateBtn) deactivateBtn.style.display = 'none';
+				
+				alert('An error occurred: ' + error.message);
 			});
 		} else {
 			console.error('❌ No current action row found');
