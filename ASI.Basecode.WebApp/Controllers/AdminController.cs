@@ -473,13 +473,6 @@ namespace ASI.Basecode.WebApp.Controllers
                     ViewBag.AcademicPerformance = academicPerformance;
                     Console.WriteLine($"Loaded {academicPerformance.Count} courses for student academic performance");
                 }
-                // Load handled courses for teachers
-                else if (role.Equals("Teacher", StringComparison.OrdinalIgnoreCase) || role.Equals("Instructor", StringComparison.OrdinalIgnoreCase))
-                {
-                    var handledCourses = await GetTeacherHandledCoursesAsync(user.UserTypeId);
-                    ViewBag.HandledCourses = handledCourses;
-                    Console.WriteLine($"Loaded {handledCourses.Count} courses for teacher");
-                }
 
                 Console.WriteLine($"ViewUser page loaded for user ID {id}");
                 return View(user);
@@ -1743,75 +1736,6 @@ namespace ASI.Basecode.WebApp.Controllers
             public string CourseCode { get; set; }
             public string CourseTitle { get; set; }
             public double OverallPercentage { get; set; }
-        }
-
-        /// <summary>
-        /// ViewModel for teacher handled courses
-        /// </summary>
-        public class TeacherHandledCourseItem
-        {
-            public string CourseCode { get; set; }
-            public string CourseName { get; set; }
-            public int EnrolledCount { get; set; }
-        }
-
-        /// <summary>
-        /// Gets courses handled by a teacher with enrollment counts
-        /// </summary>
-        private async Task<List<TeacherHandledCourseItem>> GetTeacherHandledCoursesAsync(string teacherId)
-        {
-            var handledCourses = new List<TeacherHandledCourseItem>();
-
-            try
-            {
-                var client = await _supabaseAuthService.GetSupabaseClientForAuthAsync();
-
-                // Get courses taught by this teacher
-                var courses = await _courseService.GetCoursesByInstructorAsync(teacherId);
-
-                Console.WriteLine($"Found {courses.Count} courses for teacher {teacherId}");
-
-                // For each course, count enrolled students
-                foreach (var course in courses)
-                {
-                    try
-                    {
-                        // Get active enrollments for this course
-                        var enrollmentsResponse = await client
-                            .From<EnrollmentModel>()
-                            .Filter("course_id", Supabase.Postgrest.Constants.Operator.Equals, course.Id)
-                            .Get();
-
-                        var enrollments = enrollmentsResponse?.Models ?? new List<EnrollmentModel>();
-                        var activeEnrollments = enrollments
-                            .Where(e => !string.IsNullOrEmpty(e.Status) && 
-                                   (e.Status.Equals("Active", StringComparison.OrdinalIgnoreCase) || e.Status.Equals("active", StringComparison.OrdinalIgnoreCase)) &&
-                                   e.DroppedAt == null)
-                            .ToList();
-
-                        handledCourses.Add(new TeacherHandledCourseItem
-                        {
-                            CourseCode = course.Code ?? "N/A",
-                            CourseName = course.Name ?? "Untitled Course",
-                            EnrolledCount = activeEnrollments.Count
-                        });
-
-                        Console.WriteLine($"Course: {course.Code} - {activeEnrollments.Count} enrolled students");
-                    }
-                    catch (Exception ex)
-                    {
-                        Console.WriteLine($"Error loading enrollment count for course {course.Id}: {ex.Message}");
-                        // Continue with other courses even if one fails
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error loading teacher handled courses: {ex.Message}");
-                Console.WriteLine($"Stack Trace: {ex.StackTrace}");
-            }
-
-            return handledCourses;
         }
 
         /// <summary>
