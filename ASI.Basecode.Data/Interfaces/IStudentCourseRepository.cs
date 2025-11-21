@@ -14,9 +14,6 @@ namespace ASI.Basecode.Data.Interfaces
 
         Task<SupabaseUserNew> GetUserByUserTypeIdAsync(string userTypeId);
 
-        Task<List<StudentReportViewModel.ReportItem>> GetStudentCourseReportsAsync(string studentId);
-
-        Task<StudentDashboardViewModel> GetStudentDashboardAsync(string studentId);
 
     }
 }

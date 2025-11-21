@@ -106,7 +106,7 @@ namespace ASI.Basecode.Services.Services
                     MaxScore = a.maxScore,
                     DueDate = a.DueDate,
                     CreatedAt = a.CreatedAt,
-                    IsVisible = !a.IsVisible, // Inverted: false = visible, true = hidden
+                    IsVisible = a.IsVisible, // Inverted: false = visible, true = hidden
                     InvisibleAt = a.InvisibleAt
                 }).ToList(),
 
@@ -153,7 +153,7 @@ namespace ASI.Basecode.Services.Services
                 MaxScore = activity.maxScore,
                 DueDate = activity.DueDate,
                 CreatedAt = activity.CreatedAt,
-                IsVisible = !activity.IsVisible, // Inverted: false = visible, true = hidden
+                IsVisible = activity.IsVisible, // Inverted: false = visible, true = hidden
                 InvisibleAt = activity.InvisibleAt
             };
         }
@@ -163,7 +163,7 @@ namespace ASI.Basecode.Services.Services
             // In the UI: IsVisible = true means "visible to students", IsVisible = false means "hidden"
             // In the database: IsVisible = false means "visible to students", IsVisible = true means "hidden"
             // So we need to invert: if UI says visible (true), DB should be false
-            var dbIsVisible = !model.IsVisible;
+            var dbIsVisible = model.IsVisible;
             
             Console.WriteLine($"=== CreateActivityAsync ===");
             Console.WriteLine($"UI IsVisible: {model.IsVisible} (true=visible, false=hidden)");
@@ -193,7 +193,7 @@ namespace ASI.Basecode.Services.Services
 
             // In the UI: IsVisible = true means "visible to students", IsVisible = false means "hidden"
             // In the database: IsVisible = false means "visible to students", IsVisible = true means "hidden"
-            var dbIsVisible = !model.IsVisible;
+            var dbIsVisible = model.IsVisible;
             
             Console.WriteLine($"=== UpdateActivityAsync ===");
             Console.WriteLine($"Activity ID: {model.Id}");

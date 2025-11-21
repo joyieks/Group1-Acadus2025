@@ -10,16 +10,18 @@ namespace ASI.Basecode.Data.Interfaces
 {
     public interface ITeacherCourseRepository
     {
-        Task<CourseGradebookViewModel> GetCourseGradebookAsync(int courseId);
+        Task<CourseModel> GetCourseAsync(int courseId);
 
+        Task<List<EnrollmentModel>> GetActiveEnrollmentsAsync(int courseId);
         Task<List<ActivityModel>> GetActivitiesByCourseIdAsync(long courseId);
+
         Task<List<ActivitySubmissionModel>> GetSubmissionsByStudentAndCourseAsync(string studentId, long courseId);
 
         Task<SupabaseUserNew> GetUserByUserTypeIdAsync(string userTypeId);
 
-        Task<StudentGradeDetail> GetStudentGradeDetailAsync(string studentId, int courseId);
+        Task<ActivitySubmissionModel?> GetSubmissionAsync(string studentId, int activityId);
 
-        Task<bool> UpdateActivityScoreAsync(string studentId, int activityId, int newScore);
+        Task<bool> UpdateSubmissionAsync(ActivitySubmissionModel submission);
 
     }
 }

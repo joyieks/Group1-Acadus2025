@@ -134,12 +134,102 @@ namespace ASI.Basecode.Services.Services
 
         public async Task<List<StudentReportViewModel.ReportItem>> GetStudentReportsAsync(string studentId)
         {
-            return await _studentCourseRepository.GetStudentCourseReportsAsync(studentId);
+            var courses = await _studentCourseRepository.GetCoursesByStudentIdAsync(studentId);
+            var reportItems = new List<StudentReportViewModel.ReportItem>();
+
+            foreach (var course in courses)
+            {
+                var activities = await _studentCourseRepository.GetActivitiesByCourseIdAsync(course.Id);
+                var submissions = await _studentCourseRepository.GetSubmissionsByStudentAndCourseAsync(studentId, course.Id);
+
+                var gradedPercentages = submissions
+                    .Where(s => s.SubmissionStatus == "Graded")
+                    .Select(s =>
+                    {
+                        var activity = activities.FirstOrDefault(a => a.Id == s.ActivityId);
+                        return (activity == null || activity.maxScore <= 0)
+                            ? 0
+                            : (double)s.Score / activity.maxScore * 100;
+                    })
+                    .Where(p => p > 0)
+                    .ToList();
+
+                var averagePercentage = gradedPercentages.Any()
+                    ? Math.Round(gradedPercentages.Average(), 1)
+                    : 0;
+
+                reportItems.Add(new StudentReportViewModel.ReportItem
+                {
+                    CourseCode = course.Code,
+                    CourseTitle = course.Name,
+                    FinalGrade = ConvertPercentageToGPA(averagePercentage)
+                });
+            }
+
+            return reportItems;
         }
 
         public async Task<StudentDashboardViewModel> GetStudentDashboardAsync(string studentId)
         {
-            return await _studentCourseRepository.GetStudentDashboardAsync(studentId);
+            var dashboard = new StudentDashboardViewModel
+            {
+                RecentlyGradedTasks = new List<StudentDashboardViewModel.TaskItem>(),
+                ToBeGradedTasks = new List<StudentDashboardViewModel.TaskItem>()
+            };
+
+            var courses = await _studentCourseRepository.GetCoursesByStudentIdAsync(studentId);
+
+            foreach (var course in courses)
+            {
+                var activities = await _studentCourseRepository.GetActivitiesByCourseIdAsync(course.Id);
+                var submissions = await _studentCourseRepository.GetSubmissionsByStudentAndCourseAsync(studentId, course.Id);
+
+                foreach (var activity in activities)
+                {
+                    var submission = submissions.FirstOrDefault(s => s.ActivityId == activity.Id);
+
+                    var task = new StudentDashboardViewModel.TaskItem
+                    {
+                        Title = activity.Title,
+                        UserAction = submission?.SubmissionStatus ?? "Not Submitted",
+                        Score = submission?.SubmissionStatus == "Graded" ? submission.Score.ToString() : null,
+                        DueDate = activity.DueDate,
+                        Priority = GetPriority(activity.DueDate),
+                        StudentId = int.TryParse(studentId, out var sid) ? sid : null,
+                        CourseId = activity.CourseId,
+                        CourseCode = course.Code
+                    };
+
+                    if (submission?.SubmissionStatus == "Graded")
+                        dashboard.RecentlyGradedTasks.Add(task);
+                    else
+                        dashboard.ToBeGradedTasks.Add(task);
+                }
+            }
+
+            return dashboard;
+        }
+
+        private double ConvertPercentageToGPA(double percentage)
+        {
+            if (percentage >= 98) return 1.00;
+            if (percentage >= 95) return 1.25;
+            if (percentage >= 92) return 1.50;
+            if (percentage >= 89) return 1.75;
+            if (percentage >= 86) return 2.00;
+            if (percentage >= 83) return 2.25;
+            if (percentage >= 80) return 2.50;
+            if (percentage >= 78) return 2.75;
+            if (percentage >= 75) return 3.00;
+            return 5.00;
+        }
+
+        private string GetPriority(DateTime dueDate)
+        {
+            var daysLeft = (dueDate - DateTime.Now).TotalDays;
+            if (daysLeft <= 2) return "High";
+            if (daysLeft <= 5) return "Normal";
+            return "Low";
         }
 
         public byte[] GenerateStudentReportPdf(List<StudentReportViewModel.ReportItem> reports)
