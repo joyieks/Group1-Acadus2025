@@ -231,6 +231,9 @@ namespace ASI.Basecode.WebApp.Controllers
                 model.FullName = string.Join(" ", new[] { user.FirstName, user.MiddleName, user.LastName, user.Suffix }.Where(s => !string.IsNullOrWhiteSpace(s)));
                 model.EmailAddress = user.Email;
                 model.Status = user.IsActive ?? false ? "Active" : "Inactive";
+                
+                // Set password last updated date (use current date as default since we don't track this yet)
+                model.PasswordLastUpdated = DateTime.Now;
 
                 // Get studentProfile for academic info
                 try

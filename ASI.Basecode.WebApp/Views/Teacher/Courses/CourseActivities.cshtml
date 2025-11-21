@@ -77,7 +77,13 @@
             <div>
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
                     <h3 style="margin:0; font-weight:700; font-size:18px; color:#111827;">Activity Details</h3>
-                    <button id="editButton" onclick="toggleEditMode()" style="background:#059669; color:#ffffff; border:none; border-radius:8px; padding:8px 16px; font-weight:600; cursor:pointer;">Edit</button>
+                    @if (ViewBag.SelectedActivity != null)
+                    {
+                        <div style="display:flex; gap:8px;">
+                            <button id="editButton" onclick="toggleEditMode()" style="background:#059669; color:#ffffff; border:none; border-radius:8px; padding:8px 16px; font-weight:600; cursor:pointer;">Edit</button>
+                            <button id="deleteButton" onclick="openDeleteModal()" style="background:#dc2626; color:#ffffff; border:none; border-radius:8px; padding:8px 16px; font-weight:600; cursor:pointer;">Delete</button>
+                        </div>
+                    }
                 </div>
 
                 <div style="background:#f9fafb; border:1px solid #e5e7eb; border-radius:8px; padding:24px;">
@@ -252,8 +258,9 @@
                                             data-feedback="@Html.Raw(System.Web.HttpUtility.HtmlAttributeEncode(feedback))"
                                             data-has-feedback="@(hasFeedback ? "true" : "false")"
                                             data-feedback-date="@feedbackDate"
-                                            style="background:#059669; color:#ffffff; border:none; border-radius:6px; padding:6px 12px; font-weight:600; cursor:pointer; margin-right:8px;">Grade Activity</button>
-                                    <button onclick="editGrade('@studentId', @maxScore)" style="background:#6b7280; color:#ffffff; border:none; border-radius:6px; padding:6px 12px; font-weight:600; cursor:pointer;">Edit Grade</button>
+                                            data-current-grade="@(grade ?? 0)"
+                                            data-max-score="@maxScore"
+                                            style="background:#059669; color:#ffffff; border:none; border-radius:6px; padding:6px 12px; font-weight:600; cursor:pointer;">Grade Activity</button>
                                 </td>
                             </tr>
                         }
@@ -286,6 +293,16 @@
                 <div style="margin-bottom:20px;">
                     <strong id="studentNameDisplay">Student Name</strong> answered <strong id="activityNameDisplay">Activity Name</strong>
                 </div>
+                
+                <!-- Grade Input Field -->
+                <div style="margin-bottom:20px;">
+                    <label style="display:block; font-weight:600; color:#374151; margin-bottom:8px;">Grade / Score</label>
+                    <div style="display:flex; align-items:center; gap:12px;">
+                        <input type="number" id="modalGradeInput" min="0" max="100" placeholder="0" style="width:100px; padding:10px 12px; border:1px solid #d1d5db; border-radius:8px; font-size:16px; font-weight:600; color:#059669; text-align:center;">
+                        <span style="color:#6b7280; font-size:14px;">/ <span id="modalMaxScore">100</span> points</span>
+                    </div>
+                </div>
+                
                 <div style="margin-bottom:20px;">
                     <label style="display:block; font-weight:600; color:#374151; margin-bottom:8px;">Student's Answer</label>
                     <div id="submissionContentDisplay" style="background:#f9fafb; border:1px solid #e5e7eb; border-radius:8px; padding:16px; min-height:100px; max-height:300px; overflow-y:auto; white-space:pre-wrap; word-wrap:break-word; font-size:14px; line-height:1.6; color:#111827;">
@@ -305,8 +322,8 @@
                         </div>
                         <div id="existingFeedbackText" style="color:#111827; font-size:14px; line-height:1.6; white-space:pre-wrap; word-wrap:break-word;"></div>
                     </div>
-                    <div style="padding:12px; background:#fef3c7; border:1px solid #fbbf24; border-radius:6px; color:#92400e; font-size:13px;">
-                        <strong>Note:</strong> Feedback has already been provided. You cannot modify it.
+                    <div style="padding:12px; background:#dbeafe; border:1px solid #60a5fa; border-radius:6px; color:#1e40af; font-size:13px;">
+                        <strong>Note:</strong> Feedback has already been provided. You can still edit the grade above.
                     </div>
                 </div>
                 
@@ -391,6 +408,33 @@
             <div style="display:flex; justify-content:flex-end; gap:12px; padding-top:16px; border-top:1px solid #e5e7eb;">
                 <button onclick="closeAddActivityModal()" style="background:#6b7280; color:#ffffff; border:none; border-radius:6px; padding:10px 20px; font-weight:600; cursor:pointer;">Cancel</button>
                 <button onclick="addActivity()" style="background:#059669; color:#ffffff; border:none; border-radius:6px; padding:10px 20px; font-weight:600; cursor:pointer;">Add Activity</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Activity Confirmation Modal -->
+<div id="deleteActivityModal" class="delete-modal">
+    <div class="delete-modal-box">
+        <div class="delete-modal-header">
+            <h3 class="delete-modal-title">Delete Activity</h3>
+            <button onclick="closeDeleteModal()" class="delete-modal-close">&times;</button>
+        </div>
+        <div class="delete-modal-body">
+            <div style="text-align:center; padding:20px 0;">
+                <div style="width:64px; height:64px; background:#fee2e2; border-radius:50%; display:flex; align-items:center; justify-content:center; margin:0 auto 20px;">
+                    <svg style="width:32px; height:32px; color:#dc2626;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                    </svg>
+                </div>
+                <h4 style="margin:0 0 12px 0; font-size:20px; font-weight:700; color:#111827;">Are you sure?</h4>
+                <p style="margin:0 0 24px 0; color:#6b7280; font-size:14px; line-height:1.6;">
+                    This will permanently delete the activity "<span id="deleteActivityName" style="font-weight:600; color:#111827;"></span>" and all associated student submissions and grades. This action cannot be undone.
+                </p>
+            </div>
+            <div style="display:flex; gap:12px; justify-content:center;">
+                <button onclick="closeDeleteModal()" style="background:#ffffff; color:#374151; border:1px solid #d1d5db; border-radius:8px; padding:10px 24px; font-weight:600; cursor:pointer;">Cancel</button>
+                <button onclick="confirmDelete()" style="background:#dc2626; color:#ffffff; border:none; border-radius:8px; padding:10px 24px; font-weight:600; cursor:pointer;">Yes, Delete Activity</button>
             </div>
         </div>
     </div>
@@ -675,6 +719,82 @@
             max-height: calc(90vh - 120px);
             overflow-y: auto;
         }
+
+        /* Delete Activity Modal */
+        .delete-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(4px);
+            z-index: 10000;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .delete-modal.show {
+            display: flex;
+            opacity: 1;
+        }
+
+        .delete-modal-box {
+            background: white;
+            border-radius: 16px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            transform: scale(0.9);
+            transition: transform 0.3s ease;
+        }
+
+        .delete-modal.show .delete-modal-box {
+            transform: scale(1);
+        }
+
+        .delete-modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 24px 32px 16px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .delete-modal-title {
+            margin: 0;
+            font-size: 20px;
+            font-weight: 700;
+            color: #111827;
+        }
+
+        .delete-modal-close {
+            background: none;
+            border: none;
+            font-size: 24px;
+            color: #6b7280;
+            cursor: pointer;
+            padding: 0;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 4px;
+            transition: background 0.2s ease;
+        }
+
+        .delete-modal-close:hover {
+            background: #f3f4f6;
+            color: #374151;
+        }
+
+        .delete-modal-body {
+            padding: 24px 32px;
+        }
     </style>
     <script>
         $(document).ready(function() {
@@ -888,6 +1008,13 @@
             const submissionContent = buttonElement ? buttonElement.getAttribute('data-submission-content') || '' : '';
             const feedback = buttonElement ? buttonElement.getAttribute('data-feedback') || '' : '';
             const hasFeedback = buttonElement ? buttonElement.getAttribute('data-has-feedback') === 'true' : false;
+            const currentGrade = buttonElement ? buttonElement.getAttribute('data-current-grade') || '0' : '0';
+            const maxScore = buttonElement ? buttonElement.getAttribute('data-max-score') || '100' : '100';
+            
+            // Set grade input and max score
+            document.getElementById('modalGradeInput').value = currentGrade;
+            document.getElementById('modalGradeInput').max = maxScore;
+            document.getElementById('modalMaxScore').textContent = maxScore;
             
             // Display student's submission content
             const submissionDisplay = document.getElementById('submissionContentDisplay');
@@ -927,13 +1054,15 @@
                 
                 existingFeedbackContainer.style.display = 'block';
                 newFeedbackContainer.style.display = 'none';
-                confirmBtn.style.display = 'none'; // Hide confirm button if feedback exists
+                confirmBtn.style.display = 'inline-block'; // Show confirm button to allow grade editing
+                confirmBtn.textContent = 'Save Grade'; // Change button text since feedback exists
             } else {
                 // Show new feedback input
                 document.getElementById('feedbackInput').value = '';
                 existingFeedbackContainer.style.display = 'none';
                 newFeedbackContainer.style.display = 'block';
                 confirmBtn.style.display = 'inline-block';
+                confirmBtn.textContent = 'Confirm'; // Reset button text
             }
             
             document.getElementById('gradeActivityModal').classList.add('show');
@@ -946,43 +1075,52 @@
         function confirmGrade() {
             const feedbackInput = document.getElementById('feedbackInput');
             const feedback = feedbackInput ? feedbackInput.value.trim() : '';
+            const gradeInput = document.getElementById('modalGradeInput');
+            const score = gradeInput ? gradeInput.value : 0;
             
             // Check if feedback already exists (shouldn't happen, but double-check)
             const existingFeedbackContainer = document.getElementById('existingFeedbackContainer');
-            if (existingFeedbackContainer && existingFeedbackContainer.style.display !== 'none') {
-                alert('Feedback has already been provided for this student.');
+            const hasFeedbackAlready = existingFeedbackContainer && existingFeedbackContainer.style.display !== 'none';
+            
+            // Validate grade
+            if (!score || score < 0) {
+                alert('Please enter a valid grade.');
+                if (gradeInput) gradeInput.focus();
                 return;
             }
             
-            if (!feedback) {
-                alert('Please provide feedback before confirming.');
-                if (feedbackInput) feedbackInput.focus();
+            const maxScore = gradeInput ? gradeInput.max : 100;
+            if (parseInt(score) > parseInt(maxScore)) {
+                alert(`Grade cannot exceed ${maxScore} points.`);
+                if (gradeInput) gradeInput.focus();
                 return;
             }
             
-            // Hide the textarea and show feedback as a post immediately
-            const newFeedbackContainer = document.getElementById('newFeedbackContainer');
-            const confirmBtn = document.getElementById('confirmGradeBtn');
+            // If feedback is being provided for the first time, show it as a post
+            if (!hasFeedbackAlready && feedback) {
+                // Hide the textarea and show feedback as a post immediately
+                const newFeedbackContainer = document.getElementById('newFeedbackContainer');
+                const confirmBtn = document.getElementById('confirmGradeBtn');
+                
+                // Hide textarea and confirm button
+                newFeedbackContainer.style.display = 'none';
+                confirmBtn.style.display = 'none';
+                
+                // Show existing feedback container with the new feedback
+                const feedbackText = feedback
+                    .replace(/&/g, '&amp;')
+                    .replace(/</g, '&lt;')
+                    .replace(/>/g, '&gt;')
+                    .replace(/"/g, '&quot;')
+                    .replace(/'/g, '&#39;')
+                    .replace(/\n/g, '<br>');
+                
+                document.getElementById('existingFeedbackText').innerHTML = '<strong>Feedback:</strong> ' + feedbackText;
+                const now = new Date();
+                document.getElementById('feedbackDateDisplay').textContent = now.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) + ' at ' + now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+                existingFeedbackContainer.style.display = 'block';
+            }
             
-            // Hide textarea and confirm button
-            newFeedbackContainer.style.display = 'none';
-            confirmBtn.style.display = 'none';
-            
-            // Show existing feedback container with the new feedback
-            const feedbackText = feedback
-                .replace(/&/g, '&amp;')
-                .replace(/</g, '&lt;')
-                .replace(/>/g, '&gt;')
-                .replace(/"/g, '&quot;')
-                .replace(/'/g, '&#39;')
-                .replace(/\n/g, '<br>');
-            
-            document.getElementById('existingFeedbackText').innerHTML = '<strong>Feedback:</strong> ' + feedbackText;
-            const now = new Date();
-            document.getElementById('feedbackDateDisplay').textContent = now.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) + ' at ' + now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
-            existingFeedbackContainer.style.display = 'block';
-            
-            const score = document.querySelector('.grade-input[data-student-id="' + currentStudentId + '"]')?.value || 0;
             const courseId = @Model.CourseId;
 
             // Submit form to server
@@ -1236,6 +1374,48 @@
 
         function closeAddActivityModal() {
             document.getElementById('addActivityModal').classList.remove('show');
+        }
+
+        // Delete Activity Modal Functions
+        function openDeleteModal() {
+            const activityId = document.getElementById('activityId')?.value;
+            const activityName = document.getElementById('nameDisplay')?.textContent || 'this activity';
+            
+            if (!activityId) {
+                alert('Please select an activity to delete.');
+                return;
+            }
+            
+            document.getElementById('deleteActivityName').textContent = activityName;
+            document.getElementById('deleteActivityModal').classList.add('show');
+        }
+
+        function closeDeleteModal() {
+            document.getElementById('deleteActivityModal').classList.remove('show');
+        }
+
+        function confirmDelete() {
+            const activityId = document.getElementById('activityId')?.value;
+            const courseId = @Model.CourseId;
+            
+            if (!activityId) {
+                alert('Activity ID not found.');
+                closeDeleteModal();
+                return;
+            }
+            
+            // Submit delete request
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = '@Url.Action("DeleteActivity", "Teacher")';
+            
+            form.innerHTML = `
+                <input type="hidden" name="id" value="${courseId}" />
+                <input type="hidden" name="activityId" value="${activityId}" />
+            `;
+            
+            document.body.appendChild(form);
+            form.submit();
         }
 
         function addActivity() {

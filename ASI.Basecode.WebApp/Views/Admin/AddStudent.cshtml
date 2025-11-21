@@ -1,7 +1,8 @@
-@model ASI.Basecode.Services.ServiceModels.StudentCreateDto
+@model ASI.Basecode.WebApp.Models.StudentCreateViewModel
+
 @{
-    Layout = "~/Views/Shared/_AuthenticatedLayout.cshtml";
-    ViewData["Title"] = "Add Student";
+	Layout = "~/Views/Shared/_AuthenticatedLayout.cshtml";
+	ViewData["Title"] = "Add Student";
 }
 
 <script src="https://cdn.tailwindcss.com"></script>
@@ -38,12 +39,14 @@
 			<section class="bg-white p-6 mb-6">
 				<h2 class="text-lg font-bold text-gray-900 mb-6">Section 1: Personal Information</h2>
 				
+
 				<div class="grid grid-cols-1 md:grid-cols-2 gap-5">
 					<!-- First name -->
 					<div>
 						<label asp-for="FirstName" class="block mb-2 text-sm font-semibold text-gray-900">
 							@Html.DisplayNameFor(m => m.FirstName) <span class="text-red-600">*</span>
 						</label>
+
 						<input asp-for="FirstName" type="text" required 
 							   class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-green-500">
 						<span asp-validation-for="FirstName" class="text-red-600 text-xs"></span>
@@ -69,6 +72,7 @@
 						<span asp-validation-for="MiddleName" class="text-red-600 text-xs"></span>
 					</div>
 					
+
 					<!-- Suffix -->
 					<div>
 						<label asp-for="Suffix" class="block mb-2 text-sm font-semibold text-gray-900">
@@ -78,7 +82,6 @@
 							   class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-green-500">
 						<span asp-validation-for="Suffix" class="text-red-600 text-xs"></span>
 					</div>
-					
 					<!-- Contact Number -->
 					<div>
 						<label asp-for="ContactNumber" class="block mb-2 text-sm font-semibold text-gray-900">
@@ -104,7 +107,6 @@
 			<!-- Student Specific Information Section -->
 			<div class="bg-green-100 p-6 mb-6 max-w-4xl">
 				<h2 class="text-lg font-bold text-gray-900 mb-6">Section 2: Student Specific Information</h2>
-				
 				<div class="grid grid-cols-1 md:grid-cols-2 gap-5">
 					<!-- Year Level -->
 					<div>
@@ -121,7 +123,7 @@
 						</select>
 						<span asp-validation-for="YearLevel" class="text-red-600 text-xs"></span>
 					</div>
-					
+
 					<!-- Program/Course -->
 					<div>
 						<label asp-for="ProgramId" class="block mb-2 text-sm font-semibold text-gray-900">
@@ -135,7 +137,6 @@
 						</select>
 						<span asp-validation-for="ProgramId" class="text-red-600 text-xs"></span>
 					</div>
-					
 					<!-- Department (Read-only) -->
 					<div class="md:col-span-2">
 						<label asp-for="DepartmentId" class="block mb-2 text-sm font-semibold text-gray-900">
@@ -151,7 +152,6 @@
 			<!-- Address Information Section -->
 			<div class="bg-white p-6 mb-6">
 				<h2 class="text-lg font-bold text-gray-900 mb-6">Section 3: Address Information</h2>
-				
 				<!-- Full Width Address Fields -->
 				<div class="space-y-5 mb-6">
 					<!-- House/Apt number -->
@@ -163,7 +163,6 @@
 							   class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm bg-white focus:outline-none focus:ring-2 focus:ring-green-500">
 						<span asp-validation-for="HouseNumber" class="text-red-600 text-xs"></span>
 					</div>
-					
 					<!-- Street name -->
 					<div>
 						<label asp-for="StreetName" class="block mb-2 text-sm font-semibold text-gray-900">
@@ -173,7 +172,6 @@
 							   class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm bg-white focus:outline-none focus:ring-2 focus:ring-green-500">
 						<span asp-validation-for="StreetName" class="text-red-600 text-xs"></span>
 					</div>
-					
 					<!-- Subdivision/Bldg. -->
 					<div>
 						<label asp-for="Subdivision" class="block mb-2 text-sm font-semibold text-gray-900">
@@ -184,7 +182,6 @@
 						<span asp-validation-for="Subdivision" class="text-red-600 text-xs"></span>
 					</div>
 				</div>
-				
 				<!-- Grid Layout for City/Province/etc -->
 				<div class="grid grid-cols-1 md:grid-cols-2 gap-5">
 					<!-- Barangay -->
@@ -196,7 +193,6 @@
 							   class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm bg-white focus:outline-none focus:ring-2 focus:ring-green-500">
 						<span asp-validation-for="Barangay" class="text-red-600 text-xs"></span>
 					</div>
-					
 					<!-- City -->
 					<div>
 						<label asp-for="City" class="block mb-2 text-sm font-semibold text-gray-900">
@@ -232,7 +228,6 @@
 			<!-- Emergency Contact Information Section -->
 			<div class="bg-green-100 p-6 mb-6 border border-gray-200 rounded-lg">
 				<h2 class="text-lg font-bold text-gray-900 mb-6">Section 4: Emergency Contact Information</h2>
-				
 				<div class="grid grid-cols-1 md:grid-cols-2 gap-5">
 					<!-- First name -->
 					<div>
@@ -243,7 +238,6 @@
 							   class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm bg-white focus:outline-none focus:ring-2 focus:ring-green-500">
 						<span asp-validation-for="EmergencyContactFirstName" class="text-red-600 text-xs"></span>
 					</div>
-					
 					<!-- Last name -->
 					<div>
 						<label asp-for="EmergencyContactLastName" class="block mb-2 text-sm font-semibold text-gray-900">
@@ -253,7 +247,6 @@
 							   class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm bg-white focus:outline-none focus:ring-2 focus:ring-green-500">
 						<span asp-validation-for="EmergencyContactLastName" class="text-red-600 text-xs"></span>
 					</div>
-					
 					<!-- Middle name -->
 					<div>
 						<label asp-for="EmergencyContactMiddleName" class="block mb-2 text-sm font-semibold text-gray-900">
@@ -263,7 +256,6 @@
 							   class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm bg-white focus:outline-none focus:ring-2 focus:ring-green-500">
 						<span asp-validation-for="EmergencyContactMiddleName" class="text-red-600 text-xs"></span>
 					</div>
-					
 					<!-- Suffix -->
 					<div>
 						<label asp-for="EmergencyContactSuffix" class="block mb-2 text-sm font-semibold text-gray-900">
