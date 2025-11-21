@@ -6,58 +6,59 @@
     ViewData["Title"] = "Courses";
 }
 
+<script src="https://cdn.tailwindcss.com"></script>
+
 <!-- Header Section -->
-<section class="bg-[#E8F9E8]" style="padding: 32px 0; text-align:center;">
-    <div class="container" style="max-width: 1200px; margin: 0 auto; padding: 0 16px;">
-        <h1 style="font-size:28px; font-weight:800; margin:0 0 8px 0; color:#111827;">COURSES</h1>
-        <p style="margin:0; color:#4b5563; font-size:14px;">Create, manage, and view all courses</p>
+<section class="bg-[#E8F9E8] py-8 text-center">
+    <div class="container max-w-[1200px] mx-auto px-4">
+        <h1 class="text-[28px] font-extrabold m-0 mb-2 text-gray-900">COURSES</h1>
+        <p class="m-0 text-gray-600 text-sm">Create, manage, and view all courses</p>
     </div>
 </section>
 
 <!-- Main Content Section -->
-<section style="background:#f9fafb; padding: 40px 0;">
-    <div class="container" style="max-width: 1200px; margin: 0 auto; padding: 0 16px;">
+<section class="bg-gray-50 py-10">
+    <div class="container max-w-[1200px] mx-auto px-4">
         
         <!-- Search Bar and Create Course Button -->
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px; gap:16px;">
-            <form method="get" asp-action="Courses" style="display:flex; gap:12px; flex:1; max-width:600px;">
+        <div class="flex justify-between items-center mb-6 gap-4">
+            <form method="get" asp-action="Courses" class="flex gap-3 flex-1 max-w-[600px]">
                 <input type="text" name="search" id="courseSearch" placeholder="Search by course code or name" 
                        value="@ViewData["SearchTerm"]"
-                       style="flex:1; padding:10px 16px; border:1px solid #d1d5db; border-radius:8px; font-size:14px; background:#ffffff;">
+                       class="flex-1 px-4 py-[10px] border border-gray-300 rounded-lg text-sm bg-white">
                 <button type="submit" 
-                        style="background:#059669; color:#fff; border:none; border-radius:8px; padding:10px 24px; font-weight:600; cursor:pointer; font-size:14px;">
+                        class="bg-emerald-600 text-white border-none rounded-lg px-6 py-[10px] font-semibold cursor-pointer text-sm">
                     Search
                 </button>
                 @if (!string.IsNullOrWhiteSpace(ViewData["SearchTerm"]?.ToString()))
                 {
-                    <a asp-action="Courses" style="background:#6b7280; color:#fff; border:none; border-radius:8px; padding:10px 24px; font-weight:600; cursor:pointer; text-decoration:none; font-size:14px; white-space:nowrap;">
+                    <a asp-action="Courses" class="bg-gray-500 text-white border-none rounded-lg px-6 py-[10px] font-semibold cursor-pointer no-underline text-sm whitespace-nowrap">
                         Clear
                     </a>
                 }
             </form>
-            <a asp-controller="Admin" asp-action="AddCourse" style="background:#059669; color:#fff; border:none; border-radius:8px; padding:10px 24px; font-weight:600; cursor:pointer; text-decoration:none; font-size:14px; white-space:nowrap;">Create A Course</a>
+            <a asp-controller="Admin" asp-action="AddCourse" class="bg-emerald-600 text-white border-none rounded-lg px-6 py-[10px] font-semibold cursor-pointer no-underline text-sm whitespace-nowrap">Create A Course</a>
         </div>
 
         <!-- Tabs -->
-        <div style="background:#059669; border-radius:12px 12px 0 0; padding:0; overflow:hidden;">
-            <div style="display:flex; gap:0;">
-                <button class="tab-btn active" data-tab="all" 
-                        style="background:transparent; color:#fff; border:none; border-bottom:3px solid #84FFC2; padding:16px 32px; cursor:pointer; font-weight:600; font-size:14px; transition:all 0.3s;">
+        <div class="bg-emerald-600 rounded-t-xl p-0 overflow-hidden">
+            <div class="flex gap-0">
+                <button class="tab-btn active bg-transparent text-white border-none border-b-[3px] border-b-[#84FFC2] px-8 py-4 cursor-pointer font-semibold text-sm transition-all duration-300" data-tab="all">
                     All users
                 </button>
             </div>
         </div>
 
         <!-- Table -->
-        <div style="background:#ffffff; border-radius:0 0 12px 12px; box-shadow:0 1px 3px rgba(0,0,0,0.1);">
-            <table style="width:100%; border-collapse:collapse;">
+        <div class="bg-white rounded-b-xl shadow-[0_1px_3px_rgba(0,0,0,0.1)]">
+            <table class="w-full border-collapse">
                 <thead>
-                    <tr style="background:#f9fafb; border-bottom:2px solid #e5e7eb;">
-                        <th style="padding:16px; text-align:left; font-weight:700; color:#111827; font-size:14px;">CODE</th>
-                        <th style="padding:16px; text-align:left; font-weight:700; color:#111827; font-size:14px;">Course Name</th>
-                        <th style="padding:16px; text-align:left; font-weight:700; color:#111827; font-size:14px;">Year Level</th>
-                        <th style="padding:16px; text-align:left; font-weight:700; color:#111827; font-size:14px;">Status</th>
-                        <th style="padding:16px; text-align:left; font-weight:700; color:#111827; font-size:14px;">Actions</th>
+                    <tr class="bg-gray-50 border-b-2 border-gray-200">
+                        <th class="p-4 text-left font-bold text-gray-900 text-sm">CODE</th>
+                        <th class="p-4 text-left font-bold text-gray-900 text-sm">Course Name</th>
+                        <th class="p-4 text-left font-bold text-gray-900 text-sm">Year Level</th>
+                        <th class="p-4 text-left font-bold text-gray-900 text-sm">Status</th>
+                        <th class="p-4 text-left font-bold text-gray-900 text-sm">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -65,32 +66,32 @@
                     {
                         @foreach (var course in Model)
                         {
-                            <tr style="border-bottom:1px solid #e5e7eb;">
-                                <td style="padding:14px 16px; font-size:14px; color:#111827;">@course.Code</td>
-                                <td style="padding:14px 16px; font-size:14px; color:#111827;">@course.Name</td>
-                                <td style="padding:14px 16px; font-size:14px; color:#111827;">@course.Level</td>
-                                <td style="padding:14px 16px;">
+                            <tr class="border-b border-gray-200">
+                                <td class="px-4 py-[14px] text-sm text-gray-900">@course.Code</td>
+                                <td class="px-4 py-[14px] text-sm text-gray-900">@course.Name</td>
+                                <td class="px-4 py-[14px] text-sm text-gray-900">@course.Level</td>
+                                <td class="px-4 py-[14px]">
                                     @if (course.Status == "Active")
                                     {
-                                        <span style="background:#86efac; color:#065f46; padding:4px 12px; border-radius:12px; font-size:12px; font-weight:600;">Active</span>
+                                        <span class="bg-green-300 text-green-900 px-3 py-1 rounded-xl text-xs font-semibold">Active</span>
                                     }
                                     else
                                     {
-                                        <span style="background:#d1d5db; color:#4b5563; padding:4px 12px; border-radius:12px; font-size:12px; font-weight:600;">Inactive</span>
+                                        <span class="bg-gray-300 text-gray-600 px-3 py-1 rounded-xl text-xs font-semibold">Inactive</span>
                                     }
                                 </td>
-                                <td style="padding:14px 16px; position:relative;">
-                                    <button onclick="toggleMenu(this)" style="background:none; border:none; cursor:pointer; font-size:20px; padding:4px 8px;">⋮</button>
-                                    <div class="action-menu" style="display:none; position:absolute; right:100%; top:50%; transform:translateY(-50%); background:#fff; border:1px solid #e5e7eb; border-radius:8px; box-shadow:0 4px 12px rgba(0,0,0,0.15); z-index:1000; min-width:140px; margin-right:8px;">
-                                        <a href="@Url.Action("ViewCourse", "Admin", new { id = course.Id })" style="display:block; width:100%; text-align:left; padding:10px 16px; border:none; background:none; cursor:pointer; font-size:14px; color:#111827; border-bottom:1px solid #e5e7eb; text-decoration:none;" onmouseover="this.style.background='#f3f4f6'" onmouseout="this.style.background='none'">View</a>
-                                        <a href="@Url.Action("EditCourse", "Admin", new { id = course.Id })" style="display:block; width:100%; text-align:left; padding:10px 16px; border:none; background:none; cursor:pointer; font-size:14px; color:#111827; border-bottom:1px solid #e5e7eb; text-decoration:none;" onmouseover="this.style.background='#f3f4f6'" onmouseout="this.style.background='none'">Edit</a>
+                                <td class="px-4 py-[14px] relative">
+                                    <button onclick="toggleMenu(this)" class="bg-transparent border-none cursor-pointer text-xl px-2 py-1">⋮</button>
+                                    <div class="action-menu hidden absolute right-full top-1/2 -translate-y-1/2 bg-white border border-gray-200 rounded-lg shadow-[0_4px_12px_rgba(0,0,0,0.15)] z-[1000] min-w-[140px] mr-2">
+                                        <a href="@Url.Action("ViewCourse", "Admin", new { id = course.Id })" class="block w-full text-left px-4 py-[10px] border-none bg-transparent cursor-pointer text-sm text-gray-900 border-b border-gray-200 no-underline hover:bg-gray-100">View</a>
+                                        <a href="@Url.Action("EditCourse", "Admin", new { id = course.Id })" class="block w-full text-left px-4 py-[10px] border-none bg-transparent cursor-pointer text-sm text-gray-900 border-b border-gray-200 no-underline hover:bg-gray-100">Edit</a>
                                         @if (course.Status == "Active")
                                         {
-                                            <button style="display:block; width:100%; text-align:left; padding:10px 16px; border:none; background:none; cursor:pointer; font-size:14px; color:#dc2626;" onmouseover="this.style.background='#f3f4f6'" onmouseout="this.style.background='none'">Deactivate</button>
+                                            <button class="block w-full text-left px-4 py-[10px] border-none bg-transparent cursor-pointer text-sm text-red-600 hover:bg-gray-100">Deactivate</button>
                                         }
                                         else
                                         {
-                                            <button style="display:block; width:100%; text-align:left; padding:10px 16px; border:none; background:none; cursor:pointer; font-size:14px; color:#059669;" onmouseover="this.style.background='#f3f4f6'" onmouseout="this.style.background='none'">Activate</button>
+                                            <button class="block w-full text-left px-4 py-[10px] border-none bg-transparent cursor-pointer text-sm text-emerald-600 hover:bg-gray-100">Activate</button>
                                         }
                                     </div>
                                 </td>
@@ -100,7 +101,7 @@
                     else
                     {
                         <tr>
-                            <td colspan="5" style="padding:20px; text-align:center; color:#6b7280; font-size:14px;">No courses found.</td>
+                            <td colspan="5" class="p-5 text-center text-gray-500 text-sm">No courses found.</td>
                         </tr>
                     }
                 </tbody>
@@ -113,14 +114,14 @@
 @* Success modal markup (renders only if TempData["CourseSuccessMessage"] is set) *@
 @if (TempData["CourseSuccessMessage"] != null)
 {
-    <div id="successModalBackdrop" style="position:fixed; inset:0; background:rgba(0,0,0,0.35); backdrop-filter:blur(3px); z-index:10000;"></div>
-    <div id="successModal" style="position:fixed; left:50%; top:20%; transform:translateX(-50%); z-index:10001; max-width:520px; width:90%; background:#fff; border-radius:12px; box-shadow:0 8px 30px rgba(0,0,0,0.2);">
-        <div style="padding:20px; border-bottom:1px solid #eef2f7;">
-            <h3 style="margin:0; font-size:18px; font-weight:800; color:#111827;">Success</h3>
-            <p style="margin:8px 0 0 0; color:#4b5563; font-size:14px;">@TempData["CourseSuccessMessage"]</p>
+    <div id="successModalBackdrop" class="fixed inset-0 bg-black/35 backdrop-blur-sm z-[10000]"></div>
+    <div id="successModal" class="fixed left-1/2 top-[20%] -translate-x-1/2 z-[10001] max-w-[520px] w-[90%] bg-white rounded-xl shadow-[0_8px_30px_rgba(0,0,0,0.2)]">
+        <div class="p-5 border-b border-gray-100">
+            <h3 class="m-0 text-lg font-extrabold text-gray-900">Success</h3>
+            <p class="mt-2 mb-0 text-gray-600 text-sm">@TempData["CourseSuccessMessage"]</p>
         </div>
-        <div style="display:flex; justify-content:flex-end; gap:12px; padding:16px;">
-            <a href="@Url.Action("Courses", "Admin")" style="padding:10px 18px; border-radius:8px; border:1px solid #d1d5db; background:#fff; color:#374151; text-decoration:none;">Close</a>
+        <div class="flex justify-end gap-3 p-4">
+            <a href="@Url.Action("Courses", "Admin")" class="px-[18px] py-[10px] rounded-lg border border-gray-300 bg-white text-gray-700 no-underline">Close</a>
         </div>
     </div>
 }

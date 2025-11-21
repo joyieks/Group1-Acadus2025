@@ -10,6 +10,7 @@ using System.Security.Claims;
 using System.Collections.Generic;
 using System.Linq;
 using ASI.Basecode.WebApp.Models;
+using ASI.Basecode.Data.Models;
 
 namespace ASI.Basecode.WebApp.Controllers
 {
@@ -71,6 +72,28 @@ namespace ASI.Basecode.WebApp.Controllers
                     // Check if user is confirmed
                     if (session.User.EmailConfirmedAt.HasValue)
                     {
+                        // Check if user is active in the database
+                        var client = await _supabaseAuthService.GetSupabaseClientForAuthAsync();
+                        var userQuery = await client.From<SupabaseUserNew>()
+                            .Where(x => x.UserTypeId == session.User.Id)
+                            .Get();
+
+                        if (userQuery?.Models == null || !userQuery.Models.Any())
+                        {
+                            ModelState.AddModelError(string.Empty, "❌ User account not found. Please contact support.");
+                            return View(model);
+                        }
+
+                        var user = userQuery.Models.First();
+
+                        // Check if user is active
+                        if (user.IsActive != true)
+                        {
+                            ModelState.AddModelError(string.Empty, "❌ Your account has been deactivated. Please contact an administrator.");
+                            Console.WriteLine($"Login attempt blocked: User {session.User.Email} is not active (IsActive={user.IsActive})");
+                            return View(model);
+                        }
+
                         // Determine user role and name by checking database tables and admin status
                         var (userRole, userName) = await _supabaseAuthService.GetUserRoleAndNameAsync(session.User.Id);
                         

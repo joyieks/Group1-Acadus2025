@@ -9,6 +9,7 @@
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Recent Activity</title>
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
         * {
             margin: 0;
@@ -18,24 +19,6 @@
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-        }
-
-        .modal-backdrop {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.5);
-            backdrop-filter: blur(8px);
-            -webkit-backdrop-filter: blur(8px);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 1000;
-            animation: fadeIn 0.3s ease;
-            overflow-y: auto;
-            padding: 20px;
         }
 
         @@keyframes fadeIn {
@@ -48,79 +31,12 @@
             to { transform: translateY(0); opacity: 1; }
         }
 
-        .modal-content {
-            background: #ffffff;
-            border-radius: 16px;
-            width: 100%;
-            max-width: 800px;
-            max-height: 90vh;
-            overflow-y: auto;
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
-            animation: slideUp 0.3s ease;
-            margin: auto;
-        }
-
-        .activity-item {
-            padding: 16px;
-            border-bottom: 1px solid #e5e7eb;
-            transition: background 0.2s;
-        }
-
-        .activity-item:last-child {
-            border-bottom: none;
-        }
-
         .activity-item:hover {
             background: #f9fafb;
         }
 
         .activity-item.highlighted {
             background: #E8F9E8;
-        }
-
-        .empty-state {
-            padding: 64px 32px;
-            text-align: center;
-        }
-
-        .empty-state-icon {
-            font-size: 48px;
-            color: #d1d5db;
-            margin-bottom: 16px;
-        }
-
-        .empty-state-title {
-            font-size: 18px;
-            font-weight: 700;
-            color: #111827;
-            margin-bottom: 8px;
-        }
-
-        .empty-state-message {
-            font-size: 14px;
-            color: #6b7280;
-        }
-
-        .role-tabs {
-            display: flex;
-            gap: 0;
-            border-bottom: 2px solid #d1fae5;
-            background: #E8F9E8;
-        }
-
-        .role-tab {
-            flex: 1;
-            padding: 12px 16px;
-            background: none;
-            border: none;
-            font-size: 14px;
-            font-weight: 600;
-            color: #6b7280;
-            cursor: pointer;
-            transition: all 0.2s;
-            text-decoration: none;
-            text-align: center;
-            border-bottom: 3px solid transparent;
         }
 
         .role-tab:hover {
@@ -136,41 +52,41 @@
     </style>
 </head>
 <body>
-    <div class="modal-backdrop">
-        <div class="modal-content" onclick="event.stopPropagation()">
+    <div class="fixed top-0 left-0 w-full h-full bg-black/50 backdrop-blur-lg flex items-center justify-center z-[1000] animate-[fadeIn_0.3s_ease] overflow-y-auto p-5">
+        <div class="bg-white rounded-2xl w-full max-w-[800px] max-h-[90vh] overflow-y-auto shadow-[0_20px_25px_-5px_rgba(0,0,0,0.1)] animate-[slideUp_0.3s_ease] my-auto" onclick="event.stopPropagation()">
             <!-- Header -->
-            <div style="background:#E8F9E8; padding:24px 32px 0; border-radius:16px 16px 0 0;">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
-                    <h2 style="font-size:24px; font-weight:800; color:#111827; margin:0;">Recent Activity</h2>
-                    <button id="closeBtn" style="background:none; border:none; font-size:28px; color:#6b7280; cursor:pointer; width:32px; height:32px; border-radius:6px; transition:all 0.2s;">&times;</button>
+            <div class="bg-[#E8F9E8] pt-6 px-8 pb-0 rounded-t-2xl">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-2xl font-extrabold text-gray-900 m-0">Recent Activity</h2>
+                    <button id="closeBtn" class="bg-transparent border-none text-[28px] text-gray-500 cursor-pointer w-8 h-8 rounded-md transition-all duration-200">&times;</button>
                 </div>
 
                 <!-- Role Filter Tabs -->
-                <div class="role-tabs">
+                <div class="flex gap-0 border-b-2 border-emerald-200 bg-[#E8F9E8]">
                     <a href="@Url.Action("RecentActivity", "Admin", new { role = "all" })" 
-                       class="role-tab @(currentRole == "all" ? "active" : "")">
+                       class="role-tab flex-1 py-3 px-4 bg-transparent border-none text-sm font-semibold text-gray-500 cursor-pointer transition-all duration-200 no-underline text-center border-b-[3px] border-transparent @(currentRole == "all" ? "active" : "")">
                         All
                     </a>
                     <a href="@Url.Action("RecentActivity", "Admin", new { role = "admin" })" 
-                       class="role-tab @(currentRole == "admin" ? "active" : "")">
+                       class="role-tab flex-1 py-3 px-4 bg-transparent border-none text-sm font-semibold text-gray-500 cursor-pointer transition-all duration-200 no-underline text-center border-b-[3px] border-transparent @(currentRole == "admin" ? "active" : "")">
                         Admin
                     </a>
                     <a href="@Url.Action("RecentActivity", "Admin", new { role = "teacher" })" 
-                       class="role-tab @(currentRole == "teacher" ? "active" : "")">
+                       class="role-tab flex-1 py-3 px-4 bg-transparent border-none text-sm font-semibold text-gray-500 cursor-pointer transition-all duration-200 no-underline text-center border-b-[3px] border-transparent @(currentRole == "teacher" ? "active" : "")">
                         Teachers
                     </a>
                     <a href="@Url.Action("RecentActivity", "Admin", new { role = "student" })" 
-                       class="role-tab @(currentRole == "student" ? "active" : "")">
+                       class="role-tab flex-1 py-3 px-4 bg-transparent border-none text-sm font-semibold text-gray-500 cursor-pointer transition-all duration-200 no-underline text-center border-b-[3px] border-transparent @(currentRole == "student" ? "active" : "")">
                         Students
                     </a>
                 </div>
             </div>
 
             <!-- Activity List -->
-            <div style="padding:24px 32px;">
+            <div class="py-6 px-8">
                 @if (Model != null && Model.Any())
                 {
-                    <div style="border-radius:8px; overflow:hidden; border:1px solid #e5e7eb;">
+                    <div class="rounded-lg overflow-hidden border border-gray-200">
                         @{
                             var rowIndex = 0;
                         }
@@ -181,9 +97,9 @@
                             var formattedDate = dateTime.ToString("MMMM dd, yyyy, hh:mm tt");
                             var highlightedClass = isHighlighted ? "highlighted" : "";
 
-                            <div class="activity-item @highlightedClass">
-                                <div style="font-weight:700; color:#111827; margin-bottom:4px;">@activity.ActionDescription</div>
-                                <div style="color:#6b7280; font-size:14px; display:flex; justify-content:space-between;">
+                            <div class="activity-item p-4 border-b border-gray-200 transition-colors duration-200 last:border-b-0 @highlightedClass">
+                                <div class="font-bold text-gray-900 mb-1">@activity.ActionDescription</div>
+                                <div class="text-gray-500 text-sm flex justify-between">
                                     <span>@activity.UserName</span>
                                     <span>@formattedDate</span>
                                 </div>
@@ -195,10 +111,10 @@
                 }
                 else
                 {
-                    <div class="empty-state">
-                        <div class="empty-state-icon">??</div>
-                        <div class="empty-state-title">No Recent Activity</div>
-                        <div class="empty-state-message">
+                    <div class="py-16 px-8 text-center">
+                        <div class="text-5xl text-gray-300 mb-4">📋</div>
+                        <div class="text-lg font-bold text-gray-900 mb-2">No Recent Activity</div>
+                        <div class="text-sm text-gray-500">
                             @if (currentRole == "all")
                             {
                                 <text>There are no activities to display yet. Activities will appear here as users interact with the system.</text>
@@ -213,8 +129,8 @@
             </div>
 
             <!-- Footer -->
-            <div style="padding:20px 32px; background:#f9fafb; border-top:1px solid #e5e7eb; border-radius:0 0 16px 16px; display:flex; justify-content:center;">
-                <button id="closeFooterBtn" style="padding:12px 32px; border-radius:6px; font-size:14px; font-weight:600; cursor:pointer; background:#059669; color:#ffffff; border:none;">Close</button>
+            <div class="py-5 px-8 bg-gray-50 border-t border-gray-200 rounded-b-2xl flex justify-center">
+                <button id="closeFooterBtn" class="py-3 px-8 rounded-md text-sm font-semibold cursor-pointer bg-emerald-600 text-white border-none">Close</button>
             </div>
         </div>
     </div>
@@ -231,7 +147,7 @@
         });
 
         // Close when clicking backdrop
-        document.querySelector('.modal-backdrop').addEventListener('click', function(e) {
+        document.querySelector('.fixed').addEventListener('click', function(e) {
             if (e.target === this) closeModal();
         });
 
@@ -243,3 +159,4 @@
     </script>
 </body>
 </html>
+

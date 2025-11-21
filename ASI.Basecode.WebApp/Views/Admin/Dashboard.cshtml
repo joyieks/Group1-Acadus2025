@@ -4,45 +4,47 @@
     ViewData["Title"] = "Admin Dashboard";
 }
 
-<section class="bg-[#E8F9E8]" style="padding: 24px 0;">
-	<div class="container" style="max-width: 1200px; margin: 0 auto; padding: 0 16px;">
+<script src="https://cdn.tailwindcss.com"></script>
+
+<section class="bg-[#E8F9E8] py-6">
+	<div class="container max-w-[1200px] mx-auto px-4">
 		
 		<!-- Welcome Section -->
-		<div style="text-align:center; padding: 24px 0;">
-			<h1 style="font-size:32px; font-weight:800; margin:0 0 8px 0; color:#111827;">Welcome!</h1>
-			<p style="margin:0; color:#4b5563; font-size:16px;">See what's happening in your workspace today</p>
+		<div class="text-center py-6">
+			<h1 class="text-[32px] font-extrabold m-0 mb-2 text-gray-900">Welcome!</h1>
+			<p class="m-0 text-gray-600 text-base">See what's happening in your workspace today</p>
 		</div>
 
 		<!-- KPI Cards -->
-		<div style="display:grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap:24px; max-width: 900px; margin: 0 auto 24px;">
+		<div class="grid grid-cols-3 gap-6 max-w-[900px] mx-auto mb-6">
 		<!-- Students Card -->
-		<div style="background:#ffffff; border-radius:12px; padding:20px 24px; text-align:center; min-height: 120px; display: flex; flex-direction: column; justify-content: center;">
-			<div style="display:flex; align-items:center; justify-content:center; margin-bottom:12px; color:#6b7280;">
-				<span style="margin-right:8px; font-size:18px;">≡</span>
-				<span style="font-size:14px; font-weight:600;">Students</span>
+		<div class="bg-white rounded-xl p-5 px-6 text-center min-h-[120px] flex flex-col justify-center">
+			<div class="flex items-center justify-center mb-3 text-gray-500">
+				<span class="mr-2 text-lg">≡</span>
+				<span class="text-sm font-semibold">Students</span>
 			</div>
-			<div style="font-size:48px; font-weight:800; color:#065f46;">@Model.TotalStudents</div>
+			<div class="text-5xl font-extrabold text-emerald-800">@Model.TotalStudents</div>
 		</div>
 
 		<!-- Instructors Card -->
-		<div style="background:#ffffff; border-radius:12px; padding:20px 24px; text-align:center; min-height: 120px; display: flex; flex-direction: column; justify-content: center;">
-			<div style="display:flex; align-items:center; justify-content:center; margin-bottom:12px; color:#6b7280;">
-				<span style="margin-right:8px; font-size:18px;">≡</span>
-				<span style="font-size:14px; font-weight:600;">Instructors</span>
+		<div class="bg-white rounded-xl p-5 px-6 text-center min-h-[120px] flex flex-col justify-center">
+			<div class="flex items-center justify-center mb-3 text-gray-500">
+				<span class="mr-2 text-lg">≡</span>
+				<span class="text-sm font-semibold">Instructors</span>
 			</div>
-			<div style="font-size:48px; font-weight:800; color:#065f46;">@Model.TotalInstructors</div>
+			<div class="text-5xl font-extrabold text-emerald-800">@Model.TotalInstructors</div>
 		</div>
 
             <!-- Total Courses Card (clickable -> Courses page) -->
             <a href="@Url.Action("Courses", "Admin")" class="no-underline">
 
 		<!-- Total Courses Card -->
-		<div style="background:#ffffff; border-radius:12px; padding:20px 24px; text-align:center; min-height: 120px; display: flex; flex-direction: column; justify-content: center;">
-			<div style="display:flex; align-items:center; justify-content:center; margin-bottom:12px; color:#6b7280;">
-				<span style="margin-right:8px; font-size:18px;">≡</span>
-				<span style="font-size:14px; font-weight:600;">Total Courses</span>
+		<div class="bg-white rounded-xl p-5 px-6 text-center min-h-[120px] flex flex-col justify-center">
+			<div class="flex items-center justify-center mb-3 text-gray-500">
+				<span class="mr-2 text-lg">≡</span>
+				<span class="text-sm font-semibold">Total Courses</span>
 			</div>
-			<div style="font-size:48px; font-weight:800; color:#065f46;">@Model.TotalCourses</div>
+			<div class="text-5xl font-extrabold text-emerald-800">@Model.TotalCourses</div>
 		</div>
 		</div>
 
@@ -50,20 +52,20 @@
 </section>
 
 <!-- White Section with Activity Panels -->
-<section style="background:#ffffff; padding: 32px 0;">
-	<div class="container" style="max-width: 1200px; margin: 0 auto; padding: 0 16px;">
+<section class="bg-white py-8">
+	<div class="container max-w-[1200px] mx-auto px-4">
 		
 		<!-- Recent Activity and Pending Tasks -->
-		<div style="display:grid; grid-template-columns: 1fr; gap:24px; margin-bottom:32px;">
+		<div class="grid grid-cols-1 gap-6 mb-8">
 			
                    <!-- Recent Activity -->
-                   <div style="background:#ffffff; border-radius:12px; padding:24px; box-shadow:0 1px 3px rgba(0,0,0,0.1);">
-                       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
-                           <h2 style="margin:0; font-weight:800; font-size:20px; color:#111827;">Recent activity</h2>
-                           <a href="#" id="viewAllActivitiesBtn" style="color:#059669; text-decoration:none; font-weight:600; font-size:14px; cursor:pointer;">View all</a>
+                   <div class="bg-white rounded-xl p-6 shadow-[0_1px_3px_rgba(0,0,0,0.1)]">
+                       <div class="flex justify-between items-center mb-4">
+                           <h2 class="m-0 font-extrabold text-xl text-gray-900">Recent activity</h2>
+                           <a href="#" id="viewAllActivitiesBtn" class="text-emerald-600 no-underline font-semibold text-sm cursor-pointer">View all</a>
                        </div>
 				
-				<div style="border-radius:8px; overflow:hidden; border:1px solid #e5e7eb;">
+				<div class="rounded-lg overflow-hidden border border-gray-200">
 					@if (Model.RecentActivities != null && Model.RecentActivities.Any())
 					{
 						var rowIndex = 0;
@@ -72,11 +74,11 @@
 							var isHighlighted = rowIndex % 2 == 0;
 							var dateTime = activity.CreatedAt.Kind == DateTimeKind.Utc ? activity.CreatedAt.ToLocalTime() : activity.CreatedAt;
 							var formattedDate = dateTime.ToString("MMMM dd, hh:mm tt");
-							var borderStyle = rowIndex < Model.RecentActivities.Count - 1 ? "border-bottom:1px solid #e5e7eb;" : "";
+							var borderStyle = rowIndex < Model.RecentActivities.Count - 1 ? "border-b border-gray-200" : "";
 
-							<div style="@(isHighlighted ? "background:#E8F9E8;" : "") padding:16px; @borderStyle">
-								<div style="font-weight:700; color:#111827; margin-bottom:4px;">@activity.ActionDescription</div>
-								<div style="color:#6b7280; font-size:14px; display:flex; justify-content:space-between;">
+							<div class="@(isHighlighted ? "bg-[#E8F9E8]" : "") p-4 @borderStyle">
+								<div class="font-bold text-gray-900 mb-1">@activity.ActionDescription</div>
+								<div class="text-gray-500 text-sm flex justify-between">
 									<span>@activity.UserName</span>
 									<span>@formattedDate</span>
 								</div>
@@ -87,8 +89,8 @@
 					}
 					else
 					{
-						<div style="padding:32px; text-align:center; color:#6b7280;">
-							<p style="margin:0;">No recent activity</p>
+						<div class="p-8 text-center text-gray-500">
+							<p class="m-0">No recent activity</p>
 						</div>
 					}
 				</div>
@@ -100,18 +102,18 @@
 </section>
 
 <!-- Green Section with Quick Management -->
-<section class="bg-[#E8F9E8]" style="padding: 32px 0;">
-	<div class="container" style="max-width: 1200px; margin: 0 auto; padding: 0 16px;">
+<section class="bg-[#E8F9E8] py-8">
+	<div class="container max-w-[1200px] mx-auto px-4">
 		
-		<h2 style="text-align:center; font-weight:800; margin:0 0 24px 0; font-size:24px; color:#111827;">Quick management</h2>
+		<h2 class="text-center font-extrabold m-0 mb-6 text-2xl text-gray-900">Quick management</h2>
 		
-		<div style="display:grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap:24px; max-width:900px; margin:0 auto;">
+		<div class="grid grid-cols-3 gap-6 max-w-[900px] mx-auto">
 			
 			<!-- Add a student -->
-			<div style="background:#ffffff; border-radius:12px; padding:32px 24px; text-align:center;">
-				<h3 style="margin:0 0 20px 0; font-weight:700; font-size:18px; color:#111827;">Add a student</h3>
-				<div style="height:100px; display:flex; align-items:center; justify-content:center; margin-bottom:20px;">
-					<svg width="80" height="80" viewBox="0 0 80 80" fill="none" style="stroke:#111827; stroke-width:2; stroke-linecap:round; stroke-linejoin:round;">
+			<div class="bg-white rounded-xl p-8 px-6 text-center">
+				<h3 class="m-0 mb-5 font-bold text-lg text-gray-900">Add a student</h3>
+				<div class="h-[100px] flex items-center justify-center mb-5">
+					<svg width="80" height="80" viewBox="0 0 80 80" fill="none" class="stroke-gray-900 stroke-2">
 						<!-- Graduation cap -->
 						<path d="M10 30 L40 20 L70 30 L40 40 Z" fill="none"/>
 						<path d="M40 40 L40 50" fill="none"/>
@@ -121,14 +123,14 @@
 						<path d="M30 75 Q30 65 40 65 Q50 65 50 75" fill="none"/>
 					</svg>
 				</div>
-				<a href="@Url.Action("AddStudent", "Admin")" style="display:inline-block; background:#76C7C0; color:#fff; border:none; padding:12px 32px; border-radius:8px; cursor:pointer; font-size:14px; font-weight:600; text-decoration:none;">Proceed</a>
+				<a href="@Url.Action("AddStudent", "Admin")" class="inline-block bg-[#76C7C0] text-white border-none py-3 px-8 rounded-lg cursor-pointer text-sm font-semibold no-underline">Proceed</a>
 			</div>
 
 			<!-- Add faculty -->
-			<div style="background:#ffffff; border-radius:12px; padding:32px 24px; text-align:center;">
-				<h3 style="margin:0 0 20px 0; font-weight:700; font-size:18px; color:#111827;">Add faculty</h3>
-				<div style="height:100px; display:flex; align-items:center; justify-content:center; margin-bottom:20px;">
-					<svg width="80" height="80" viewBox="0 0 80 80" fill="none" style="stroke:#111827; stroke-width:2; stroke-linecap:round; stroke-linejoin:round;">
+			<div class="bg-white rounded-xl p-8 px-6 text-center">
+				<h3 class="m-0 mb-5 font-bold text-lg text-gray-900">Add faculty</h3>
+				<div class="h-[100px] flex items-center justify-center mb-5">
+					<svg width="80" height="80" viewBox="0 0 80 80" fill="none" class="stroke-gray-900 stroke-2">
 						<!-- Book -->
 						<rect x="25" y="25" width="30" height="40" rx="2" fill="none"/>
 						<line x1="25" y1="30" x2="55" y2="30"/>
@@ -137,21 +139,21 @@
 						<line x1="30" y1="45" x2="50" y2="45"/>
 					</svg>
 				</div>
-				<a href="@Url.Action("AddTeacher", "Admin")" style="display:inline-block; background:#76C7C0; color:#fff; border:none; padding:12px 32px; border-radius:8px; cursor:pointer; font-size:14px; font-weight:600; text-decoration:none;">Proceed</a>
+				<a href="@Url.Action("AddTeacher", "Admin")" class="inline-block bg-[#76C7C0] text-white border-none py-3 px-8 rounded-lg cursor-pointer text-sm font-semibold no-underline">Proceed</a>
 			</div>
 
 			<!-- Create a course -->
-			<div style="background:#ffffff; border-radius:12px; padding:32px 24px; text-align:center;">
-				<h3 style="margin:0 0 20px 0; font-weight:700; font-size:18px; color:#111827;">Create a course</h3>
-				<div style="height:100px; display:flex; align-items:center; justify-content:center; margin-bottom:20px;">
-					<svg width="80" height="80" viewBox="0 0 80 80" fill="none" style="stroke:#111827; stroke-width:3; stroke-linecap:round;">
+			<div class="bg-white rounded-xl p-8 px-6 text-center">
+				<h3 class="m-0 mb-5 font-bold text-lg text-gray-900">Create a course</h3>
+				<div class="h-[100px] flex items-center justify-center mb-5">
+					<svg width="80" height="80" viewBox="0 0 80 80" fill="none" class="stroke-gray-900 stroke-[3px]">
 						<!-- Three lines icon -->
 						<line x1="20" y1="30" x2="60" y2="30"/>
 						<line x1="20" y1="40" x2="60" y2="40"/>
 						<line x1="20" y1="50" x2="60" y2="50"/>
 					</svg>
 				</div>
-				<a href="@Url.Action("AddCourse", "Admin")" style="display:inline-block; background:#76C7C0; color:#fff; border:none; padding:12px 32px; border-radius:8px; cursor:pointer; font-size:14px; font-weight:600; text-decoration:none;">Proceed</a>
+				<a href="@Url.Action("AddCourse", "Admin")" class="inline-block bg-[#76C7C0] text-white border-none py-3 px-8 rounded-lg cursor-pointer text-sm font-semibold no-underline">Proceed</a>
 			</div>
 
 		</div>
@@ -437,18 +439,18 @@
 </script>
 
 <!-- View All Activities Modal for Admin -->
-<div id="viewAllModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; z-index:10000; align-items:center; justify-content:center;">
-    <div id="viewAllModalBackdrop" style="position:absolute; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5);"></div>
-    <div style="background:#ffffff; border-radius:16px; padding:0; max-width:1000px; width:90%; max-height:90vh; position:relative; z-index:10001; box-shadow:0 20px 25px -5px rgba(0,0,0,0.1); display:flex; flex-direction:column;">
-        <div style="padding:24px; border-bottom:1px solid #e5e7eb; display:flex; justify-content:space-between; align-items:center; position:relative; z-index:10002;">
-            <h2 style="margin:0; font-weight:800; font-size:24px; color:#111827;">All Recent Activities</h2>
-            <button id="closeViewAllModalBtn" style="background:transparent; border:none; font-size:28px; color:#6b7280; cursor:pointer; padding:4px 8px; line-height:1; position:relative; z-index:10003;">&times;</button>
+<div id="viewAllModal" class="hidden fixed top-0 left-0 w-full h-full z-[10000] items-center justify-center">
+    <div id="viewAllModalBackdrop" class="absolute top-0 left-0 w-full h-full bg-black/50"></div>
+    <div class="bg-white rounded-2xl p-0 max-w-[1000px] w-[90%] max-h-[90vh] relative z-[10001] shadow-[0_20px_25px_-5px_rgba(0,0,0,0.1)] flex flex-col">
+        <div class="p-6 border-b border-gray-200 flex justify-between items-center relative z-[10002]">
+            <h2 class="m-0 font-extrabold text-2xl text-gray-900">All Recent Activities</h2>
+            <button id="closeViewAllModalBtn" class="bg-transparent border-none text-[28px] text-gray-500 cursor-pointer px-2 py-1 leading-none relative z-[10003]">&times;</button>
         </div>
-        <div id="viewAllModalContent" style="padding:24px; overflow-y:auto; flex:1; position:relative; z-index:10002;">
+        <div id="viewAllModalContent" class="p-6 overflow-y-auto flex-1 relative z-[10002]">
             <!-- Content will be loaded here -->
         </div>
-        <div style="padding:16px 24px; border-top:1px solid #e5e7eb; display:flex; justify-content:flex-end; position:relative; z-index:10002;">
-            <button id="closeViewAllModalBtnBottom" style="background:#059669; color:#fff; border:none; border-radius:8px; padding:10px 24px; font-weight:600; cursor:pointer; position:relative; z-index:10003;">Close</button>
+        <div class="p-4 px-6 border-t border-gray-200 flex justify-end relative z-[10002]">
+            <button id="closeViewAllModalBtnBottom" class="bg-emerald-600 text-white border-none rounded-lg py-[10px] px-6 font-semibold cursor-pointer relative z-[10003]">Close</button>
         </div>
     </div>
 </div>
