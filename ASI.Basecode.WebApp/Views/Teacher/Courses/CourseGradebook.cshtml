@@ -4,51 +4,51 @@
     ViewData["Title"] = "Course Gradebook";
 }
 
+<script src="https://cdn.tailwindcss.com"></script>
+
 <!-- Hero Section -->
-<section class="hero-section" style="background:#E8F9E8; display:flex; align-items:center; justify-content:center; text-align:center; position:relative; padding: 40px 0;">
-    <a href="/Teacher/FullCourseView/@Model.CourseId" style="position:absolute; top:20px; left:20px; background:#ffffff; color:#059669; border:1px solid #d1d5db; border-radius:8px; padding:8px 16px; font-weight:600; text-decoration:none; transition:background 0.3s; display:flex; align-items:center; gap:8px;">
+<section class="hero-section bg-[#E8F9E8] flex items-center justify-center text-center relative py-10">
+    <a href="/Teacher/FullCourseView/@Model.CourseId" class="absolute top-5 left-5 bg-white text-emerald-600 border border-gray-300 rounded-lg py-2 px-4 font-semibold no-underline transition-colors hover:bg-gray-50 flex items-center gap-2">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M19 12H5"></path>
             <path d="M12 19l-7-7 7-7"></path>
         </svg>
         Back to Course
     </a>
-    <div style="max-width: 1200px; margin: 0 auto; padding: 0 16px;">
-        <p style="margin:0 0 4px 0; color:#4b5563; font-size:20px;">@Model.CourseCode</p>
-        <h1 style="font-size:48px; font-weight:800; margin:0 0 4px 0; color:#111827;">Course Gradebook</h1>
-        <p style="margin:0 0 16px 0; color:#4b5563; font-size:18px;">@Model.SemesterInfo</p>
-        <p style="margin:0 0 0 0; color:#6b7280; font-size:14px;">View and manage student grades for this course.</p>
+    <div class="max-w-[1200px] mx-auto px-4">
+        <p class="m-0 mb-1 text-gray-600 text-xl">@Model.CourseCode</p>
+        <h1 class="text-5xl font-extrabold m-0 mb-1 text-gray-900">Course Gradebook</h1>
+        <p class="m-0 mb-4 text-gray-600 text-lg">@Model.SemesterInfo</p>
+        <p class="m-0 text-gray-500 text-sm">View and manage student grades for this course.</p>
     </div>
 </section>
 
 <!-- White Section with Student Grades -->
-<section style="background:#ffffff; padding: 40px 0;">
-    <div style="max-width: 1200px; margin: 0 auto; padding: 0 16px;">
-        <h2 style="margin:0 0 24px 0; font-weight:800; font-size:24px; color:#111827;">Student Grades</h2>
+<section class="bg-white py-10">
+    <div class="max-w-[1200px] mx-auto px-4">
+        <h2 class="m-0 mb-6 font-extrabold text-2xl text-gray-900">Student Grades</h2>
 
-        <div style="display:grid; grid-template-columns: 3fr 5fr; gap:24px;">
+        <div class="grid gap-6" style="grid-template-columns: 3fr 5fr;">
             <!-- Left Column: Student List -->
             <div>
-                <h3 style="margin:0 0 16px 0; font-weight:700; font-size:18px; color:#111827;">Students</h3>
-                <div style="border-radius:8px; overflow:hidden; border:1px solid #e5e7eb;">
-                    <table id="studentTable" style="width:100%; border-collapse:collapse;">
-                        <thead style="background:#059669;">
+                <h3 class="m-0 mb-4 font-bold text-lg text-gray-900">Students</h3>
+                <div class="rounded-lg overflow-hidden border border-gray-200">
+                    <table id="studentTable" class="w-full border-collapse">
+                        <thead class="bg-emerald-600">
                             <tr>
-                                <th style="padding:12px 16px; text-align:left; font-weight:700; color:#fff; min-width:180px; white-space:nowrap;">Student ID</th>
-                                <th style="padding:12px 16px; text-align:left; font-weight:700; color:#fff; min-width:200px; white-space:nowrap;">Name</th>
-                                <th style="padding:12px 16px; text-align:left; font-weight:700; color:#fff;">Overall Grade</th>
+                                <th class="py-3 px-4 text-left font-bold text-white min-w-[180px] whitespace-nowrap">Student ID</th>
+                                <th class="py-3 px-4 text-left font-bold text-white min-w-[200px] whitespace-nowrap">Name</th>
+                                <th class="py-3 px-4 text-left font-bold text-white">Overall Grade</th>
                             </tr>
                         </thead>
                         <tbody>
                             @foreach (var student in Model.Students)
                             {
                                 <tr onclick="location.href='@Url.Action("CourseGradebook", "Teacher", new { id = Model.CourseId, selectedStudentId = student.StudentId })'"
-                                    style="border-bottom:1px solid #e5e7eb; cursor:pointer; transition:background 0.2s;"
-                                    onmouseover="this.style.background='#f3f4f6';"
-                                    onmouseout="this.style.background='transparent';">
-                                    <td style="padding:16px; color:#111827; font-weight:500; white-space:nowrap;">@student.StudentDisplayId</td>
-                                    <td style="padding:16px; color:#111827; white-space:nowrap;">@student.Name</td>
-                                    <td style="padding:16px; color:#059669; font-weight:600;">@student.AveragePercentage%</td>
+                                    class="border-b border-gray-200 cursor-pointer transition-colors hover:bg-gray-100">
+                                    <td class="py-4 px-4 text-gray-900 font-medium whitespace-nowrap">@student.StudentDisplayId</td>
+                                    <td class="py-4 px-4 text-gray-900 whitespace-nowrap">@student.Name</td>
+                                    <td class="py-4 px-4 text-emerald-600 font-semibold">@student.AveragePercentage%</td>
                                 </tr>
                             }
                         </tbody>
@@ -58,26 +58,26 @@
 
             <!-- Right Column: Grades -->
             <div>
-                <h3 style="margin:0 0 16px 0; font-weight:700; font-size:18px; color:#111827;">Grades</h3>
+                <h3 class="m-0 mb-4 font-bold text-lg text-gray-900">Grades</h3>
 
                 <!-- Average Section -->
                 @if (Model.SelectedStudentDetail != null)
                 {
-                    <div style="background:#f9fafb; border:1px solid #e5e7eb; border-radius:8px; padding:16px; margin-bottom:20px;">
-                        <h4 style="margin:0 0 8px 0; font-weight:600; color:#374151; font-size:14px;">Average (Based on all graded activities)</h4>
-                        <div style="font-size:24px; font-weight:800; color:#059669;">@Model.SelectedStudentDetail.Percentage%</div>
-                        <div style="font-size:14px; color:#6b7280; margin-top:4px;">Grade: @Model.SelectedStudentDetail.Percentage</div>
+                    <div class="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-5">
+                        <h4 class="m-0 mb-2 font-semibold text-gray-700 text-sm">Average (Based on all graded activities)</h4>
+                        <div class="text-2xl font-extrabold text-emerald-600">@Model.SelectedStudentDetail.Percentage%</div>
+                        <div class="text-sm text-gray-500 mt-1">Grade: @Model.SelectedStudentDetail.Percentage</div>
                     </div>
 
                     <!-- Grades Table -->
-                    <div style="border-radius:8px; overflow:hidden; border:1px solid #e5e7eb;">
-                        <table style="width:100%; border-collapse:collapse;">
-                            <thead style="background:#f9fafb;">
+                    <div class="rounded-lg overflow-hidden border border-gray-200">
+                        <table class="w-full border-collapse">
+                            <thead class="bg-gray-50">
                                 <tr>
-                                    <th style="padding:12px 16px; text-align:left; font-weight:600; color:#374151; border-bottom:1px solid #e5e7eb;">Activity Name</th>
-                                    <th style="padding:12px 16px; text-align:left; font-weight:600; color:#374151; border-bottom:1px solid #e5e7eb;">Raw Score</th>
-                                    <th style="padding:12px 16px; text-align:left; font-weight:600; color:#374151; border-bottom:1px solid #e5e7eb;">Perfect Score</th>
-                                    <th style="padding:12px 16px; text-align:left; font-weight:600; color:#374151; border-bottom:1px solid #e5e7eb;">Actions</th>
+                                    <th class="py-3 px-4 text-left font-semibold text-gray-700 border-b border-gray-200">Activity Name</th>
+                                    <th class="py-3 px-4 text-left font-semibold text-gray-700 border-b border-gray-200">Raw Score</th>
+                                    <th class="py-3 px-4 text-left font-semibold text-gray-700 border-b border-gray-200">Perfect Score</th>
+                                    <th class="py-3 px-4 text-left font-semibold text-gray-700 border-b border-gray-200">Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -85,32 +85,30 @@
                                 {
                                     var rowId = $"row-{activity.ActivityId}";
                                     var formId = $"form-{activity.ActivityId}";
-                                    <tr id="@rowId" style="border-bottom:1px solid #f3f4f6;">
-                                        <td style="padding:12px 16px; color:#111827; font-weight:500;">@activity.ActivityName</td>
+                                    <tr id="@rowId" class="border-b border-gray-100">
+                                        <td class="py-3 px-4 text-gray-900 font-medium">@activity.ActivityName</td>
 
-                                        <td style="padding:12px 16px; color:#111827;">
+                                        <td class="py-3 px-4 text-gray-900">
                                             <span class="score-display">@activity.RawScore</span>
                                             <form id="@formId" method="post" asp-action="UpdateScore"
                                                   onsubmit="return validateAndSubmit('@rowId', @activity.MaxScore)"
-                                                  style="display:none;" class="score-form">
+                                                  class="score-form hidden">
                                                 <input type="hidden" name="studentId" value="@Model.SelectedStudentDetail.StudentId" />
                                                 <input type="hidden" name="activityId" value="@activity.ActivityId" />
                                                 <input type="hidden" name="courseId" value="@Model.CourseId" />
                                                 <input type="text" name="newScore" value="@activity.RawScore"
-                                                       style="width:60px; padding:4px 6px; border:1px solid #d1d5db; border-radius:4px;"
-                                                       class="score-input" />
+                                                       class="score-input w-[60px] py-1 px-1.5 border border-gray-300 rounded" />
                                             </form>
                                         </td>
 
-                                        <td style="padding:12px 16px; color:#059669; font-weight:600;">@activity.MaxScore</td>
+                                        <td class="py-3 px-4 text-emerald-600 font-semibold">@activity.MaxScore</td>
 
-                                        <td style="padding:12px 16px;">
-                                            <button type="button" class="edit-btn" onclick="enableEdit('@rowId')"
-                                                    style="background:#3b82f6; color:#fff; border:none; padding:4px 10px; border-radius:4px;">
+                                        <td class="py-3 px-4">
+                                            <button type="button" class="edit-btn bg-blue-500 text-white border-none py-1 px-2.5 rounded" onclick="enableEdit('@rowId')">
                                                 Edit
                                             </button>
                                             <button type="submit" form="@formId"
-                                                    class="save-btn" style="display:none; background:#059669; color:#fff; border:none; padding:4px 10px; border-radius:4px;">
+                                                    class="save-btn hidden bg-emerald-600 text-white border-none py-1 px-2.5 rounded">
                                                 Save
                                             </button>
                                         </td>
@@ -124,7 +122,7 @@
                 }
                 else
                 {
-                    <div style="font-size:14px; color:#6b7280;">Select a student to view detailed grades.</div>
+                    <div class="text-sm text-gray-500">Select a student to view detailed grades.</div>
                 }
             </div>
         </div>
@@ -207,7 +205,6 @@
             return true; // allow form to submit
         }
     </script>
-
 
 
 

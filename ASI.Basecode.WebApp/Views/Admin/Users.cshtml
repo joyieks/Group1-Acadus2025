@@ -6,32 +6,34 @@
     ViewData["Title"] = "Users";
 }
 
-<section class="bg-[#E8F9E8]" style="padding: 0 0 24px 0;">
-	<div class="container" style="max-width: 1200px; margin: 0 auto; padding: 0 16px;">
+<script src="https://cdn.tailwindcss.com"></script>
+
+<section class="bg-[#E8F9E8] pb-6">
+	<div class="container max-w-[1200px] mx-auto px-4">
 		<!-- Header -->
-		<div style="text-align:center; padding: 24px 0;">
-			<h1 style="font-size:28px; font-weight:800; margin:0 0 4px 0;">USERS</h1>
-			<p style="margin:0; color:#4b5563;">Create, manage, and view all your users</p>
+		<div class="text-center py-6">
+			<h1 class="text-[28px] font-extrabold m-0 mb-1">USERS</h1>
+			<p class="m-0 text-gray-600">Create, manage, and view all your users</p>
 		</div>
 
 		<!-- KPI cards -->
-		<div style="display:grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap:24px; max-width: 800px; margin-left: auto; margin-right: auto;">
-			<div style="background:#ffffff; border-radius:12px; padding:15px 24px; text-align:center; min-width: 200px; min-height: 120px; display: flex; flex-direction: column; justify-content: center;">
-				<div style="display:flex; align-items:center; justify-content:center; margin-bottom:8px; color:#6b7280;">
-					<span style="margin-right:8px;">≡</span>
-					<span style="font-size:14px;">Students</span>
+		<div class="grid grid-cols-2 gap-6 max-w-[800px] mx-auto">
+			<div class="bg-white rounded-xl py-[15px] px-6 text-center min-w-[200px] min-h-[120px] flex flex-col justify-center">
+				<div class="flex items-center justify-center mb-2 text-gray-500">
+					<span class="mr-2">≡</span>
+					<span class="text-sm">Students</span>
 				</div>
-				<div style="font-size:36px; font-weight:800; color:#065f46;">
+				<div class="text-4xl font-extrabold text-emerald-800">
 					@(Model != null ? Model.TotalStudents : 0)
 				</div>
 			</div>
 
-			<div style="background:#ffffff; border-radius:12px; padding:15px 24px; text-align:center; min-width: 200px; min-height: 120px; display: flex; flex-direction: column; justify-content: center;">
-				<div style="display:flex; align-items:center; justify-content:center; margin-bottom:8px; color:#6b7280;">
-					<span style="margin-right:8px;">≡</span>
-					<span style="font-size:14px;">Instructors</span>
+			<div class="bg-white rounded-xl py-[15px] px-6 text-center min-w-[200px] min-h-[120px] flex flex-col justify-center">
+				<div class="flex items-center justify-center mb-2 text-gray-500">
+					<span class="mr-2">≡</span>
+					<span class="text-sm">Instructors</span>
 				</div>
-				<div style="font-size:36px; font-weight:800; color:#065f46;">
+				<div class="text-4xl font-extrabold text-emerald-800">
 					@(Model != null ? Model.TotalInstructors : 0)
 				</div>
 			</div>
@@ -40,36 +42,36 @@
 </section>
 
 <!-- White section with search and table -->
-<section style="background:#ffffff; padding: 24px 0;">
-	<div class="container" style="max-width: 1200px; margin: 0 auto; padding: 0 16px;">
+<section class="bg-white py-6">
+	<div class="container max-w-[1200px] mx-auto px-4">
 		
 		@* Success modal markup (renders only if TempData["UserSuccessMessage"] is set) *@
 		@if (TempData["UserSuccessMessage"] != null)
 		{
-			<div id="successModalBackdrop" style="position:fixed; inset:0; background:rgba(0,0,0,0.35); backdrop-filter:blur(3px); z-index:10000;"></div>
-			<div id="successModal" style="position:fixed; left:50%; top:20%; transform:translateX(-50%); z-index:10001; max-width:520px; width:90%; background:#fff; border-radius:12px; box-shadow:0 8px 30px rgba(0,0,0,0.2);">
-				<div style="padding:20px; border-bottom:1px solid #eef2f7;">
-					<h3 style="margin:0; font-size:18px; font-weight:800; color:#111827;">Success</h3>
-					<p style="margin:8px 0 0 0; color:#4b5563; font-size:14px;">@TempData["UserSuccessMessage"]</p>
+			<div id="successModalBackdrop" class="fixed inset-0 bg-black/35 backdrop-blur-sm z-[10000]"></div>
+			<div id="successModal" class="fixed left-1/2 top-[20%] -translate-x-1/2 z-[10001] max-w-[520px] w-[90%] bg-white rounded-xl shadow-[0_8px_30px_rgba(0,0,0,0.2)]">
+				<div class="p-5 border-b border-gray-100">
+					<h3 class="m-0 text-lg font-extrabold text-gray-900">Success</h3>
+					<p class="mt-2 mb-0 text-gray-600 text-sm">@TempData["UserSuccessMessage"]</p>
 				</div>
-				<div style="display:flex; justify-content:flex-end; gap:12px; padding:16px;">
-					<a href="@Url.Action("Users", "Admin")" style="padding:10px 18px; border-radius:8px; border:1px solid #d1d5db; background:#fff; color:#374151; text-decoration:none;">Close</a>
+				<div class="flex justify-end gap-3 p-4">
+					<a href="@Url.Action("Users", "Admin")" class="py-2.5 px-[18px] rounded-lg border border-gray-300 bg-white text-gray-700 no-underline">Close</a>
 				</div>
 			</div>
 		}
 		<!-- Search bar and Add buttons -->
-		<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px; gap:12px; flex-wrap:wrap;">
-			<div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
-				<form method="get" asp-action="Users" style="display:flex; align-items:center; gap:12px; flex:1 1 500px; max-width:700px; min-width:350px;">
+		<div class="flex justify-between items-center mb-6 gap-3 flex-wrap">
+			<div class="flex items-center gap-3 flex-wrap">
+				<form method="get" asp-action="Users" class="flex items-center gap-3 flex-1 min-w-[350px] max-w-[700px]">
 					<input type="hidden" name="tab" value="@Model?.ActiveTab" />
 					<input type="hidden" name="status" value="@Model?.ActiveStatus" />
 					<input type="text" name="search" placeholder="Search by name or ID number" 
 						   value="@Model?.SearchTerm"
-						   style="flex:1; min-width:280px; padding:10px 16px; border:1px solid #d1d5db; border-radius:8px; font-size:14px; background:#ffffff;">
-					<button type="submit" style="background:#059669; color:#fff; border:none; border-radius:8px; padding:10px 24px; font-weight:600; cursor:pointer; white-space:nowrap;">Search</button>
+						   class="flex-1 min-w-[280px] py-2.5 px-4 border border-gray-300 rounded-lg text-sm bg-white">
+					<button type="submit" class="bg-emerald-600 text-white border-none rounded-lg py-2.5 px-6 font-semibold cursor-pointer whitespace-nowrap">Search</button>
 					
 					<!-- Status Filter Dropdown - positioned beside Search button -->
-					<select id="statusFilter" onchange="filterByStatus()" style="padding:10px 16px; border:1px solid #d1d5db; border-radius:8px; font-size:14px; background:#ffffff; cursor:pointer;">
+					<select id="statusFilter" onchange="filterByStatus()" class="py-2.5 px-4 border border-gray-300 rounded-lg text-sm bg-white cursor-pointer">
 						<option value="all" selected="@(Model?.ActiveStatus == "all" || string.IsNullOrEmpty(Model?.ActiveStatus))">All Status</option>
 						<option value="active" selected="@(Model?.ActiveStatus == "active")">Active Only</option>
 						<option value="inactive" selected="@(Model?.ActiveStatus == "inactive")">Inactive Only</option>
@@ -77,37 +79,37 @@
 					
 					@if (!string.IsNullOrWhiteSpace(Model?.SearchTerm))
 					{
-						<a asp-action="Users" asp-route-tab="@Model.ActiveTab" asp-route-status="@Model.ActiveStatus" style="background:#6b7280; color:#fff; border:none; border-radius:8px; padding:10px 24px; font-weight:600; cursor:pointer; text-decoration:none;">Clear</a>
+						<a asp-action="Users" asp-route-tab="@Model.ActiveTab" asp-route-status="@Model.ActiveStatus" class="bg-gray-500 text-white border-none rounded-lg py-2.5 px-6 font-semibold cursor-pointer no-underline">Clear</a>
 					}
 				</form>
 			</div>
 
-			<div style="display:flex; align-items:center; gap:12px;">
-				<a id="addStudentBtn" asp-controller="Admin" asp-action="AddStudent" style="display:none; background:#059669; color:#fff; border:none; border-radius:8px; padding:10px 24px; font-weight:600; cursor:pointer; text-decoration:none; min-width:140px; text-align:center;">Add Student</a>
-				<a id="addTeacherBtn" asp-controller="Admin" asp-action="AddTeacher" style="display:none; background:#059669; color:#fff; border:none; border-radius:8px; padding:10px 24px; font-weight:600; cursor:pointer; text-decoration:none; min-width:140px; text-align:center;">Add Teacher</a>
+			<div class="flex items-center gap-3">
+				<a id="addStudentBtn" asp-controller="Admin" asp-action="AddStudent" class="hidden bg-emerald-600 text-white border-none rounded-lg py-2.5 px-6 font-semibold cursor-pointer no-underline min-w-[140px] text-center">Add Student</a>
+				<a id="addTeacherBtn" asp-controller="Admin" asp-action="AddTeacher" class="hidden bg-emerald-600 text-white border-none rounded-lg py-2.5 px-6 font-semibold cursor-pointer no-underline min-w-[140px] text-center">Add Teacher</a>
 			</div>
 		</div>
 
 		<!-- Tabs -->
-		<div style="display:flex; gap:0; background:#059669; padding:0; border-radius:8px 8px 0 0; overflow:hidden;">
+		<div class="flex gap-0 bg-emerald-600 p-0 rounded-t-lg overflow-hidden">
 			<a id="tabAll" asp-action="Users" asp-route-tab="all" asp-route-search="@Model?.SearchTerm" asp-route-status="@Model?.ActiveStatus"
-			   style="background:#059669; color:#fff; border:none; padding:12px 24px; font-weight:600; cursor:pointer; border-radius:0; position:relative; border-bottom:@(Model?.ActiveTab == "all" ? "3px solid #84FFC2" : "3px solid transparent"); transition:all 0.3s ease; text-decoration:none;">All users</a>
+			   class="bg-emerald-600 text-white border-none py-3 px-6 font-semibold cursor-pointer rounded-none relative border-b-[3px] transition-all duration-300 no-underline @(Model?.ActiveTab == "all" ? "border-b-[#84FFC2]" : "border-b-transparent")">All users</a>
 			<a id="tabStudents" asp-action="Users" asp-route-tab="students" asp-route-search="@Model?.SearchTerm" asp-route-status="@Model?.ActiveStatus"
-			   style="background:#059669; color:@(Model?.ActiveTab == "students" ? "#fff" : "rgba(255,255,255,0.7)"); border:none; padding:12px 24px; font-weight:600; cursor:pointer; border-radius:0; position:relative; border-bottom:@(Model?.ActiveTab == "students" ? "3px solid #84FFC2" : "3px solid transparent"); transition:all 0.3s ease; text-decoration:none;">Students (@(Model?.Students.Count ?? 0))</a>
+			   class="bg-emerald-600 border-none py-3 px-6 font-semibold cursor-pointer rounded-none relative border-b-[3px] transition-all duration-300 no-underline @(Model?.ActiveTab == "students" ? "text-white border-b-[#84FFC2]" : "text-white/70 border-b-transparent")">Students (@(Model?.Students.Count ?? 0))</a>
 			<a id="tabInstructors" asp-action="Users" asp-route-tab="instructors" asp-route-search="@Model?.SearchTerm" asp-route-status="@Model?.ActiveStatus"
-			   style="background:#059669; color:@(Model?.ActiveTab == "instructors" ? "#fff" : "rgba(255,255,255,0.7)"); border:none; padding:12px 24px; font-weight:600; cursor:pointer; border-radius:0; position:relative; border-bottom:@(Model?.ActiveTab == "instructors" ? "3px solid #84FFC2" : "3px solid transparent"); transition:all 0.3s ease; text-decoration:none;">Instructors (@(Model?.Instructors.Count ?? 0))</a>
+			   class="bg-emerald-600 border-none py-3 px-6 font-semibold cursor-pointer rounded-none relative border-b-[3px] transition-all duration-300 no-underline @(Model?.ActiveTab == "instructors" ? "text-white border-b-[#84FFC2]" : "text-white/70 border-b-transparent")">Instructors (@(Model?.Instructors.Count ?? 0))</a>
 		</div>
 
 		<!-- Table -->
-		<div style="background:#ffffff; border-radius:0 0 12px 12px; overflow:hidden; box-shadow:0 1px 3px rgba(0,0,0,0.1);">
-			<table style="width:100%; border-collapse:collapse; background:#ffffff;">
+		<div class="bg-white rounded-b-xl overflow-hidden shadow-sm">
+			<table class="w-full border-collapse bg-white">
 				<thead>
-					<tr style="background:#f9fafb; border-bottom:2px solid #e5e7eb;">
-						<th style="padding:12px 16px; text-align:left; font-weight:700; color:#111827;">ID No.</th>
-						<th style="padding:12px 16px; text-align:left; font-weight:700; color:#111827;">Name</th>
-						<th style="padding:12px 16px; text-align:left; font-weight:700; color:#111827;">Role</th>
-						<th style="padding:12px 16px; text-align:left; font-weight:700; color:#111827;">Status</th>
-						<th style="padding:12px 16px; text-align:left; font-weight:700; color:#111827;">Actions</th>
+					<tr class="bg-gray-50 border-b-2 border-gray-200">
+						<th class="py-3 px-4 text-left font-bold text-gray-900">ID No.</th>
+						<th class="py-3 px-4 text-left font-bold text-gray-900">Name</th>
+						<th class="py-3 px-4 text-left font-bold text-gray-900">Role</th>
+						<th class="py-3 px-4 text-left font-bold text-gray-900">Status</th>
+						<th class="py-3 px-4 text-left font-bold text-gray-900">Actions</th>
 					</tr>
 				</thead>
 				<tbody>
@@ -128,8 +130,8 @@
 							{
 								Console.WriteLine($"   ✅ UserTypeId is valid for {userDisplay}");
 							}
-							<tr style="border-bottom:1px solid #e5e7eb;" data-user-id="@entry.User.Id" data-user-type-id="@(string.IsNullOrWhiteSpace(entry.User.UserTypeId) ? "" : entry.User.UserTypeId)">
-								<td style="padding:16px; color:#111827;">
+							<tr class="border-b border-gray-200" data-user-id="@entry.User.Id" data-user-type-id="@(string.IsNullOrWhiteSpace(entry.User.UserTypeId) ? "" : entry.User.UserTypeId)">
+								<td class="py-4 px-4 text-gray-900">
 									@if (!string.IsNullOrWhiteSpace(entry.User.UserDisplayId))
 									{
 										@entry.User.UserDisplayId
@@ -139,34 +141,34 @@
 										@rowNumber
 									}
 								</td>
-								<td style="padding:16px; color:#111827;">@UsersTableViewModel.GetFullName(entry.User)</td>
-								<td style="padding:16px; color:#111827;">@entry.GetRoleNames()</td>
-								<td style="padding:16px;">
+								<td class="py-4 px-4 text-gray-900">@UsersTableViewModel.GetFullName(entry.User)</td>
+								<td class="py-4 px-4 text-gray-900">@entry.GetRoleNames()</td>
+								<td class="py-4 px-4">
 									@if (entry.User.IsActive == true)
 									{
-										<span style="background:#d1fae5; color:#065f46; padding:6px 14px; border-radius:16px; font-size:13px; font-weight:600;">Active</span>
+										<span class="bg-emerald-100 text-emerald-800 py-1.5 px-3.5 rounded-2xl text-[13px] font-semibold">Active</span>
 									}
 									else
 									{
-										<span style="background:#e5e7eb; color:#4b5563; padding:6px 14px; border-radius:16px; font-size:13px; font-weight:600;">Inactive</span>
+										<span class="bg-gray-200 text-gray-600 py-1.5 px-3.5 rounded-2xl text-[13px] font-semibold">Inactive</span>
 									}
 								</td>
-								<td style="padding:16px; position:relative;">
-									<button class="action-menu-btn" style="background:transparent; border:none; font-size:24px; font-weight:800; cursor:pointer; padding:4px 8px; line-height:1;">⋮</button>
-									<div class="action-menu" style="display:none; position:absolute; right:40px; top:50%; transform:translateY(-50%); background:#fff; border:1px solid #e5e7eb; border-radius:8px; box-shadow:0 4px 12px rgba(0,0,0,0.15); min-width:130px; z-index:10;">
-										<button style="display:block; width:100%; padding:10px 16px; border:none; background:transparent; text-align:left; cursor:pointer; color:#111827; font-size:14px;" onclick="navigateToView(this)">View</button>
-										<button style="display:block; width:100%; padding:10px 16px; border:none; background:transparent; text-align:left; cursor:pointer; color:#111827; font-size:14px;" onclick="navigateToEdit(this)">Edit</button>
+								<td class="py-4 px-4 relative">
+									<button class="action-menu-btn bg-transparent border-none text-2xl font-extrabold cursor-pointer py-1 px-2 leading-none">⋮</button>
+									<div class="action-menu hidden absolute right-10 top-1/2 -translate-y-1/2 bg-white border border-gray-200 rounded-lg shadow-[0_4px_12px_rgba(0,0,0,0.15)] min-w-[130px] z-10">
+										<button class="block w-full py-2.5 px-4 border-none bg-transparent text-left cursor-pointer text-gray-900 text-sm" onclick="navigateToView(this)">View</button>
+										<button class="block w-full py-2.5 px-4 border-none bg-transparent text-left cursor-pointer text-gray-900 text-sm" onclick="navigateToEdit(this)">Edit</button>
 										@{
 											var hasValidUserTypeId = !string.IsNullOrWhiteSpace(entry.User.UserTypeId);
-											var disabledStyle = !hasValidUserTypeId ? "opacity:0.5; cursor:not-allowed;" : "";
+											var disabledStyle = !hasValidUserTypeId ? "opacity-50 cursor-not-allowed" : "";
 										}
 										@if (entry.User.IsActive == true)
 										{
-											<button class="deactivate-action" style="display:block; width:100%; padding:10px 16px; border:none; background:transparent; text-align:left; cursor:@(hasValidUserTypeId ? "pointer" : "not-allowed"); color:#dc2626; font-size:14px; @disabledStyle" onclick="@(hasValidUserTypeId ? "showDeactivateModal(this)" : "alert('Cannot deactivate: User has invalid/missing Supabase ID')")" title="@(!hasValidUserTypeId ? "This user cannot be deactivated due to missing Supabase ID" : "")">Deactivate</button>
+											<button class="deactivate-action block w-full py-2.5 px-4 border-none bg-transparent text-left text-red-600 text-sm @disabledStyle @(hasValidUserTypeId ? "cursor-pointer" : "cursor-not-allowed")" onclick="@(hasValidUserTypeId ? "showDeactivateModal(this)" : "alert('Cannot deactivate: User has invalid/missing Supabase ID')")" title="@(!hasValidUserTypeId ? "This user cannot be deactivated due to missing Supabase ID" : "")">Deactivate</button>
 										}
 										else
 										{
-											<button class="reactivate-action" style="display:block; width:100%; padding:10px 16px; border:none; background:transparent; text-align:left; cursor:@(hasValidUserTypeId ? "pointer" : "not-allowed"); color:#059669; font-size:14px; @disabledStyle" onclick="@(hasValidUserTypeId ? "showReactivateModal(this)" : "alert('Cannot reactivate: User has invalid/missing Supabase ID')")" title="@(!hasValidUserTypeId ? "This user cannot be reactivated due to missing Supabase ID" : "")">Reactivate</button>
+											<button class="reactivate-action block w-full py-2.5 px-4 border-none bg-transparent text-left text-emerald-600 text-sm @disabledStyle @(hasValidUserTypeId ? "cursor-pointer" : "cursor-not-allowed")" onclick="@(hasValidUserTypeId ? "showReactivateModal(this)" : "alert('Cannot reactivate: User has invalid/missing Supabase ID')")" title="@(!hasValidUserTypeId ? "This user cannot be reactivated due to missing Supabase ID" : "")">Reactivate</button>
 										}
 									</div>
 								</td>
@@ -176,15 +178,15 @@
 					}
 					else
 					{
-						<tr style="border-bottom:1px solid #e5e7eb;">
-							<td colspan="5" style="padding:32px; text-align:center; color:#6b7280;">
+						<tr class="border-b border-gray-200">
+							<td colspan="5" class="py-8 px-4 text-center text-gray-500">
 								@if (Model?.SearchTerm != null)
 								{
-									<p style="margin:0;">No users found matching "@Model.SearchTerm"</p>
+									<p class="m-0">No users found matching "@Model.SearchTerm"</p>
 								}
 								else
 								{
-									<p style="margin:0;">No users available</p>
+									<p class="m-0">No users available</p>
 								}
 							</td>
 						</tr>
@@ -255,59 +257,59 @@ function filterByStatus() {
 </script>
 
 <!-- Deactivate Modal -->
-<div id="deactivateModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:1000; align-items:center; justify-content:center;">
-    <div style="background:#ffffff; border-radius:12px; padding:32px; max-width:400px; width:90%; margin:20px; box-shadow:0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04);">
-        <div style="text-align:center; margin-bottom:24px;">
-            <div style="width:64px; height:64px; border-radius:9999px; background:#fef2f2; display:flex; align-items:center; justify-content:center; margin:0 auto 16px auto;">
+<div id="deactivateModal" class="hidden fixed top-0 left-0 w-full h-full bg-black/50 z-[1000] items-center justify-center">
+    <div class="bg-white rounded-xl p-8 max-w-[400px] w-[90%] my-5 shadow-[0_20px_25px_-5px_rgba(0,0,0,0.1),0_10px_10px_-5px_rgba(0,0,0,0.04)]">
+        <div class="text-center mb-6">
+            <div class="w-16 h-16 rounded-full bg-red-50 flex items-center justify-center mx-auto mb-4">
                 <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
                     <line x1="12" y1="9" x2="12" y2="13"></line>
                     <line x1="12" y1="17" x2="12.01" y2="17"></line>
                 </svg>
             </div>
-            <h3 style="font-size:18px; font-weight:700; color:#111827; margin:0 0 8px 0;">Deactivate User</h3>
-            <p style="color:#6b7280; font-size:14px; margin:0;" id="deactivateModalText">Are you sure you want to deactivate this user? This action will prevent them from accessing the system.</p>
+            <h3 class="text-lg font-bold text-gray-900 m-0 mb-2">Deactivate User</h3>
+            <p class="text-gray-500 text-sm m-0" id="deactivateModalText">Are you sure you want to deactivate this user? This action will prevent them from accessing the system.</p>
         </div>
-        <div style="display:flex; gap:12px;">
-            <button onclick="hideDeactivateModal()" style="flex:1; background:#f3f4f6; color:#374151; border:1px solid #d1d5db; border-radius:6px; padding:12px; font-weight:600; cursor:pointer;">Cancel</button>
-            <button onclick="confirmDeactivate()" style="flex:1; background:#dc2626; color:#ffffff; border:none; border-radius:6px; padding:12px; font-weight:600; cursor:pointer;">Deactivate</button>
+        <div class="flex gap-3">
+            <button onclick="hideDeactivateModal()" class="flex-1 bg-gray-100 text-gray-700 border border-gray-300 rounded-md py-3 px-4 font-semibold cursor-pointer">Cancel</button>
+            <button onclick="confirmDeactivate()" class="flex-1 bg-red-600 text-white border-none rounded-md py-3 px-4 font-semibold cursor-pointer">Deactivate</button>
         </div>
     </div>
 </div>
 
 <!-- Reactivate Modal -->
-<div id="reactivateModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:1000; align-items:center; justify-content:center;">
-    <div style="background:#ffffff; border-radius:12px; padding:32px; max-width:400px; width:90%; margin:20px; box-shadow:0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04);">
-        <div style="text-align:center; margin-bottom:24px;">
-            <div style="width:64px; height:64px; border-radius:9999px; background:#d1fae5; display:flex; align-items:center; justify-content:center; margin:0 auto 16px auto;">
+<div id="reactivateModal" class="hidden fixed top-0 left-0 w-full h-full bg-black/50 z-[1000] items-center justify-center">
+    <div class="bg-white rounded-xl p-8 max-w-[400px] w-[90%] my-5 shadow-[0_20px_25px_-5px_rgba(0,0,0,0.1),0_10px_10px_-5px_rgba(0,0,0,0.04)]">
+        <div class="text-center mb-6">
+            <div class="w-16 h-16 rounded-full bg-emerald-100 flex items-center justify-center mx-auto mb-4">
                 <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <polyline points="20,6 9,17 4,12"></polyline>
                 </svg>
             </div>
-            <h3 style="font-size:18px; font-weight:700; color:#111827; margin:0 0 8px 0;">Reactivate User</h3>
-            <p style="color:#6b7280; font-size:14px; margin:0;" id="reactivateModalText">Are you sure you want to reactivate this user? This will restore their access to the system.</p>
+            <h3 class="text-lg font-bold text-gray-900 m-0 mb-2">Reactivate User</h3>
+            <p class="text-gray-500 text-sm m-0" id="reactivateModalText">Are you sure you want to reactivate this user? This will restore their access to the system.</p>
         </div>
-        <div style="display:flex; gap:12px;">
-            <button onclick="hideReactivateModal()" style="flex:1; background:#f3f4f6; color:#374151; border:1px solid #d1d5db; border-radius:6px; padding:12px; font-weight:600; cursor:pointer;">Cancel</button>
-            <button onclick="confirmReactivate()" style="flex:1; background:#059669; color:#ffffff; border:none; border-radius:6px; padding:12px; font-weight:600; cursor:pointer;">Reactivate</button>
+        <div class="flex gap-3">
+            <button onclick="hideReactivateModal()" class="flex-1 bg-gray-100 text-gray-700 border border-gray-300 rounded-md py-3 px-4 font-semibold cursor-pointer">Cancel</button>
+            <button onclick="confirmReactivate()" class="flex-1 bg-emerald-600 text-white border-none rounded-md py-3 px-4 font-semibold cursor-pointer">Reactivate</button>
         </div>
     </div>
 </div>
 
 <!-- Success Modal -->
-<div id="successModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:1000; align-items:center; justify-content:center;">
-    <div style="background:#ffffff; border-radius:12px; padding:32px; max-width:400px; width:90%; margin:20px; box-shadow:0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04);">
-        <div style="text-align:center; margin-bottom:24px;">
-            <div style="width:64px; height:64px; border-radius:9999px; background:#d1fae5; display:flex; align-items:center; justify-content:center; margin:0 auto 16px auto;">
+<div id="successModal" class="hidden fixed top-0 left-0 w-full h-full bg-black/50 z-[1000] items-center justify-center">
+    <div class="bg-white rounded-xl p-8 max-w-[400px] w-[90%] my-5 shadow-[0_20px_25px_-5px_rgba(0,0,0,0.1),0_10px_10px_-5px_rgba(0,0,0,0.04)]">
+        <div class="text-center mb-6">
+            <div class="w-16 h-16 rounded-full bg-emerald-100 flex items-center justify-center mx-auto mb-4">
                 <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <polyline points="20,6 9,17 4,12"></polyline>
                 </svg>
             </div>
-            <h3 style="font-size:18px; font-weight:700; color:#111827; margin:0 0 8px 0;">Success</h3>
-            <p style="color:#6b7280; font-size:14px; margin:0;" id="successModalText">Operation completed successfully.</p>
+            <h3 class="text-lg font-bold text-gray-900 m-0 mb-2">Success</h3>
+            <p class="text-gray-500 text-sm m-0" id="successModalText">Operation completed successfully.</p>
         </div>
-        <div style="display:flex; justify-content:center;">
-            <button onclick="closeSuccessModal()" style="flex:1; background:#059669; color:#ffffff; border:none; border-radius:6px; padding:12px; font-weight:600; cursor:pointer;">Close</button>
+        <div class="flex justify-center">
+            <button onclick="closeSuccessModal()" class="flex-1 bg-emerald-600 text-white border-none rounded-md py-3 px-4 font-semibold cursor-pointer">Close</button>
         </div>
     </div>
 </div>

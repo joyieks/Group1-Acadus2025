@@ -223,19 +223,46 @@ namespace ASI.Basecode.WebApp.Controllers
         [HttpGet]
         public IActionResult AddStudent()
         {
-            return View(new StudentCreateDto());
+            return View(new StudentCreateViewModel());
         }
 
         // POST: Handle form submission
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> AddStudent(StudentCreateDto model)
+        public async Task<IActionResult> AddStudent(StudentCreateViewModel model)
         {
             if (!ModelState.IsValid) return View(model);
 
             try
             {
-                var success = await _userService.CreateStudentAsync(model);
+                // Map ViewModel to DTO
+                var dto = new StudentCreateDto
+                {
+                    FirstName = model.FirstName,
+                    MiddleName = model.MiddleName,
+                    LastName = model.LastName,
+                    Suffix = model.Suffix,
+                    Email = model.Email,
+                    ContactNumber = model.ContactNumber,
+                    HouseNumber = model.HouseNumber,
+                    StreetName = model.StreetName,
+                    Subdivision = model.Subdivision,
+                    Barangay = model.Barangay,
+                    City = model.City,
+                    Province = model.Province,
+                    ZipCode = model.ZipCode,
+                    YearLevel = model.YearLevel,
+                    ProgramId = model.ProgramId,
+                    DepartmentId = model.DepartmentId,
+                    EmergencyContactFirstName = model.EmergencyContactFirstName,
+                    EmergencyContactMiddleName = model.EmergencyContactMiddleName,
+                    EmergencyContactLastName = model.EmergencyContactLastName,
+                    EmergencyContactSuffix = model.EmergencyContactSuffix,
+                    EmergencyContactNumber = model.EmergencyContactNumber,
+                    EmergencyContactRelationship = model.EmergencyContactRelationship
+                };
+
+                var success = await _userService.CreateStudentAsync(dto);
        
                 if (success)
                 {
@@ -262,7 +289,7 @@ namespace ASI.Basecode.WebApp.Controllers
                 ViewBag.Departments = new List<Department>();
             }
 
-            return View(new StudentCreateDto());
+            return View(new StudentCreateViewModel());
         }
 
         [HttpGet]
