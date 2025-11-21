@@ -178,11 +178,15 @@
                 <div>
                     <div style="background:#f9fafb; border:1px solid #e5e7eb; border-radius:8px; padding:24px;">
                         <h3 style="margin:0 0 20px 0; font-weight:700; font-size:18px; color:#111827;">Handled Courses</h3>
+                        @{
+                            var handledCourses = ViewBag.HandledCourses as IEnumerable<dynamic>;
+                            var totalCourses = handledCourses?.Count() ?? 0;
+                        }
 
                         <!-- Total Courses Card -->
                         <div style="background:#ffffff; border:1px solid #e5e7eb; border-radius:8px; padding:24px; margin-bottom:24px; text-align:center;">
                             <div style="font-size:14px; color:#6b7280; margin-bottom:12px;">Total Courses This Semester</div>
-                            <div style="font-size:64px; font-weight:800; color:#059669; margin-bottom:8px; line-height:1;">0</div>
+                            <div style="font-size:64px; font-weight:800; color:#059669; margin-bottom:8px; line-height:1;">@totalCourses</div>
                             <div style="font-size:14px; color:#6b7280;">Active Teaching Load</div>
                         </div>
 
@@ -195,16 +199,29 @@
                                         <tr>
                                             <th style="padding:12px 16px; text-align:left; font-weight:700; color:#fff; font-size:14px;">Course Code</th>
                                             <th style="padding:12px 16px; text-align:left; font-weight:700; color:#fff; font-size:14px;">Course Name</th>
-                                            <th style="padding:12px 16px; text-align:left; font-weight:700; color:#fff; font-size:14px;">Schedule</th>
                                             <th style="padding:12px 16px; text-align:center; font-weight:700; color:#fff; font-size:14px;">Enrolled</th>
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        <tr>
-                                            <td colspan="4" style="padding:32px; text-align:center; color:#6b7280; background:#ffffff;">
-                                                No courses assigned yet
-                                            </td>
-                                        </tr>
+                                        @if (handledCourses != null && handledCourses.Any())
+                                        {
+                                            @foreach (var course in handledCourses)
+                                            {
+                                                <tr style="background:#ffffff; border-bottom:1px solid #e5e7eb;">
+                                                    <td style="padding:12px 16px; color:#111827; font-weight:600; font-size:14px;">@course.CourseCode</td>
+                                                    <td style="padding:12px 16px; color:#6b7280; font-size:14px;">@course.CourseName</td>
+                                                    <td style="padding:12px 16px; text-align:center; color:#059669; font-weight:700; font-size:14px;">@course.EnrolledCount</td>
+                                                </tr>
+                                            }
+                                        }
+                                        else
+                                        {
+                                            <tr>
+                                                <td colspan="3" style="padding:32px; text-align:center; color:#6b7280; background:#ffffff;">
+                                                    No courses assigned yet
+                                                </td>
+                                            </tr>
+                                        }
                                     </tbody>
                                 </table>
                             </div>
