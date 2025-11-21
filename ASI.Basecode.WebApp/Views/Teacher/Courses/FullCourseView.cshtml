@@ -4,6 +4,8 @@
     ViewData["Title"] = "Full Course View";
 }
 
+<script src="https://cdn.tailwindcss.com"></script>
+
 <style>
     @@keyframes bounce {
         0%, 20%, 50%, 80%, 100% {
@@ -22,40 +24,40 @@
 </style>
 
 <!-- Hero Section -->
-<section class="hero-section" style="min-height:80vh; background:#E8F9E8; display:flex; align-items:center; justify-content:center; text-align:center; position:relative;">
-    <a href="/Teacher/Courses" style="position:absolute; top:20px; left:20px; background:#ffffff; color:#059669; border:1px solid #d1d5db; border-radius:8px; padding:8px 16px; font-weight:600; text-decoration:none; transition:background 0.3s; display:flex; align-items:center; gap:8px;">
+<section class="hero-section min-h-[80vh] bg-[#E8F9E8] flex items-center justify-center text-center relative">
+    <a href="/Teacher/Courses" class="absolute top-5 left-5 bg-white text-emerald-600 border border-gray-300 rounded-lg py-2 px-4 font-semibold no-underline transition-colors hover:bg-gray-50 flex items-center gap-2">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M19 12H5"></path>
             <path d="M12 19l-7-7 7-7"></path>
         </svg>
         Back to Courses
     </a>
-    <div class="container" style="max-width: 1200px; margin: 0 auto; padding: 0 8px;">
-        <p style="margin:0 0 4px 0; color:#4b5563; font-size:24px;">@Model.CourseCode</p>
-        <h1 style="font-size:64px; font-weight:800; margin:0 0 4px 0; color:#111827;">@Model.CourseTitle</h1>
-        <p style="margin:0 0 24px 0; color:#4b5563; font-size:24px;">@Model.SemesterInfo</p>
-        <p style="margin:0 0 32px 0; color:#6b7280; font-size:16px;">Manage your course students, view top performers, and access quick actions.</p>
-        <a href="#students-section" class="bounce-cta" style="background:#d1fae5; color:#065f46; border:none; border-radius:16px; padding:12px 32px; font-weight:600; text-decoration:none; display:inline-block; transition:background 0.3s;">↓ Scroll down to see more ↓</a>
+    <div class="container max-w-[1200px] mx-auto px-2">
+        <p class="m-0 mb-1 text-gray-600 text-2xl">@Model.CourseCode</p>
+        <h1 class="text-6xl font-extrabold m-0 mb-1 text-gray-900">@Model.CourseTitle</h1>
+        <p class="m-0 mb-6 text-gray-600 text-2xl">@Model.SemesterInfo</p>
+        <p class="m-0 mb-8 text-gray-500 text-base">Manage your course students, view top performers, and access quick actions.</p>
+        <a href="#students-section" class="bounce-cta bg-emerald-100 text-emerald-800 border-none rounded-2xl py-3 px-8 font-semibold no-underline inline-block transition-colors">↓ Scroll down to see more ↓</a>
     </div>
 </section>
 
 <!-- White Section for Students -->
-<section id="students-section" style="background:#ffffff; padding: 40px 0;">
-    <div class="container" style="max-width: 1200px; margin: 0 auto; padding: 0 16px;">
-        <h2 style="margin:0 0 32px 0; font-weight:800; font-size:24px; color:#111827;">Student List</h2>
+<section id="students-section" class="bg-white py-10">
+    <div class="container max-w-[1200px] mx-auto px-4">
+        <h2 class="m-0 mb-8 font-extrabold text-2xl text-gray-900">Student List</h2>
         
         <!-- Search bar, Filter, and Add Student button on same row -->
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px; gap:12px;">
-            <div style="display:flex; align-items:center; gap:12px;">
-                <input type="text" id="studentSearchInput" placeholder="Search for a student ID or name" style="width:300px; padding:10px 16px; border:1px solid #d1d5db; border-radius:8px; font-size:14px; background:#f3f4f6;">
-                <select id="statusFilter" style="padding:10px 16px; border:1px solid #d1d5db; border-radius:8px; font-size:14px; background:#ffffff; cursor:pointer; min-width:150px;">
+        <div class="flex justify-between items-center mb-6 gap-3">
+            <div class="flex items-center gap-3">
+                <input type="text" id="studentSearchInput" placeholder="Search for a student ID or name" class="w-[300px] py-2.5 px-4 border border-gray-300 rounded-lg text-sm bg-gray-100">
+                <select id="statusFilter" class="py-2.5 px-4 border border-gray-300 rounded-lg text-sm bg-white cursor-pointer min-w-[150px]">
                     <option value="">All Status</option>
                     <option value="Active">Active</option>
                     <option value="Inactive">Inactive</option>
                 </select>
-                <button id="studentSearchBtn" style="background:#059669; color:#fff; border:none; border-radius:8px; padding:10px 24px; font-weight:600; cursor:pointer;">Search</button>
+                <button id="studentSearchBtn" class="bg-emerald-600 text-white border-none rounded-lg py-2.5 px-6 font-semibold cursor-pointer">Search</button>
             </div>
-            <button id="addStudentBtn" style="background:#059669; color:#fff; border:none; border-radius:8px; padding:10px 24px; font-weight:600; cursor:pointer; display:flex; align-items:center; gap:8px;">
+            <button id="addStudentBtn" class="bg-emerald-600 text-white border-none rounded-lg py-2.5 px-6 font-semibold cursor-pointer flex items-center gap-2">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M12 5v14M5 12h14"></path>
                 </svg>
@@ -253,7 +255,7 @@
 
         async function loadAvailableStudents() {
             try {
-                $('#availableStudentsList').html('<tr><td colspan="4" style="text-align:center; padding:32px; color:#6b7280;">Loading students...</td></tr>');
+                $('#availableStudentsList').html('<tr><td colspan="4" class="text-center py-8 px-4 text-gray-500">Loading students...</td></tr>');
                 
                 const response = await fetch(`/Teacher/GetAvailableStudents?courseId=${courseId}`);
                 const data = await response.json();
@@ -267,17 +269,16 @@
                     let html = '';
                     data.students.forEach(student => {
                         html += `
-                            <tr style="border-bottom:1px solid #e5e7eb;">
-                                <td style="padding:12px; color:#111827;">${student.idNumber}</td>
-                                <td style="padding:12px; color:#111827;">${student.firstName}</td>
-                                <td style="padding:12px; color:#111827;">${student.lastName}</td>
-                                <td style="padding:12px;">
-                                    <button class="enroll-student-btn" 
+                            <tr class="border-b border-gray-200">
+                                <td class="py-3 px-4 text-gray-900">${student.idNumber}</td>
+                                <td class="py-3 px-4 text-gray-900">${student.firstName}</td>
+                                <td class="py-3 px-4 text-gray-900">${student.lastName}</td>
+                                <td class="py-3 px-4">
+                                    <button class="enroll-student-btn bg-emerald-600 text-white border-none rounded-md py-1.5 px-4 font-semibold cursor-pointer text-xs" 
                                             data-student-id="${student.studentId}"
                                             data-id-number="${student.idNumber}"
                                             data-first-name="${student.firstName}"
-                                            data-last-name="${student.lastName}"
-                                            style="background:#059669; color:#fff; border:none; border-radius:6px; padding:6px 16px; font-weight:600; cursor:pointer; font-size:13px;">
+                                            data-last-name="${student.lastName}">
                                         Select
                                     </button>
                                 </td>
@@ -294,11 +295,11 @@
                             message = `All ${data.debug.totalStudents} students are already enrolled in this course.`;
                         }
                     }
-                    $('#availableStudentsList').html(`<tr><td colspan="4" style="text-align:center; padding:32px; color:#6b7280;">${message}</td></tr>`);
+                    $('#availableStudentsList').html(`<tr><td colspan="4" class="text-center py-8 px-4 text-gray-500">${message}</td></tr>`);
                 }
             } catch (error) {
                 console.error('Error loading available students:', error);
-                $('#availableStudentsList').html('<tr><td colspan="4" style="text-align:center; padding:32px; color:#dc2626;">Error loading students. Please check the console for details.</td></tr>');
+                $('#availableStudentsList').html('<tr><td colspan="4" class="text-center py-8 px-4 text-red-600">Error loading students. Please check the console for details.</td></tr>');
             }
         }
 
@@ -445,31 +446,31 @@
 }
 
 <!-- Add Student Modal -->
-<div id="addStudentModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:1000; align-items:center; justify-content:center;">
-    <div class="modal-backdrop" style="position:absolute; top:0; left:0; width:100%; height:100%;"></div>
-    <div style="background:#ffffff; border-radius:16px; padding:32px; max-width:800px; width:90%; max-height:90vh; overflow-y:auto; position:relative; z-index:1001; box-shadow:0 20px 25px -5px rgba(0,0,0,0.1);">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px;">
-            <h2 style="margin:0; font-weight:800; font-size:24px; color:#111827;">Add Student to Course</h2>
-            <button class="modal-close" style="background:none; border:none; font-size:24px; color:#6b7280; cursor:pointer; padding:0; width:32px; height:32px; display:flex; align-items:center; justify-content:center;">&times;</button>
+<div id="addStudentModal" class="hidden fixed top-0 left-0 w-full h-full bg-black/50 z-[1000] items-center justify-center">
+    <div class="modal-backdrop absolute top-0 left-0 w-full h-full"></div>
+    <div class="bg-white rounded-2xl p-8 max-w-[800px] w-[90%] max-h-[90vh] overflow-y-auto relative z-[1001] shadow-[0_20px_25px_-5px_rgba(0,0,0,0.1)]">
+        <div class="flex justify-between items-center mb-6">
+            <h2 class="m-0 font-extrabold text-2xl text-gray-900">Add Student to Course</h2>
+            <button class="modal-close bg-transparent border-none text-2xl text-gray-500 cursor-pointer p-0 w-8 h-8 flex items-center justify-center">&times;</button>
         </div>
         
-        <div style="margin-bottom:24px;">
-            <input type="text" id="modalStudentSearch" placeholder="Search by ID Number, First Name, or Last Name" style="width:100%; padding:12px 16px; border:1px solid #d1d5db; border-radius:8px; font-size:14px;">
+        <div class="mb-6">
+            <input type="text" id="modalStudentSearch" placeholder="Search by ID Number, First Name, or Last Name" class="w-full py-3 px-4 border border-gray-300 rounded-lg text-sm">
         </div>
 
-        <div style="border:1px solid #e5e7eb; border-radius:8px; overflow:hidden;">
-            <table style="width:100%; border-collapse:collapse;">
+        <div class="border border-gray-200 rounded-lg overflow-hidden">
+            <table class="w-full border-collapse">
                 <thead>
-                    <tr style="background:#059669;">
-                        <th style="padding:12px 16px; text-align:left; font-weight:700; color:#fff;">ID Number</th>
-                        <th style="padding:12px 16px; text-align:left; font-weight:700; color:#fff;">First Name</th>
-                        <th style="padding:12px 16px; text-align:left; font-weight:700; color:#fff;">Last Name</th>
-                        <th style="padding:12px 16px; text-align:left; font-weight:700; color:#fff;">Action</th>
+                    <tr class="bg-emerald-600">
+                        <th class="py-3 px-4 text-left font-bold text-white">ID Number</th>
+                        <th class="py-3 px-4 text-left font-bold text-white">First Name</th>
+                        <th class="py-3 px-4 text-left font-bold text-white">Last Name</th>
+                        <th class="py-3 px-4 text-left font-bold text-white">Action</th>
                     </tr>
                 </thead>
                 <tbody id="availableStudentsList">
                     <tr>
-                        <td colspan="4" style="text-align:center; padding:32px; color:#6b7280;">Loading students...</td>
+                        <td colspan="4" class="text-center py-8 px-4 text-gray-500">Loading students...</td>
                     </tr>
                 </tbody>
             </table>
@@ -478,29 +479,29 @@
 </div>
 
 <!-- Enrollment Confirmation Modal -->
-<div id="enrollmentConfirmModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:2000; align-items:center; justify-content:center;">
-    <div class="enrollment-modal-backdrop" style="position:absolute; top:0; left:0; width:100%; height:100%;"></div>
-    <div style="background:#ffffff; border-radius:16px; padding:32px; max-width:500px; width:90%; position:relative; z-index:2001; box-shadow:0 20px 25px -5px rgba(0,0,0,0.1);">
-        <div style="text-align:center; margin-bottom:24px;">
-            <div style="width:64px; height:64px; background:#d1fae5; border-radius:50%; display:flex; align-items:center; justify-content:center; margin:0 auto 16px;">
+<div id="enrollmentConfirmModal" class="hidden fixed top-0 left-0 w-full h-full bg-black/50 z-[2000] items-center justify-center">
+    <div class="enrollment-modal-backdrop absolute top-0 left-0 w-full h-full"></div>
+    <div class="bg-white rounded-2xl p-8 max-w-[500px] w-[90%] relative z-[2001] shadow-[0_20px_25px_-5px_rgba(0,0,0,0.1)]">
+        <div class="text-center mb-6">
+            <div class="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4">
                 <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
                     <polyline points="22 4 12 14.01 9 11.01"></polyline>
                 </svg>
             </div>
-            <h2 style="margin:0 0 12px 0; font-weight:800; font-size:24px; color:#111827;">Confirm Enrollment</h2>
-            <p style="margin:0; color:#6b7280; font-size:16px; line-height:1.5;">
+            <h2 class="m-0 mb-3 font-extrabold text-2xl text-gray-900">Confirm Enrollment</h2>
+            <p class="m-0 text-gray-500 text-base leading-relaxed">
                 Are you sure you want to enroll<br>
-                <strong style="color:#111827;" id="enrollmentConfirmStudentName"></strong><br>
-                <span style="color:#059669; font-size:14px;" id="enrollmentConfirmStudentId"></span><br>
+                <strong class="text-gray-900" id="enrollmentConfirmStudentName"></strong><br>
+                <span class="text-emerald-600 text-sm" id="enrollmentConfirmStudentId"></span><br>
                 in this course?
             </p>
         </div>
-        <div style="display:flex; gap:12px; justify-content:flex-end;">
-            <button id="cancelEnrollBtn" style="background:#f3f4f6; color:#374151; border:none; border-radius:8px; padding:12px 24px; font-weight:600; cursor:pointer; font-size:14px;">
+        <div class="flex gap-3 justify-end">
+            <button id="cancelEnrollBtn" class="bg-gray-100 text-gray-700 border-none rounded-lg py-3 px-6 font-semibold cursor-pointer text-sm">
                 Cancel
             </button>
-            <button id="confirmEnrollBtn" style="background:#059669; color:#fff; border:none; border-radius:8px; padding:12px 24px; font-weight:600; cursor:pointer; font-size:14px;">
+            <button id="confirmEnrollBtn" class="bg-emerald-600 text-white border-none rounded-lg py-3 px-6 font-semibold cursor-pointer text-sm">
                 Confirm
             </button>
         </div>
@@ -508,28 +509,28 @@
 </div>
 
 <!-- Remove Student Confirmation Modal -->
-<div id="removeConfirmModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:2000; align-items:center; justify-content:center;">
-    <div class="remove-modal-backdrop" style="position:absolute; top:0; left:0; width:100%; height:100%;"></div>
-    <div style="background:#ffffff; border-radius:16px; padding:32px; max-width:500px; width:90%; position:relative; z-index:2001; box-shadow:0 20px 25px -5px rgba(0,0,0,0.1);">
-        <div style="text-align:center; margin-bottom:24px;">
-            <div style="width:64px; height:64px; background:#fee2e2; border-radius:50%; display:flex; align-items:center; justify-content:center; margin:0 auto 16px;">
+<div id="removeConfirmModal" class="hidden fixed top-0 left-0 w-full h-full bg-black/50 z-[2000] items-center justify-center">
+    <div class="remove-modal-backdrop absolute top-0 left-0 w-full h-full"></div>
+    <div class="bg-white rounded-2xl p-8 max-w-[500px] w-[90%] relative z-[2001] shadow-[0_20px_25px_-5px_rgba(0,0,0,0.1)]">
+        <div class="text-center mb-6">
+            <div class="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-4">
                 <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M18 6L6 18M6 6l12 12"></path>
                 </svg>
             </div>
-            <h2 style="margin:0 0 12px 0; font-weight:800; font-size:24px; color:#111827;">Confirm Removal</h2>
-            <p style="margin:0; color:#6b7280; font-size:16px; line-height:1.5;">
+            <h2 class="m-0 mb-3 font-extrabold text-2xl text-gray-900">Confirm Removal</h2>
+            <p class="m-0 text-gray-500 text-base leading-relaxed">
                 Are you sure you want to remove<br>
-                <strong style="color:#111827;" id="removeConfirmStudentName"></strong><br>
-                <span style="color:#dc2626; font-size:14px;" id="removeConfirmStudentId"></span><br>
+                <strong class="text-gray-900" id="removeConfirmStudentName"></strong><br>
+                <span class="text-red-600 text-sm" id="removeConfirmStudentId"></span><br>
                 from this course?
             </p>
         </div>
-        <div style="display:flex; gap:12px; justify-content:flex-end;">
-            <button id="cancelRemoveBtn" style="background:#f3f4f6; color:#374151; border:none; border-radius:8px; padding:12px 24px; font-weight:600; cursor:pointer; font-size:14px;">
+        <div class="flex gap-3 justify-end">
+            <button id="cancelRemoveBtn" class="bg-gray-100 text-gray-700 border-none rounded-lg py-3 px-6 font-semibold cursor-pointer text-sm">
                 Cancel
             </button>
-            <button id="confirmRemoveBtn" style="background:#dc2626; color:#fff; border:none; border-radius:8px; padding:12px 24px; font-weight:600; cursor:pointer; font-size:14px;">
+            <button id="confirmRemoveBtn" class="bg-red-600 text-white border-none rounded-lg py-3 px-6 font-semibold cursor-pointer text-sm">
                 Confirm
             </button>
         </div>
@@ -537,9 +538,9 @@
 </div>
 
 <!-- Green Section with Top Students and Quick Actions -->
-<section style="background:#E8F9E8; padding: 40px 0;">
-    <div class="container" style="max-width: 1200px; margin: 0 auto; padding: 0 16px;">
-        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:24px;">
+<section class="bg-[#E8F9E8] py-10">
+    <div class="container max-w-[1200px] mx-auto px-4">
+        <div class="grid grid-cols-2 gap-6">
             <div>
                 @await Component.InvokeAsync("TopStudents", new { courseId = Model.Id })
             </div>

@@ -9,6 +9,7 @@ using ASI.Basecode.Data.Models;
 using System;
 using System.Linq;
 using System.Security.Claims;
+using System.Text.Json;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using static ASI.Basecode.Data.Models.CourseGradebookViewModel;
 
@@ -114,81 +115,77 @@ namespace ASI.Basecode.WebApp.Controllers
                 }
                 Console.WriteLine($"After status filter ({status}): {allUsers.Count} users");
 
-                // Resolve roles for ALL users first (deduplicate users first to avoid processing same user multiple times)
+                // ⚡ OPTIMIZED: Resolve roles for ALL users in parallel (N+1 fix)
                 var uniqueUsers = allUsers
                     .GroupBy(u => u.UserTypeId)
                     .Select(g => g.First())
                     .ToList();
                 
-                var allUsersWithRoles = new List<UserWithRoleViewModel>();
-                foreach (var u in uniqueUsers)
+                Console.WriteLine($"⏱️ Starting parallel role resolution for {uniqueUsers.Count} users...");
+                var rolesTasks = uniqueUsers.Select(async u =>
                 {
-                    // FIX: Use UserTypeId (Supabase Auth UUID) not Id (database integer)
                     var rolesForUser = await _userService.GetUserRolesAsync(u.UserTypeId);
-                    allUsersWithRoles.Add(new UserWithRoleViewModel
+                    return new UserWithRoleViewModel
                     {
                         User = u,
                         Roles = rolesForUser
-                    });
-                }
+                    };
+                }).ToList();
 
-                Console.WriteLine($"Resolved roles for {allUsersWithRoles.Count} users");
+                // Wait for all role queries to complete in parallel instead of sequentially
+                var allUsersWithRoles = (await Task.WhenAll(rolesTasks)).ToList();
 
-                // Now filter by role for students and instructors (with deduplication)
-                var students = allUsersWithRoles
+                Console.WriteLine($"✅ Resolved roles for {allUsersWithRoles.Count} users in parallel");
+
+                // ⚡ OPTIMIZED: Filter by role ONCE and store both User and UserWithRole
+                var studentsWithRoles = allUsersWithRoles
                     .Where(entry => entry.Roles.Any(r => r.RoleName != null && 
                            (r.RoleName.Equals("Student", StringComparison.OrdinalIgnoreCase) ||
                             r.RoleName.Equals("Students", StringComparison.OrdinalIgnoreCase))))
-                    .Select(entry => entry.User)
-                    .GroupBy(u => u.UserTypeId)  // Group by UserTypeId to remove duplicates
-                    .Select(g => g.First())     // Take first occurrence of each user
+                    .GroupBy(entry => entry.User.UserTypeId)  // Deduplicate by UserTypeId
+                    .Select(g => g.First())     // Take first occurrence
                     .ToList();
 
-                var instructors = allUsersWithRoles
+                var instructorsWithRoles = allUsersWithRoles
                     .Where(entry => entry.Roles.Any(r => r.RoleName != null && 
                            (r.RoleName.Equals("Teacher", StringComparison.OrdinalIgnoreCase) ||
                             r.RoleName.Equals("Instructor", StringComparison.OrdinalIgnoreCase) ||
                             r.RoleName.Equals("Teachers", StringComparison.OrdinalIgnoreCase) ||
                             r.RoleName.Equals("Instructors", StringComparison.OrdinalIgnoreCase))))
-                    .Select(entry => entry.User)
-                    .GroupBy(u => u.UserTypeId)  // Group by UserTypeId to remove duplicates
-                    .Select(g => g.First())       // Take first occurrence of each user
+                    .GroupBy(entry => entry.User.UserTypeId)  // Deduplicate by UserTypeId
+                    .Select(g => g.First())     // Take first occurrence
                     .ToList();
 
-                Console.WriteLine($"Filtered by role - Students: {students.Count}, Instructors: {instructors.Count}");
+                // Extract just the users for the old lists (for backward compatibility)
+                var students = studentsWithRoles.Select(entry => entry.User).ToList();
+                var instructors = instructorsWithRoles.Select(entry => entry.User).ToList();
+
+                Console.WriteLine($"📊 Filtered by role - Students: {students.Count}, Instructors: {instructors.Count}");
 
                 // Determine which list to display based on tab
-                List<SupabaseUserNew> displayedUsers;
                 List<UserWithRoleViewModel> displayedWithRoles;
 
                 switch (tab)
                 {
                     case "students":
-                        displayedUsers = students;
-                        displayedWithRoles = allUsersWithRoles
-                            .Where(entry => students.Any(s => s.UserTypeId == entry.User.UserTypeId))
-                            .ToList();
+                        displayedWithRoles = studentsWithRoles;
+                        Console.WriteLine($"🎓 Displaying {displayedWithRoles.Count} students");
                         break;
                     case "instructors":
-                        displayedUsers = instructors;
-                        displayedWithRoles = allUsersWithRoles
-                            .Where(entry => instructors.Any(i => i.UserTypeId == entry.User.UserTypeId))
-                            .ToList();
+                        displayedWithRoles = instructorsWithRoles;
+                        Console.WriteLine($"👨‍🏫 Displaying {displayedWithRoles.Count} instructors");
                         break;
                     default: // "all"
-                        displayedUsers = allUsers;
                         displayedWithRoles = allUsersWithRoles;
+                        Console.WriteLine($"📋 Displaying {displayedWithRoles.Count} all users");
                         break;
                 }
-
-                Console.WriteLine($"Displaying {displayedWithRoles.Count} users for tab '{tab}'");
 
                 var viewModel = new UsersTableViewModel
                 {
                     AllUsers = allUsers,
                     Students = students,
                     Instructors = instructors,
-                    DisplayedUsers = displayedUsers,
                     DisplayedUsersWithRoles = displayedWithRoles,
                     SearchTerm = search,
                     ActiveTab = tab,
@@ -197,7 +194,7 @@ namespace ASI.Basecode.WebApp.Controllers
                     TotalInstructors = totalInstructors
                 };
 
-                Console.WriteLine($"ViewModel created - All: {allUsers.Count}, Students: {students.Count}, Instructors: {instructors.Count}, Displayed: {displayedUsers.Count}");
+                Console.WriteLine($"✅ ViewModel created - All: {allUsers.Count}, Students: {students.Count}, Instructors: {instructors.Count}, Displayed: {displayedWithRoles.Count}");
                 
                 // ? ADDED: Log user IDs for debugging
                 Console.WriteLine($"=== USER IDS DEBUG ===");
@@ -226,19 +223,46 @@ namespace ASI.Basecode.WebApp.Controllers
         [HttpGet]
         public IActionResult AddStudent()
         {
-            return View(new StudentCreateDto());
+            return View(new StudentCreateViewModel());
         }
 
         // POST: Handle form submission
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> AddStudent(StudentCreateDto model)
+        public async Task<IActionResult> AddStudent(StudentCreateViewModel model)
         {
             if (!ModelState.IsValid) return View(model);
 
             try
             {
-                var success = await _userService.CreateStudentAsync(model);
+                // Map ViewModel to DTO
+                var dto = new StudentCreateDto
+                {
+                    FirstName = model.FirstName,
+                    MiddleName = model.MiddleName,
+                    LastName = model.LastName,
+                    Suffix = model.Suffix,
+                    Email = model.Email,
+                    ContactNumber = model.ContactNumber,
+                    HouseNumber = model.HouseNumber,
+                    StreetName = model.StreetName,
+                    Subdivision = model.Subdivision,
+                    Barangay = model.Barangay,
+                    City = model.City,
+                    Province = model.Province,
+                    ZipCode = model.ZipCode,
+                    YearLevel = model.YearLevel,
+                    ProgramId = model.ProgramId,
+                    DepartmentId = model.DepartmentId,
+                    EmergencyContactFirstName = model.EmergencyContactFirstName,
+                    EmergencyContactMiddleName = model.EmergencyContactMiddleName,
+                    EmergencyContactLastName = model.EmergencyContactLastName,
+                    EmergencyContactSuffix = model.EmergencyContactSuffix,
+                    EmergencyContactNumber = model.EmergencyContactNumber,
+                    EmergencyContactRelationship = model.EmergencyContactRelationship
+                };
+
+                var success = await _userService.CreateStudentAsync(dto);
        
                 if (success)
                 {
@@ -265,7 +289,7 @@ namespace ASI.Basecode.WebApp.Controllers
                 ViewBag.Departments = new List<Department>();
             }
 
-            return View(new StudentCreateDto());
+            return View(new StudentCreateViewModel());
         }
 
         [HttpGet]
@@ -448,13 +472,6 @@ namespace ASI.Basecode.WebApp.Controllers
                     var academicPerformance = await GetStudentAcademicPerformanceAsync(user.UserTypeId);
                     ViewBag.AcademicPerformance = academicPerformance;
                     Console.WriteLine($"Loaded {academicPerformance.Count} courses for student academic performance");
-                }
-                // Load handled courses for teachers
-                else if (role.Equals("Teacher", StringComparison.OrdinalIgnoreCase) || role.Equals("Instructor", StringComparison.OrdinalIgnoreCase))
-                {
-                    var handledCourses = await GetTeacherHandledCoursesAsync(user.UserTypeId);
-                    ViewBag.HandledCourses = handledCourses;
-                    Console.WriteLine($"Loaded {handledCourses.Count} courses for teacher");
                 }
 
                 Console.WriteLine($"ViewUser page loaded for user ID {id}");
@@ -1220,78 +1237,106 @@ namespace ASI.Basecode.WebApp.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> SetUserStatus(int id, bool isActive)
+        public async Task<IActionResult> SetUserStatus([FromBody] JsonElement request)
         {
             try
             {
-                Console.WriteLine($"=== SetUserStatus: ID={id}, IsActive={isActive} ===");
-
-                if (id <= 0)
+                Console.WriteLine($"╔══════════════════════════════════════════════════════════╗");
+                Console.WriteLine($"║         SetUserStatus - Admin Action                    ║");
+                Console.WriteLine($"╚══════════════════════════════════════════════════════════╝");
+                
+                // Extract parameters from the JsonElement request
+                string id = null;
+                bool isActive = false;
+                
+                if (request.TryGetProperty("id", out var idProperty))
                 {
-                    Console.WriteLine($"? Invalid ID: {id}");
+                    id = idProperty.GetString();
+                }
+                
+                if (request.TryGetProperty("isActive", out var isActiveProperty))
+                {
+                    isActive = isActiveProperty.GetBoolean();
+                }
+                
+                Console.WriteLine($"� COMPARISON VALUES:");
+                Console.WriteLine($"   Frontend ID (from data attribute):");
+                Console.WriteLine($"      Type: {id?.GetType().Name ?? "null"}");
+                Console.WriteLine($"      Value: '{id}'");
+                Console.WriteLine($"      Length: {id?.Length ?? 0}");
+                
+                Console.WriteLine($"🔄 New Status: {(isActive ? "ACTIVATE" : "DEACTIVATE")} (IsActive={isActive})");
+
+                if (string.IsNullOrWhiteSpace(id))
+                {
+                    Console.WriteLine($"❌ VALIDATION FAILED: Invalid/Empty UserTypeId: {id}");
                     return Json(new { success = false, message = "Invalid user ID" });
                 }
 
-                // Get all users from database
-                Console.WriteLine($"Calling GetAllUsersAsync()...");
-                var allUsers = await _userService.GetAllUsersAsync();
-                Console.WriteLine($"Retrieved {allUsers.Count} users from GetAllUsersAsync()");
+                // ⚡ OPTIMIZED: Query only the specific user by UserTypeId (N+1 fix)
+                Console.WriteLine($"📥 Querying Supabase WHERE userTypeId == '{id}'...");
+                var client = await _supabaseAuthService.GetSupabaseClientForAuthAsync();
                 
-                // Log first few users to verify data
-                if (allUsers.Count > 0)
-                {
-                    Console.WriteLine($"First 5 users in database:");
-                    foreach (var u in allUsers.Take(5))
-                    {
-                        Console.WriteLine($"  - ID: {u.Id}, Name: {u.FirstName} {u.LastName}, Email: {u.Email}, IsActive: {u.IsActive}");
-                    }
-                }
-                
-                Console.WriteLine($"Searching for user with ID={id}...");
-                var user = allUsers.FirstOrDefault(u => u.Id == id);
+                var userQuery = await client.From<SupabaseUserNew>()
+                    .Where(x => x.UserTypeId == id)
+                    .Get();
 
-                if (user == null)
+                if (userQuery?.Models == null || !userQuery.Models.Any())
                 {
-                    Console.WriteLine($"? User not found with ID: {id}");
-                    Console.WriteLine($"? Available user IDs: {string.Join(", ", allUsers.Select(u => u.Id).Take(10))}");
-                    return Json(new { success = false, message = $"User not found with ID {id}. Please refresh the page and try again." });
+                    Console.WriteLine($"❌ USER NOT FOUND in Supabase");
+                    Console.WriteLine($"   Query compared: userTypeId (string) == '{id}' (string)");
+                    Console.WriteLine($"   No matching records found in users table");
+                    return Json(new { success = false, message = $"User not found. Please refresh the page and try again." });
                 }
 
-                Console.WriteLine($"? Found user: {user.FirstName} {user.LastName} (ID: {user.Id})");
-                Console.WriteLine($"Current status: {user.IsActive}, New status: {isActive}");
+                var user = userQuery.Models.First();
+                
+                Console.WriteLine($"✅ USER FOUND in Supabase:");
+                Console.WriteLine($"   Supabase Record userTypeId:");
+                Console.WriteLine($"      Type: {user.UserTypeId?.GetType().Name ?? "null"}");
+                Console.WriteLine($"      Value: '{user.UserTypeId}'");
+                Console.WriteLine($"      Length: {user.UserTypeId?.Length ?? 0}");
+                Console.WriteLine($"   Match: {(user.UserTypeId == id ? "✅ EXACT MATCH" : "❌ MISMATCH")}");
+                Console.WriteLine($"   User: {user.FirstName} {user.LastName}");
+                Console.WriteLine($"   Current Status: {(user.IsActive == true ? "ACTIVE" : "INACTIVE")}");
+                Console.WriteLine($"   New Status: {(isActive ? "ACTIVE" : "INACTIVE")}");
 
                 // Update user status
                 user.IsActive = isActive;
 
                 // Update in Supabase
-                Console.WriteLine($"Updating user in Supabase...");
-                var client = await _supabaseAuthService.GetSupabaseClientForAuthAsync();
+                Console.WriteLine($"💾 Updating user in Supabase...");
                 
                 var updateResult = await client.From<SupabaseUserNew>()
-                    .Where(x => x.Id == id)
+                    .Where(x => x.UserTypeId == id)
                     .Update(user);
 
                 if (updateResult?.Models == null || !updateResult.Models.Any())
                 {
-                    Console.WriteLine($"? Update failed - no models returned");
+                    Console.WriteLine($"❌ UPDATE FAILED: No models returned from Supabase");
                     return Json(new { success = false, message = "Failed to update user status in database" });
                 }
 
-                Console.WriteLine($"? User {user.FirstName} {user.LastName} status updated to {(isActive ? "Active" : "Inactive")}");
+                Console.WriteLine($"✅ SUPABASE UPDATE SUCCESSFUL");
+                Console.WriteLine($"   User: {user.FirstName} {user.LastName}");
+                Console.WriteLine($"   New Status: {(isActive ? "ACTIVE" : "INACTIVE")}");
 
                 // Log admin activity
                 await LogAdminActivityAsync(
                     actionType: isActive ? "ACTIVATE_USER" : "DEACTIVATE_USER",
                     actionDescription: $"Admin {(isActive ? "activated" : "deactivated")} user {user.FirstName} {user.LastName}",
-                    details: $"User ID: {id}, Email: {user.Email}"
+                    details: $"User TypeID: {id}, Email: {user.Email}"
                 );
+
+                Console.WriteLine($"📝 Admin activity logged");
+                Console.WriteLine($"═══════════════════════════════════════════════════════════");
 
                 return Json(new { success = true, message = $"User status updated to {(isActive ? "Active" : "Inactive")}" });
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"? Error updating user status: {ex.Message}");
-                Console.WriteLine($"Stack Trace: {ex.StackTrace}");
+                Console.WriteLine($"❌ EXCEPTION IN SetUserStatus: {ex.Message}");
+                Console.WriteLine($"📌 Stack Trace: {ex.StackTrace}");
                 return Json(new { success = false, message = $"Error: {ex.Message}" });
             }
         }
@@ -1691,75 +1736,6 @@ namespace ASI.Basecode.WebApp.Controllers
             public string CourseCode { get; set; }
             public string CourseTitle { get; set; }
             public double OverallPercentage { get; set; }
-        }
-
-        /// <summary>
-        /// ViewModel for teacher handled courses
-        /// </summary>
-        public class TeacherHandledCourseItem
-        {
-            public string CourseCode { get; set; }
-            public string CourseName { get; set; }
-            public int EnrolledCount { get; set; }
-        }
-
-        /// <summary>
-        /// Gets courses handled by a teacher with enrollment counts
-        /// </summary>
-        private async Task<List<TeacherHandledCourseItem>> GetTeacherHandledCoursesAsync(string teacherId)
-        {
-            var handledCourses = new List<TeacherHandledCourseItem>();
-
-            try
-            {
-                var client = await _supabaseAuthService.GetSupabaseClientForAuthAsync();
-
-                // Get courses taught by this teacher
-                var courses = await _courseService.GetCoursesByInstructorAsync(teacherId);
-
-                Console.WriteLine($"Found {courses.Count} courses for teacher {teacherId}");
-
-                // For each course, count enrolled students
-                foreach (var course in courses)
-                {
-                    try
-                    {
-                        // Get active enrollments for this course
-                        var enrollmentsResponse = await client
-                            .From<EnrollmentModel>()
-                            .Filter("course_id", Supabase.Postgrest.Constants.Operator.Equals, course.Id)
-                            .Get();
-
-                        var enrollments = enrollmentsResponse?.Models ?? new List<EnrollmentModel>();
-                        var activeEnrollments = enrollments
-                            .Where(e => !string.IsNullOrEmpty(e.Status) && 
-                                   (e.Status.Equals("Active", StringComparison.OrdinalIgnoreCase) || e.Status.Equals("active", StringComparison.OrdinalIgnoreCase)) &&
-                                   e.DroppedAt == null)
-                            .ToList();
-
-                        handledCourses.Add(new TeacherHandledCourseItem
-                        {
-                            CourseCode = course.Code ?? "N/A",
-                            CourseName = course.Name ?? "Untitled Course",
-                            EnrolledCount = activeEnrollments.Count
-                        });
-
-                        Console.WriteLine($"Course: {course.Code} - {activeEnrollments.Count} enrolled students");
-                    }
-                    catch (Exception ex)
-                    {
-                        Console.WriteLine($"Error loading enrollment count for course {course.Id}: {ex.Message}");
-                        // Continue with other courses even if one fails
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error loading teacher handled courses: {ex.Message}");
-                Console.WriteLine($"Stack Trace: {ex.StackTrace}");
-            }
-
-            return handledCourses;
         }
 
         /// <summary>

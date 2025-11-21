@@ -4,18 +4,20 @@
     ViewData["Title"] = "Edit Course";
 }
 
+<script src="https://cdn.tailwindcss.com"></script>
+
 <!-- Header Section -->
-<section class="bg-[#E8F9E8]" style="padding: 32px 0; text-align:center;">
-    <div class="container" style="max-width: 1200px; margin: 0 auto; padding: 0 16px;">
-        <h1 style="font-size:28px; font-weight:800; margin:0 0 8px 0; color:#111827;">EDIT COURSE</h1>
-        <p style="margin:0; color:#4b5563; font-size:14px;">@Model.CourseTitle (@Model.CourseCode)</p>
-        <a href="@Url.Action("Courses", "Teacher")" style="color:#059669; text-decoration:none; font-weight:600;">Back to Courses</a>
+<section class="bg-[#E8F9E8] py-8 text-center">
+    <div class="container max-w-[1200px] mx-auto px-4">
+        <h1 class="text-3xl font-extrabold m-0 mb-2 text-gray-900">EDIT COURSE</h1>
+        <p class="m-0 text-gray-600 text-sm">@Model.CourseTitle (@Model.CourseCode)</p>
+        <a href="@Url.Action("Courses", "Teacher")" class="text-emerald-600 no-underline font-semibold">Back to Courses</a>
     </div>
 </section>
 
 <!-- Main Content Section -->
-<section style="background:#f9fafb; padding: 40px 0;">
-    <div class="container" style="max-width: 1200px; margin: 0 auto; padding: 0 16px;">
+<section class="bg-gray-50 py-10">
+    <div class="container max-w-[1200px] mx-auto px-4">
         <p>Content for editing course will be added here.</p>
     </div>
 </section>
