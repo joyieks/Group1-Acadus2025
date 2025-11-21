@@ -38,7 +38,7 @@
         <!-- Action Buttons -->
         <div style="display:flex; justify-content:flex-end; gap:12px; margin-bottom:24px;">
             <a href="@Url.Action("EditUser", "Admin", new { id = Model.Id })" style="background:#059669; color:#ffffff; border:none; border-radius:6px; padding:12px 20px; font-weight:600; text-decoration:none;">Edit @userTypeLabel</a>
-            <button onclick="toggleUserStatus()" style="background:@buttonColor; color:#ffffff; border:none; border-radius:6px; padding:12px 20px; font-weight:600; cursor:pointer;">@buttonText</button>
+            <button id="actionButton" onclick="openConfirmationModal()" style="background:@buttonColor; color:#ffffff; border:none; border-radius:6px; padding:12px 20px; font-weight:600; cursor:pointer;">@buttonText</button>
         </div>
 
         <div style="display:grid; grid-template-columns: @gridColumns; gap:24px;">
@@ -51,7 +51,7 @@
                     <!-- User Name -->
                     <div style="margin-bottom:20px;">
                         <div style="font-size:24px; font-weight:800; color:#111827; margin-bottom:4px;">@Model.FirstName @Model.LastName</div>
-                        <div style="color:#6b7280; font-size:14px;">@role • @statusBadge</div>
+                        <div style="color:#6b7280; font-size:14px;">@role • <span id="statusBadge">@statusBadge</span></div>
                     </div>
 
                     <!-- Profile Picture -->
@@ -233,6 +233,46 @@
     </div>
 </section>
 
+<!-- Deactivate Modal -->
+<div id="deactivateModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:1000; align-items:center; justify-content:center;">
+    <div style="background:#ffffff; border-radius:12px; padding:32px; max-width:400px; width:90%; margin:20px; box-shadow:0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04);">
+        <div style="text-align:center; margin-bottom:24px;">
+            <div style="width:64px; height:64px; border-radius:9999px; background:#fef2f2; display:flex; align-items:center; justify-content:center; margin:0 auto 16px auto;">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+                    <line x1="12" y1="9" x2="12" y2="13"></line>
+                    <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                </svg>
+            </div>
+            <h3 style="font-size:18px; font-weight:700; color:#111827; margin:0 0 8px 0;">Deactivate User</h3>
+            <p style="color:#6b7280; font-size:14px; margin:0;" id="deactivateModalText">Are you sure you want to deactivate this user? This action will prevent them from accessing the system.</p>
+        </div>
+        <div style="display:flex; gap:12px;">
+            <button onclick="hideModals()" style="flex:1; background:#f3f4f6; color:#374151; border:1px solid #d1d5db; border-radius:6px; padding:12px; font-weight:600; cursor:pointer;">Cancel</button>
+            <button onclick="performUserStatusUpdate(false)" style="flex:1; background:#dc2626; color:#ffffff; border:none; border-radius:6px; padding:12px; font-weight:600; cursor:pointer;">Deactivate</button>
+        </div>
+    </div>
+</div>
+
+<!-- Reactivate Modal -->
+<div id="reactivateModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:1000; align-items:center; justify-content:center;">
+    <div style="background:#ffffff; border-radius:12px; padding:32px; max-width:400px; width:90%; margin:20px; box-shadow:0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04);">
+        <div style="text-align:center; margin-bottom:24px;">
+            <div style="width:64px; height:64px; border-radius:9999px; background:#d1fae5; display:flex; align-items:center; justify-content:center; margin:0 auto 16px auto;">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="20,6 9,17 4,12"></polyline>
+                </svg>
+            </div>
+            <h3 style="font-size:18px; font-weight:700; color:#111827; margin:0 0 8px 0;">Reactivate User</h3>
+            <p style="color:#6b7280; font-size:14px; margin:0;" id="reactivateModalText">Are you sure you want to reactivate this user? This will restore their access to the system.</p>
+        </div>
+        <div style="display:flex; gap:12px;">
+            <button onclick="hideModals()" style="flex:1; background:#f3f4f6; color:#374151; border:1px solid #d1d5db; border-radius:6px; padding:12px; font-weight:600; cursor:pointer;">Cancel</button>
+            <button onclick="performUserStatusUpdate(true)" style="flex:1; background:#059669; color:#ffffff; border:none; border-radius:6px; padding:12px; font-weight:600; cursor:pointer;">Reactivate</button>
+        </div>
+    </div>
+</div>
+
 <!-- Success Modal -->
 <div id="successModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:1000; align-items:center; justify-content:center;">
     <div style="background:#ffffff; border-radius:12px; padding:32px; max-width:400px; width:90%; margin:20px; box-shadow:0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04);">
@@ -252,40 +292,86 @@
 </div>
 
 <script>
-    function toggleUserStatus() {
-        const userId = '@Model.UserTypeId';
-        const isActive = @Json.Serialize(Model.IsActive == true);
-        const userName = '@Html.Raw(Model.FirstName) @Html.Raw(Model.LastName)';
-        const newStatus = isActive === true ? false : true;
-        
-        if (confirm(`Are you sure you want to ${newStatus ? 'reactivate' : 'deactivate'} ${userName}?`)) {
-            fetch('/Admin/SetUserStatus', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ id: userId, isActive: newStatus })
-            })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('Network response was not ok');
-                }
-                return response.json();
-            })
-            .then(data => {
-                if (data.success) {
-                    showSuccessModal(data.message);
-                    // Reload after a short delay to let user see the modal
-                    setTimeout(() => {
-                        window.location.reload();
-                    }, 1500);
-                } else {
-                    alert(data.message || 'Failed to update user status.');
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('An error occurred: ' + error.message + '. Please try again.');
-            });
+    const userId = '@Model.UserTypeId';
+    const userName = '@Html.Raw(Model.FirstName) @Html.Raw(Model.LastName)';
+    // We'll rely on the button text/color to know current state for toggling
+    // But for robustness, let's track the current state in a variable that updates
+    let isCurrentlyActive = @Json.Serialize(Model.IsActive == true);
+
+    function openConfirmationModal() {
+        if (isCurrentlyActive) {
+            // Show Deactivate Modal
+            document.getElementById('deactivateModalText').textContent = `Are you sure you want to deactivate ${userName}? This action will prevent them from accessing the system.`;
+            document.getElementById('deactivateModal').style.display = 'flex';
+        } else {
+            // Show Reactivate Modal
+            document.getElementById('reactivateModalText').textContent = `Are you sure you want to reactivate ${userName}? This will restore their access to the system.`;
+            document.getElementById('reactivateModal').style.display = 'flex';
         }
+    }
+
+    function hideModals() {
+        document.getElementById('deactivateModal').style.display = 'none';
+        document.getElementById('reactivateModal').style.display = 'none';
+    }
+
+    function performUserStatusUpdate(newStatus) {
+        hideModals();
+
+        const actionButton = document.getElementById('actionButton');
+        const statusBadge = document.getElementById('statusBadge');
+        const originalButtonText = actionButton.innerText;
+        const originalButtonColor = actionButton.style.background;
+        const originalStatusText = statusBadge.innerText;
+
+        // ⚡ OPTIMISTIC UPDATE
+        if (newStatus) { // Reactivating
+            actionButton.innerText = 'Deactivate';
+            actionButton.style.background = '#dc2626'; // Red
+            statusBadge.innerText = 'Active';
+        } else { // Deactivating
+            actionButton.innerText = 'Reactivate';
+            actionButton.style.background = '#059669'; // Green
+            statusBadge.innerText = 'Inactive';
+        }
+
+        fetch('/Admin/SetUserStatus', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id: userId, isActive: newStatus })
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.success) {
+                showSuccessModal(data.message);
+                // Update our local state tracker
+                isCurrentlyActive = newStatus;
+                
+                // Reload after a short delay to let user see the modal and ensure full sync
+                setTimeout(() => {
+                    window.location.reload();
+                }, 1500);
+            } else {
+                // Revert UI
+                actionButton.innerText = originalButtonText;
+                actionButton.style.background = originalButtonColor;
+                statusBadge.innerText = originalStatusText;
+                alert(data.message || 'Failed to update user status.');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            // Revert UI
+            actionButton.innerText = originalButtonText;
+            actionButton.style.background = originalButtonColor;
+            statusBadge.innerText = originalStatusText;
+            alert('An error occurred: ' + error.message + '. Please try again.');
+        });
     }
 
     function showSuccessModal(message) {
