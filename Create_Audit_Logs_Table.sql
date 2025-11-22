@@ -108,3 +108,4 @@ COMMENT ON COLUMN public.audit_logs."details" IS 'JSON object containing additio
 
 
 
+
