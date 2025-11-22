@@ -714,7 +714,7 @@ namespace ASI.Basecode.WebApp.Controllers
                     return Json(new { success = false, message = "Activity not found." });
                 }
 
-                activity.IsVisible = true;
+                activity.IsVisible = false;
                 activity.InvisibleAt = DateTime.UtcNow;
                 await activity.Update<ActivityModel>();
 
