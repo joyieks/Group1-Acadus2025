@@ -134,33 +134,21 @@ namespace ASI.Basecode.Services.Services
                 var insertedUser = insertedUserResponse.Model;
                 Console.WriteLine($"? Step 2 Complete: User record created with ID: {insertedUser.Id} (DisplayId: {teacherDisplayId})");
 
-                // Step 3: Lookup department ID
-                Console.WriteLine($"Step 3: Looking up department ID...");
-                int? departmentId = null;
+                // Step 3: Process Department (now stored as text)
+                // ? UPDATED: Now storing as text strings, not integer FKs
+                Console.WriteLine($"Step 3: Processing Department (now stored as text)...");
+                string departmentId = model.Department;  // ? Changed from int? to string
 
-                try
-                {
-                    // Try to find department by name
-                    var deptQuery = await client.From<Department>()
-                        .Where(x => x.DepartmentName == model.Department)
-                        .Get();
-                    var deptRecord = deptQuery?.Models?.FirstOrDefault();
-                    departmentId = deptRecord?.Id;
-                    Console.WriteLine($"  Department lookup: {(departmentId.HasValue ? $"Found ID {departmentId}" : "Not found, will use null")}");
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"  Warning: Department lookup failed: {ex.Message}");
-                }
-                Console.WriteLine($"? Step 3 Complete: Department ID = {departmentId}");
+                Console.WriteLine($"  Department: {departmentId}");
+                Console.WriteLine($"? Step 3 Complete: Department = '{departmentId}'");
 
                 // Step 4: Create teacherProfile record (only stores teacherId and departmentId)
                 Console.WriteLine($"Step 4: Creating teacherProfile record...");
                 var teacher = new Teacher
                 {
                     TeacherId = supabaseUserId,   // References users.userTypeId (UUID)
-                    TeacherDisplayId = teacherDisplayId, // ? NEW: Human-readable display ID
-                    DepartmentId = departmentId,  // FK to departments table
+                    TeacherDisplayId = teacherDisplayId, // ? Human-readable display ID
+                    DepartmentId = departmentId,  // ? Now stores text like "College of Computer Studies (CCS)"
                     CreatedAt = DateTime.UtcNow
                 };
 
@@ -365,22 +353,14 @@ namespace ASI.Basecode.Services.Services
                     .Where(x => x.TeacherId == existingUser.UserTypeId)
                     .Single();
 
-                // Lookup department ID
-                int? departmentId = null;
-                try
-                {
-                    var deptQuery = await client.From<Department>()
-                        .Where(x => x.DepartmentName == model.Department)
-                        .Get();
-                    departmentId = deptQuery?.Models?.FirstOrDefault()?.Id;
-                }
-                catch { }
+                // ? Store department as text directly
+                string departmentId = model.Department;  // Now stores text like "College of Computer Studies (CCS)"
 
-                teacherProfile.DepartmentId = departmentId;  // Fixed: use int, not string
+                teacherProfile.DepartmentId = departmentId;  // ? Now stores text instead of integer
 
-                await client.From<Teacher>()
-                    .Where(x => x.TeacherId == existingUser.UserTypeId)
-                    .Update(teacherProfile);
+     await client.From<Teacher>()
+        .Where(x => x.TeacherId == existingUser.UserTypeId)
+            .Update(teacherProfile);
 
                 return true;
             }

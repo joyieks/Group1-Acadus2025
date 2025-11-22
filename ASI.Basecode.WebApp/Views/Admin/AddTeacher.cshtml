@@ -92,20 +92,15 @@
                  <div class="grid grid-cols-1 gap-5 mb-5">
         <div>
             <label class="block font-semibold text-gray-700 mb-2 text-sm">Department <span class="text-red-600">*</span></label>
-          <select asp-for="DepartmentId" class="w-full p-3 border border-gray-300 rounded-lg text-sm">
-       <option value="">-- Select Department --</option>
-                @if (ViewBag.Departments != null)
-    {
-           foreach (var dept in ViewBag.Departments)
-           {
-      <option value="@dept.Id">@dept.DepartmentName (@dept.DepartmentCode)</option>
-        }
-            }
-             </select>
-     <span asp-validation-for="DepartmentId" class="text-red-600 text-xs block mt-1"></span>
-                 </div>
-                   </div>
-        </section>
+          <!-- ✅ UPDATED: Hardcoded department options with text values -->
+         <select asp-for="DepartmentId" class="w-full p-3 border border-gray-300 rounded-lg text-sm">
+    <option value="">-- Select Department --</option>
+     <option value="College of Computer Studies (CCS)">College of Computer Studies (CCS)</option>
+     </select>
+   <span asp-validation-for="DepartmentId" class="text-red-600 text-xs block mt-1"></span>
+        </div>
+    </div>
+</section>
 
                 <!-- Address Information Section -->
                 <section class="mb-8">

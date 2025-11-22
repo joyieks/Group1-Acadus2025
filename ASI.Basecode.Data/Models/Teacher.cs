@@ -13,8 +13,9 @@ namespace ASI.Basecode.Data.Models
         [Column("teacherId")]
         public string TeacherId { get; set; }  // References users.userTypeId
 
+        // ? Changed from int? to string to store department name directly
         [Column("departmentId")]
-        public int? DepartmentId { get; set; }  // Changed from string to int to match departments table
+        public string DepartmentId { get; set; }  // Now stores text like "College of Computer Studies (CCS)"
 
         // ? NEW: Human-readable teacher display ID
         [Column("teacherDisplayId")]
