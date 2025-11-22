@@ -10,13 +10,12 @@ using System;
 using System.Linq;
 using System.Security.Claims;
 using System.Text.Json;
-using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using static ASI.Basecode.Data.Models.CourseGradebookViewModel;
 
 
 namespace ASI.Basecode.WebApp.Controllers
 {
-    [Authorize(Roles = "Admin")]  // ? CRITICAL: Require authentication and Admin role
+    [Authorize(Roles = "Admin")]  
 
     public class AdminController : Controller
     {
