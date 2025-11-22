@@ -134,75 +134,15 @@ namespace ASI.Basecode.Services.Services
                 var insertedUser = insertedUserResponse.Model;
                 Console.WriteLine($"✓ Step 2 Complete: User record created with ID: {insertedUser.Id} (DisplayId: {studentDisplayId})");
 
-                // Step 3: Parse program and department IDs from model
-                Console.WriteLine($"Step 3: Parsing program and department IDs...");
-                int? programId = null;
-                int? departmentId = null;
+                // Step 3: Lookup Program and Department IDs if provided as names
+                // ✅ UPDATED: Now storing as text strings, not integer FKs
+                Console.WriteLine($"Step 3: Processing Program and Department (now stored as text)...");
+                string programId = model.Program;  // ✅ Use model.Program (string)
+                string departmentId = model.Department;  // ✅ Use model.Department (string)
 
-                // ✅ FIX: If Program/Department contain names, look them up
-                // If they're null, that means the IDs were already parsed in UserService
-                try
-                {
-                    if (!string.IsNullOrEmpty(model.Program))
-                    {
-                        // Try to parse as integer first (if it's an ID string)
-                        if (int.TryParse(model.Program, out int progId))
-                        {
-                            programId = progId;
-                            Console.WriteLine($"  Program: Parsed ID {programId} from string");
-                        }
-                        else
-                        {
-                            // It's a name, look it up
-                            var programQuery = await client.From<ASI.Basecode.Data.Models.Program>()
-                                .Where(x => x.ProgramName == model.Program)
-                                .Get();
-                            var programRecord = programQuery?.Models?.FirstOrDefault();
-                            programId = programRecord?.Id;
-                            Console.WriteLine($"  Program lookup by name '{model.Program}': {(programId.HasValue ? $"Found ID {programId}" : "Not found")}");
-                        }
-                    }
-                    else
-                    {
-                        Console.WriteLine($"  Program: Not provided (null)");
-                    }
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"  Warning: Program lookup failed: {ex.Message}");
-                }
-
-                try
-                {
-                    if (!string.IsNullOrEmpty(model.Department))
-                    {
-                        // Try to parse as integer first (if it's an ID string)
-                        if (int.TryParse(model.Department, out int deptId))
-                        {
-                            departmentId = deptId;
-                            Console.WriteLine($"  Department: Parsed ID {departmentId} from string");
-                        }
-                        else
-                        {
-                            // It's a name, look it up
-                            var deptQuery = await client.From<Department>()
-                                .Where(x => x.DepartmentName == model.Department)
-                                .Get();
-                            var deptRecord = deptQuery?.Models?.FirstOrDefault();
-                            departmentId = deptRecord?.Id;
-                            Console.WriteLine($"  Department lookup by name '{model.Department}': {(departmentId.HasValue ? $"Found ID {departmentId}" : "Not found")}");
-                        }
-                    }
-                    else
-                    {
-                        Console.WriteLine($"  Department: Not provided (null)");
-                    }
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"  Warning: Department lookup failed: {ex.Message}");
-                }
-                Console.WriteLine($"✓ Step 3 Complete: Program ID = {programId}, Department ID = {departmentId}");
+                Console.WriteLine($"  Program: {programId}");
+                Console.WriteLine($"  Department: {departmentId}");
+                Console.WriteLine($"✓ Step 3 Complete: Program = '{programId}', Department = '{departmentId}'");
 
                 // Step 4: Create studentProfile record (only stores studentId, yearLevel, programId, departmentId)
                 Console.WriteLine($"Step 4: Creating studentProfile record...");
@@ -211,8 +151,8 @@ namespace ASI.Basecode.Services.Services
                     StudentId = supabaseUserId,   // References users.userTypeId (UUID)
                     StudentDisplayId = studentDisplayId, // ✅ UPDATED: Human-readable display ID
                     YearLevel = model.YearLevel,
-                    ProgramId = programId,  // FK to programs table
-                    DepartmentId = departmentId,  // FK to departments table
+                    ProgramId = programId,  // ✅ Now stores text like "BS Computer Science"
+                    DepartmentId = departmentId,  // ✅ Now stores text like "College of Computer Studies"
                     CreatedAt = DateTime.UtcNow
                 };
 
@@ -429,34 +369,16 @@ namespace ASI.Basecode.Services.Services
                      .Single();
 
                 // Lookup program and department IDs
-                int? programId = null;
-                int? departmentId = null;
-
-                try
-                {
-                    var programQuery = await client.From<ASI.Basecode.Data.Models.Program>()
-                  .Where(x => x.ProgramName == model.Program)
-                .Get();
-                    programId = programQuery?.Models?.FirstOrDefault()?.Id;
-                }
-                catch { }
-
-                try
-                {
-                    var deptQuery = await client.From<Department>()
-                    .Where(x => x.DepartmentName == model.Department)
-                       .Get();
-                    departmentId = deptQuery?.Models?.FirstOrDefault()?.Id;
-                }
-                catch { }
+                string programId = model.Program;  // ✅ Use model.Program (not model.ProgramId)
+                string departmentId = model.Department;  // ✅ Use model.Department (not model.DepartmentId)
 
                 studentProfile.YearLevel = model.YearLevel;
-                studentProfile.ProgramId = programId;  // Fixed: use ProgramId
-                studentProfile.DepartmentId = departmentId;  // Fixed: use int, not string
+                studentProfile.ProgramId = programId;  // ✅ Now stores text like "BS Computer Science"
+                studentProfile.DepartmentId = departmentId;  // ✅ Now stores text like "College of Computer Studies"
 
                 await client.From<Student>()
                   .Where(x => x.StudentId == existingUser.UserTypeId)
-             .Update(studentProfile);
+     .Update(studentProfile);
 
                 // Update address if exists
                 try

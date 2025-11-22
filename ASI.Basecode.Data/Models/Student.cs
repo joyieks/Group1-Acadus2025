@@ -18,10 +18,10 @@ namespace ASI.Basecode.Data.Models
         public int? YearLevel { get; set; }
 
         [Column("programId")]  // Changed from "program" to "programId" (FK to programs table)
-        public int? ProgramId { get; set; }
+        public string ProgramId { get; set; }
 
         [Column("departmentId")]
-        public int? DepartmentId { get; set; }  // Changed from string to int to match departments table
+        public string DepartmentId { get; set; }  // Changed from string to int to match departments table
 
         // ? RENAMED: Human-readable student display ID
         [Column("studentDisplayId")]
