@@ -295,21 +295,9 @@ namespace ASI.Basecode.WebApp.Controllers
         [HttpGet]
         public async Task<IActionResult> AddTeacher()
         {
-            // ? Load departments from database for dropdown
-            try
-            {
-                var departments = await _adminService.GetAllDepartmentsAsync();
-
-                ViewBag.Departments = departments;
-
-                Console.WriteLine($"Loaded {departments.Count} departments for Add Teacher form");
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error loading departments: {ex.Message}");
-                ViewBag.Departments = new List<Department>();
-            }
-
+            // ✅ No need to load departments - they're hardcoded in the view
+            Console.WriteLine("Loading Add Teacher form with hardcoded department");
+            
             return View(new TeacherCreateViewModel());
         }
 
@@ -352,7 +340,7 @@ namespace ASI.Basecode.WebApp.Controllers
                     City = model.City,
                     Province = model.Province,
                     ZipCode = model.ZipCode,
-                    DepartmentId = model.DepartmentId
+                    DepartmentId = model.DepartmentId  // ✅ Now stores text like "College of Computer Studies (CCS)"
                 };
 
                 var success = await _userService.CreateTeacherAsync(teacherDto);
@@ -391,20 +379,7 @@ namespace ASI.Basecode.WebApp.Controllers
             catch (System.Exception ex)
             {
                 ModelState.AddModelError(string.Empty, $"Error creating teacher: {ex.Message}");
-
-                // ? FIX: Reload dropdown data before returning view
-                try
-                {
-                    var departments = await _adminService.GetAllDepartmentsAsync();
-                    ViewBag.Departments = departments;
-                }
-                catch (Exception reloadEx)
-                {
-                    Console.WriteLine($"Error reloading departments: {reloadEx.Message}");
-                    ViewBag.Departments = new List<Department>();
-                }
-
-                return View(model);
+return View(model);
             }
         }
 
@@ -1479,7 +1454,7 @@ namespace ASI.Basecode.WebApp.Controllers
                 Console.WriteLine($"Stack Trace: {ex.StackTrace}");
                 return new JsonResult(new { 
                     success = false, 
-                    message = $"Error loading students: {ex.Message}" 
+                    message = ex.Message 
                 })
                 {
                     ContentType = "application/json"
