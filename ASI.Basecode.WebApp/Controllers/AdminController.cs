@@ -9,7 +9,7 @@ using ASI.Basecode.Data.Models;
 using System;
 using System.Linq;
 using System.Security.Claims;
-using System.Text.Json;
+using System.Text.Json;  // ✅ Added for JsonElement
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using static ASI.Basecode.Data.Models.CourseGradebookViewModel;
 
@@ -115,77 +115,81 @@ namespace ASI.Basecode.WebApp.Controllers
                 }
                 Console.WriteLine($"After status filter ({status}): {allUsers.Count} users");
 
-                // ⚡ OPTIMIZED: Resolve roles for ALL users in parallel (N+1 fix)
+                // Resolve roles for ALL users first (deduplicate users first to avoid processing same user multiple times)
                 var uniqueUsers = allUsers
                     .GroupBy(u => u.UserTypeId)
                     .Select(g => g.First())
                     .ToList();
                 
-                Console.WriteLine($"⏱️ Starting parallel role resolution for {uniqueUsers.Count} users...");
-                var rolesTasks = uniqueUsers.Select(async u =>
+                var allUsersWithRoles = new List<UserWithRoleViewModel>();
+                foreach (var u in uniqueUsers)
                 {
+                    // FIX: Use UserTypeId (Supabase Auth UUID) not Id (database integer)
                     var rolesForUser = await _userService.GetUserRolesAsync(u.UserTypeId);
-                    return new UserWithRoleViewModel
+                    allUsersWithRoles.Add(new UserWithRoleViewModel
                     {
                         User = u,
                         Roles = rolesForUser
-                    };
-                }).ToList();
+                    });
+                }
 
-                // Wait for all role queries to complete in parallel instead of sequentially
-                var allUsersWithRoles = (await Task.WhenAll(rolesTasks)).ToList();
+                Console.WriteLine($"Resolved roles for {allUsersWithRoles.Count} users");
 
-                Console.WriteLine($"✅ Resolved roles for {allUsersWithRoles.Count} users in parallel");
-
-                // ⚡ OPTIMIZED: Filter by role ONCE and store both User and UserWithRole
-                var studentsWithRoles = allUsersWithRoles
+                // Now filter by role for students and instructors (with deduplication)
+                var students = allUsersWithRoles
                     .Where(entry => entry.Roles.Any(r => r.RoleName != null && 
                            (r.RoleName.Equals("Student", StringComparison.OrdinalIgnoreCase) ||
                             r.RoleName.Equals("Students", StringComparison.OrdinalIgnoreCase))))
-                    .GroupBy(entry => entry.User.UserTypeId)  // Deduplicate by UserTypeId
-                    .Select(g => g.First())     // Take first occurrence
+                    .Select(entry => entry.User)
+                    .GroupBy(u => u.UserTypeId)  // Group by UserTypeId to remove duplicates
+                    .Select(g => g.First())     // Take first occurrence of each user
                     .ToList();
 
-                var instructorsWithRoles = allUsersWithRoles
+                var instructors = allUsersWithRoles
                     .Where(entry => entry.Roles.Any(r => r.RoleName != null && 
                            (r.RoleName.Equals("Teacher", StringComparison.OrdinalIgnoreCase) ||
                             r.RoleName.Equals("Instructor", StringComparison.OrdinalIgnoreCase) ||
                             r.RoleName.Equals("Teachers", StringComparison.OrdinalIgnoreCase) ||
                             r.RoleName.Equals("Instructors", StringComparison.OrdinalIgnoreCase))))
-                    .GroupBy(entry => entry.User.UserTypeId)  // Deduplicate by UserTypeId
-                    .Select(g => g.First())     // Take first occurrence
+                    .Select(entry => entry.User)
+                    .GroupBy(u => u.UserTypeId)  // Group by UserTypeId to remove duplicates
+                    .Select(g => g.First())       // Take first occurrence of each user
                     .ToList();
 
-                // Extract just the users for the old lists (for backward compatibility)
-                var students = studentsWithRoles.Select(entry => entry.User).ToList();
-                var instructors = instructorsWithRoles.Select(entry => entry.User).ToList();
-
-                Console.WriteLine($"📊 Filtered by role - Students: {students.Count}, Instructors: {instructors.Count}");
+                Console.WriteLine($"Filtered by role - Students: {students.Count}, Instructors: {instructors.Count}");
 
                 // Determine which list to display based on tab
+                List<SupabaseUserNew> displayedUsers;
                 List<UserWithRoleViewModel> displayedWithRoles;
 
                 switch (tab)
                 {
                     case "students":
-                        displayedWithRoles = studentsWithRoles;
-                        Console.WriteLine($"🎓 Displaying {displayedWithRoles.Count} students");
+                        displayedUsers = students;
+                        displayedWithRoles = allUsersWithRoles
+                            .Where(entry => students.Any(s => s.UserTypeId == entry.User.UserTypeId))
+                            .ToList();
                         break;
                     case "instructors":
-                        displayedWithRoles = instructorsWithRoles;
-                        Console.WriteLine($"👨‍🏫 Displaying {displayedWithRoles.Count} instructors");
+                        displayedUsers = instructors;
+                        displayedWithRoles = allUsersWithRoles
+                            .Where(entry => instructors.Any(i => i.UserTypeId == entry.User.UserTypeId))
+                            .ToList();
                         break;
                     default: // "all"
+                        displayedUsers = allUsers;
                         displayedWithRoles = allUsersWithRoles;
-                        Console.WriteLine($"📋 Displaying {displayedWithRoles.Count} all users");
                         break;
                 }
+
+                Console.WriteLine($"Displaying {displayedWithRoles.Count} users for tab '{tab}'");
 
                 var viewModel = new UsersTableViewModel
                 {
                     AllUsers = allUsers,
                     Students = students,
                     Instructors = instructors,
+                    DisplayedUsers = displayedUsers,
                     DisplayedUsersWithRoles = displayedWithRoles,
                     SearchTerm = search,
                     ActiveTab = tab,
@@ -194,7 +198,7 @@ namespace ASI.Basecode.WebApp.Controllers
                     TotalInstructors = totalInstructors
                 };
 
-                Console.WriteLine($"✅ ViewModel created - All: {allUsers.Count}, Students: {students.Count}, Instructors: {instructors.Count}, Displayed: {displayedWithRoles.Count}");
+                Console.WriteLine($"ViewModel created - All: {allUsers.Count}, Students: {students.Count}, Instructors: {instructors.Count}, Displayed: {displayedUsers.Count}");
                 
                 // ? ADDED: Log user IDs for debugging
                 Console.WriteLine($"=== USER IDS DEBUG ===");
@@ -221,8 +225,11 @@ namespace ASI.Basecode.WebApp.Controllers
 
         // GET: Display the empty form
         [HttpGet]
-        public IActionResult AddStudent()
+        public async Task<IActionResult> AddStudent()
         {
+            // ✅ No need to load programs and departments - they're hardcoded in the view
+            Console.WriteLine("Loading Add Student form with hardcoded programs and department");
+            
             return View(new StudentCreateViewModel());
         }
 
@@ -307,18 +314,7 @@ namespace ASI.Basecode.WebApp.Controllers
         {
             if (!ModelState.IsValid)
             {
-                // ? FIX: Reload dropdown data when validation fails
-                try
-                {
-                    var departments = await _adminService.GetAllDepartmentsAsync();
-                    ViewBag.Departments = departments;
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"Error reloading departments: {ex.Message}");
-                    ViewBag.Departments = new List<Department>();
-                }
-
+                // ✅ No need to reload dropdowns - they're hardcoded
                 return View(model);
             }
 
@@ -344,7 +340,7 @@ namespace ASI.Basecode.WebApp.Controllers
                 };
 
                 var success = await _userService.CreateTeacherAsync(teacherDto);
-  
+
                 if (success)
                 {
                     // Log admin activity
@@ -360,26 +356,13 @@ namespace ASI.Basecode.WebApp.Controllers
                 else
                 {
                     ModelState.AddModelError(string.Empty, "Failed to create teacher. Please try again.");
-        
-                    // ? FIX: Reload dropdown data before returning view
-                    try
-                    {
-                        var departments = await _adminService.GetAllDepartmentsAsync();
-                        ViewBag.Departments = departments;
-                    }
-                    catch (Exception reloadEx)
-                    {
-                        Console.WriteLine($"Error reloading departments: {reloadEx.Message}");
-                        ViewBag.Departments = new List<Department>();
-                    }
-
                     return View(model);
                 }
             }
             catch (System.Exception ex)
             {
                 ModelState.AddModelError(string.Empty, $"Error creating teacher: {ex.Message}");
-return View(model);
+                return View(model);
             }
         }
 
@@ -387,452 +370,30 @@ return View(model);
         public async Task<IActionResult> Courses(string search)
         {
             try
-            {
+ {
                 List<CourseModel> courses;
 
-                if (!string.IsNullOrWhiteSpace(search))
+              if (!string.IsNullOrWhiteSpace(search))
                 {
                     courses = await _courseService.SearchCoursesAsync(search);
                     ViewData["SearchTerm"] = search;
-                    Console.WriteLine($"=== AdminController.Courses (Search) ===");
-                    Console.WriteLine($"Search term: '{search}'");
+ Console.WriteLine($"=== AdminController.Courses (Search) ===");
+                  Console.WriteLine($"Search term: '{search}'");
                 }
                 else
                 {
                     courses = await _courseService.GetAllCoursesAsync();
                     Console.WriteLine($"=== AdminController.Courses ===");
-                }
+         }
 
-                Console.WriteLine($"Retrieved {courses.Count} courses");
-                return View(courses);
+              Console.WriteLine($"Retrieved {courses.Count} courses");
+             return View(courses);
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"Error retrieving courses: {ex.Message}");
-                Console.WriteLine($"Stack Trace: {ex.StackTrace}");
-                return View(new List<CourseModel>());
-            }
-        }
-
-        [HttpGet]
-        public async Task<IActionResult> ViewUser(int id)
-        {
-            try
-            {
-                Console.WriteLine($"=== ViewUser GET: Loading user with ID={id} ===");
-
-                // Get all users
-                var allUsers = await _userService.GetAllUsersAsync();
-                var user = allUsers.FirstOrDefault(u => u.Id == id);
-
-                if (user == null)
-                {
-                    TempData["ErrorMessage"] = "User not found.";
-                    return RedirectToAction("Users");
-                }
-
-                // Get user roles to determine if Student or Teacher
-                var roles = await _userService.GetUserRolesAsync(user.UserTypeId);
-                var role = roles.FirstOrDefault()?.RoleName ?? "Unknown";
-
-                Console.WriteLine($"Found user: {user.FirstName} {user.LastName}, Role: {role}");
-
-                // Store role and other data in ViewBag for the view
-                ViewBag.Role = role;
-                ViewBag.Department = "CCS"; // TODO: Load from actual department table
-
-                // Load academic performance for students
-                if (role.Equals("Student", StringComparison.OrdinalIgnoreCase))
-                {
-                    var academicPerformance = await GetStudentAcademicPerformanceAsync(user.UserTypeId);
-                    ViewBag.AcademicPerformance = academicPerformance;
-                    Console.WriteLine($"Loaded {academicPerformance.Count} courses for student academic performance");
-                }
-
-                Console.WriteLine($"ViewUser page loaded for user ID {id}");
-                return View(user);
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error loading user for view: {ex.Message}");
-                Console.WriteLine($"Stack Trace: {ex.StackTrace}");
-                TempData["ErrorMessage"] = "Error loading user data.";
-                return RedirectToAction("Users");
-            }
-        }
-
-        [HttpGet]
-        public IActionResult ViewTeacher(string id)
-        {
-            // TODO: Load teacher data by id
-            return View();
-        }
-
-        /// <summary>
-        /// GET: Loads user data for editing
-        /// </summary>
-        [HttpGet]
-        public async Task<IActionResult> EditUser(int id)
-        {
-            try
-            {
-                Console.WriteLine($"\n=== EditUser GET: Loading user with ID={id} ===");
-
-                if (id <= 0)
-                {
-                    Console.WriteLine($"? Invalid ID provided: {id}");
-                    TempData["ErrorMessage"] = "Invalid user ID.";
-                    return RedirectToAction("Users");
-                }
-
-                // Get all users
-                Console.WriteLine($"Fetching all users from database...");
-                var allUsers = await _userService.GetAllUsersAsync();
-                Console.WriteLine($"Retrieved {allUsers.Count} total users");
-
-                // Log first few user IDs for debugging
-                if (allUsers.Count > 0)
-                {
-                    Console.WriteLine($"Sample user IDs in database:");
-                    foreach (var u in allUsers.Take(5))
-                    {
-                        Console.WriteLine($"  - ID: {u.Id}, Name: {u.FirstName} {u.LastName}, Email: {u.Email}");
-                    }
-                }
-
-                Console.WriteLine($"Searching for user with ID={id}...");
-                var user = allUsers.FirstOrDefault(u => u.Id == id);
-
-                if (user == null)
-                {
-                    Console.WriteLine($"? User not found with ID: {id}");
-                    Console.WriteLine($"Available user IDs: {string.Join(", ", allUsers.Select(u => u.Id).Take(20))}");
-                    TempData["ErrorMessage"] = $"User with ID {id} not found.";
-                    return RedirectToAction("Users");
-                }
-
-                Console.WriteLine($"? Found user: {user.FirstName} {user.LastName} (Email: {user.Email})");
-
-                // Get user roles to determine if Student or Teacher
-                Console.WriteLine($"Fetching roles for user with UserTypeId: {user.UserTypeId}");
-                var roles = await _userService.GetUserRolesAsync(user.UserTypeId);
-                var role = roles.FirstOrDefault()?.RoleName ?? "Unknown";
-
-                Console.WriteLine($"User role: {role}");
-
-                // Store role and other data in ViewBag for the view
-                ViewBag.Role = role;
-                ViewBag.Department = "CCS"; // TODO: Load from actual department table
-
-                Console.WriteLine($"? EditUser view loaded successfully for user ID {id}");
-                Console.WriteLine($"=== End EditUser GET ===\n");
-                
-                return View(user);
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"? ERROR in EditUser GET:");
-                Console.WriteLine($"Exception Type: {ex.GetType().Name}");
-                Console.WriteLine($"Message: {ex.Message}");
-                Console.WriteLine($"Stack Trace: {ex.StackTrace}");
-                
-                if (ex.InnerException != null)
-                {
-                    Console.WriteLine($"Inner Exception: {ex.InnerException.Message}");
-                }
-                
-                TempData["ErrorMessage"] = "Error loading user data for editing.";
-                return RedirectToAction("Users");
-            }
-        }
-
-        /// <summary>
-        /// POST: Saves edited user data
-        /// </summary>
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> EditUser(int id, SupabaseUserNew model)
-        {
-            try
-            {
-                Console.WriteLine($"=== EditUser POST: Saving user with ID={id} ===");
-
-                // Validate ID match
-                if (id != model.Id)
-                {
-                    Console.WriteLine($"ID mismatch: URL id={id}, Model id={model.Id}");
-                    ModelState.AddModelError(string.Empty, "User ID mismatch.");
-                    return View(model);
-                }
-
-                // Get the existing user
-                var allUsers = await _userService.GetAllUsersAsync();
-                var existingUser = allUsers.FirstOrDefault(u => u.Id == id);
-
-                if (existingUser == null)
-                {
-                    Console.WriteLine($"User with ID {id} not found");
-                    TempData["ErrorMessage"] = "User not found.";
-                    return RedirectToAction("Users");
-                }
-
-                Console.WriteLine($"Updating user: {existingUser.FirstName} {existingUser.LastName}");
-
-                // Update only the editable fields from the form
-                existingUser.FirstName = model.FirstName;
-                existingUser.LastName = model.LastName;
-                existingUser.MiddleName = model.MiddleName;
-                existingUser.Suffix = model.Suffix;
-                existingUser.Email = model.Email;
-                existingUser.ContactNumber = model.ContactNumber;
-                existingUser.IsActive = model.IsActive;
-
-                // Save to database
-                var client = await _supabaseAuthService.GetSupabaseClientForAuthAsync();
-                
-                var updateResult = await client.From<SupabaseUserNew>()
-                    .Where(x => x.Id == id)
-                    .Update(existingUser);
-
-                if (updateResult?.Models == null || !updateResult.Models.Any())
-                {
-                    Console.WriteLine("Update failed - no models returned");
-                    ModelState.AddModelError(string.Empty, "Failed to update user.");
-                    return View(model);
-                }
-
-                Console.WriteLine($"? User {existingUser.FirstName} {existingUser.LastName} updated successfully");
-
-                // Log admin activity
-                await LogAdminActivityAsync(
-                    actionType: "UPDATE_USER",
-                    actionDescription: $"Admin updated user {model.FirstName} {model.LastName}",
-                    details: $"User ID: {id}, Email: {model.Email}"
-                );
-
-                // TODO: Update address and emergency contact if needed
-
-                TempData["UserSuccessMessage"] = $"User {model.FirstName} {model.LastName} has been updated successfully!";
-                return RedirectToAction("ViewUser", new { id = id });
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error updating user: {ex.Message}");
-                Console.WriteLine($"Stack Trace: {ex.StackTrace}");
-                ModelState.AddModelError(string.Empty, $"Error updating user: {ex.Message}");
-                return View(model);
-            }
-        }
-
-        /// <summary>
-        /// API endpoint to get all recent activities for admin (with optional role filter)
-        /// </summary>
-        [HttpGet]
-        public async Task<IActionResult> GetAllRecentActivitiesApi(string role = "all")
-        {
-            try
-            {
-                List<AuditLogModel> activities;
-                
-                // Filter by role if specified
-                if (role == "all" || string.IsNullOrWhiteSpace(role))
-                {
-                    activities = await _auditLogService.GetAllRecentActivitiesAsync(limit: 100);
-                }
-                else
-                {
-                    // Capitalize first letter for consistent role names
-                    var roleFilter = char.ToUpper(role[0]) + role.Substring(1).ToLower();
-                    activities = await _auditLogService.GetRecentActivitiesByRoleAsync(roleFilter, limit: 100);
-                }
-                
-                var activitiesData = activities.Select(a => new
-                {
-                    actionDescription = a.ActionDescription,
-                    userName = a.UserName,
-                    createdAt = a.CreatedAt.Kind == DateTimeKind.Utc ? a.CreatedAt.ToLocalTime() : a.CreatedAt,
-                    formattedDate = (a.CreatedAt.Kind == DateTimeKind.Utc ? a.CreatedAt.ToLocalTime() : a.CreatedAt).ToString("MMMM dd, yyyy, hh:mm tt")
-                }).ToList();
-
-                return Json(new { success = true, activities = activitiesData, role = role });
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error fetching all recent activities: {ex.Message}");
-                return Json(new { success = false, message = ex.Message });
-            }
-        }
-
-        [HttpGet]
-        public async Task<IActionResult> RecentActivity(string role = "all")
-        {
-            var stopwatch = System.Diagnostics.Stopwatch.StartNew();
-            
-            try
-            {
-                Console.WriteLine($"=== RecentActivity: Loading activities for role={role} ===");
-                Console.WriteLine($"[{stopwatch.ElapsedMilliseconds}ms] Starting query...");
-
-                List<AuditLogModel> activities;
-                
-                // Filter by role if specified
-                if (role == "all" || string.IsNullOrWhiteSpace(role))
-                {
-                    activities = await _auditLogService.GetAllRecentActivitiesAsync(limit: 20);
-                }
-                else
-                {
-                    // Capitalize first letter for consistent role names
-                    var roleFilter = char.ToUpper(role[0]) + role.Substring(1).ToLower();
-                    activities = await _auditLogService.GetRecentActivitiesByRoleAsync(roleFilter, limit: 20);
-                }
-                
-                Console.WriteLine($"[{stopwatch.ElapsedMilliseconds}ms] Query completed - Retrieved {activities.Count} activities");
-                
-                stopwatch.Stop();
-                Console.WriteLine($"[TOTAL TIME: {stopwatch.ElapsedMilliseconds}ms]");
-
-                // Pass the current role filter to the view
-                ViewBag.CurrentRole = role;
-
-                return View(activities);
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error loading recent activity: {ex.Message}");
-                Console.WriteLine($"Stack Trace: {ex.StackTrace}");
-                return View(new List<AuditLogModel>());
-            }
-        }
-
-        [HttpGet]
-        public IActionResult PendingTasks()
-        {
-            return View();
-        }
-
-        [HttpGet]
-        public async Task<IActionResult> Profile()
-        {
-            try
-            {
-                var supabaseUserId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? User.FindFirstValue("sub");
-                if (string.IsNullOrWhiteSpace(supabaseUserId))
-                {
-                    ViewBag.NoDataMessage = "Session expired. Please log in again.";
-                    return View("~/Views/Shared/Profile.cshtml", new StudentProfileViewModel());
-                }
-
-                var model = new StudentProfileViewModel();
-                var client = await _supabaseAuthService.GetSupabaseClientForAuthAsync();
-
-                // Load user info
-                var user = await client.From<SupabaseUserNew>()
-                    .Where(x => x.UserTypeId == supabaseUserId)
-                    .Get();
-
-                var userData = user?.Models?.FirstOrDefault();
-                if (userData != null)
-                {
-                    model.FirstName = userData.FirstName;
-                    model.MiddleName = userData.MiddleName;
-                    model.LastName = userData.LastName;
-                    model.Suffix = userData.Suffix;
-                    model.PhoneNumber = userData.ContactNumber;
-                    model.StudentId = userData.UserDisplayId ?? "N/A";
-                    model.FullName = string.Join(" ", new[] { userData.FirstName, userData.MiddleName, userData.LastName, userData.Suffix }.Where(s => !string.IsNullOrWhiteSpace(s)));
-                    model.EmailAddress = userData.Email;
-                    model.Status = userData.IsActive ?? false ? "Active" : "Inactive";
-                }
-
-                // Profile image
-                model.ProfileImageUrl = await _supabaseAuthService.GetUserProfileImageUrlAsync(supabaseUserId);
-                if (TempData["UploadedProfileUrl"] is string uploadedUrl && !string.IsNullOrWhiteSpace(uploadedUrl))
-                {
-                    model.ProfileImageUrl = uploadedUrl;
-                }
-
-                // Password last updated (default to now if not available)
-                model.PasswordLastUpdated = DateTime.Now.AddMonths(-1);
-
-                return View("~/Views/Shared/Profile.cshtml", model);
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error loading admin profile: {ex.Message}");
-                ViewBag.NoDataMessage = "Error loading profile data. Please try again.";
-                return View("~/Views/Shared/Profile.cshtml", new StudentProfileViewModel());
-            }
-        }
-
-        [HttpGet]
-        public IActionResult EditProfile()
-        {
-            return View();
-        }
-
-        /// <summary>
-        /// API endpoint to generate course code based on year level
-        /// </summary>
-        [HttpGet]
-        public async Task<IActionResult> GenerateCourseCode(string level)
-        {
-            try
-            {
-                if (string.IsNullOrWhiteSpace(level))
-                {
-                    return Json(new { success = false, message = "Year level is required" });
-                }
-
-                var generatedCode = await _courseService.GenerateCourseCodeAsync(level);
-                return Json(new { success = true, code = generatedCode });
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error generating course code: {ex.Message}");
-                return Json(new { success = false, message = ex.Message });
-            }
-        }
-
-        [HttpGet]
-        public async Task<IActionResult> AddCourse()
-        {
-            try
-            {
-                var model = new CourseCreateViewModel();
-                model.Code = string.Empty; // Ensure Code is empty for auto-generation
-
-                // Populate instructor dropdown
-                var instructors = await _courseService.GetActiveInstructorsAsync();
-                model.Instructors = instructors
-                    .Select(i => new InstructorOption { UserTypeId = i.UserTypeId, FullName = i.FullName })
-                    .ToList();
-
-                // Populate semester dropdown
-                var semesters = await _courseService.GetAllSemestersAsync();
-                model.Semesters = semesters
-                    .Select(s => new SemesterOption { Id = s.Id, SemesterName = s.SemesterName })
-                    .ToList();
-
-                // Populate level dropdown
-                model.Levels = new List<LevelOption>
-                {
-                    new LevelOption { Value = "1st Year", Label = "1st Year" },
-                    new LevelOption { Value = "2nd Year", Label = "2nd Year" },
-                    new LevelOption { Value = "3rd Year", Label = "3rd Year" },
-                    new LevelOption { Value = "4th Year", Label = "4th Year" }
-                };
-
-                Console.WriteLine($"=== AdminController.AddCourse (GET) ===");
-                Console.WriteLine($"Instructors: {model.Instructors.Count}, Semesters: {model.Semesters.Count}, Levels: {model.Levels.Count}");
-
-                return View(model);
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error loading AddCourse form: {ex.Message}");
-                TempData["ErrorMessage"] = "Error loading course creation form. Please try again.";
-                return RedirectToAction("Courses");
+Console.WriteLine($"Stack Trace: {ex.StackTrace}");
+            return View(new List<CourseModel>());
             }
         }
 
@@ -1711,162 +1272,44 @@ return View(model);
             public string CourseCode { get; set; }
             public string CourseTitle { get; set; }
             public double OverallPercentage { get; set; }
-        }
-
-        /// <summary>
-        /// Gets student details (profile and grades) for a specific course
-        /// </summary>
-        [HttpGet]
-        [Route("Admin/GetStudentDetails")]
-        [IgnoreAntiforgeryToken]
-        public async Task<IActionResult> GetStudentDetails([FromQuery] string studentId, [FromQuery] int courseId)
-        {
-            try
-            {
-                Console.WriteLine($"=== GetStudentDetails ===");
-                Console.WriteLine($"StudentId: {studentId}, CourseId: {courseId}");
-
-                if (string.IsNullOrWhiteSpace(studentId) || courseId <= 0)
-                {
-                    return Json(new { success = false, message = "Invalid student ID or course ID" });
-                }
-
-                var client = await _supabaseAuthService.GetSupabaseClientForAuthAsync();
-
-                // Get student profile information
-                var userQuery = await client.From<SupabaseUserNew>()
-                    .Where(x => x.UserTypeId == studentId)
-                    .Get();
-                var user = userQuery?.Models?.FirstOrDefault();
-
-                if (user == null)
-                {
-                    Console.WriteLine($"Student not found: {studentId}");
-                    return Json(new { success = false, message = "Student not found" });
-                }
-
-                Console.WriteLine($"User found: {user.FirstName} {user.LastName}");
-
-                // Get student profile (academic info)
-                var studentProfileQuery = await client.From<Student>()
-                    .Where(x => x.StudentId == studentId)
-                    .Get();
-                var studentProfile = studentProfileQuery?.Models?.FirstOrDefault();
-
-                // Get student grades for this course
-                StudentGradeDetail gradeDetail = null;
-                try
-                {
-                    gradeDetail = await _teacherCourseService.GetStudentGradeDetailAsync(studentId, courseId);
-                    Console.WriteLine($"Grade detail loaded: {gradeDetail?.Activities?.Count ?? 0} activities");
-                }
-                catch (Exception gradeEx)
-                {
-                    Console.WriteLine($"Warning: Error loading grades: {gradeEx.Message}");
-                    // Continue with empty grades - not critical
-                    gradeDetail = new StudentGradeDetail
-                    {
-                        StudentId = studentId,
-                        StudentDisplayId = user.UserDisplayId ?? "N/A",
-                        Name = $"{user.FirstName} {user.LastName}".Trim(),
-                        Activities = new List<CourseGradebookViewModel.ActivityGradeItem>()
-                    };
-                }
-
-                // Build profile data
-                var profileData = new
-                {
-                    idNumber = user.UserDisplayId ?? "N/A",
-                    firstName = user.FirstName ?? "",
-                    middleName = user.MiddleName ?? "",
-                    lastName = user.LastName ?? "",
-                    suffix = user.Suffix ?? "",
-                    fullName = string.Join(" ", new[] { user.FirstName, user.MiddleName, user.LastName, user.Suffix }.Where(s => !string.IsNullOrWhiteSpace(s))),
-                    email = user.Email ?? "N/A",
-                    phoneNumber = user.ContactNumber ?? "N/A",
-                    status = user.IsActive ?? false ? "Active" : "Inactive",
-                    department = studentProfile?.DepartmentId?.ToString() ?? "N/A",
-                    course = studentProfile?.ProgramId?.ToString() ?? "N/A",
-                    yearLevel = studentProfile?.YearLevel?.ToString() ?? "N/A"
-                };
-
-                // Build grades data
-                var activitiesList = new List<object>();
-                if (gradeDetail?.Activities != null && gradeDetail.Activities.Any())
-                {
-                    activitiesList = gradeDetail.Activities.Select(a => new
-                    {
-                        activityId = a.ActivityId,
-                        activityName = a.ActivityName,
-                        rawScore = a.RawScore,
-                        maxScore = a.MaxScore,
-                        percentage = a.MaxScore > 0 ? Math.Round((double)a.RawScore / a.MaxScore * 100, 1) : 0
-                    }).Cast<object>().ToList();
-                }
-
-                var gradesData = new
-                {
-                    totalRawScore = gradeDetail?.TotalRawScore ?? 0,
-                    totalMaxScore = gradeDetail?.TotalMaxScore ?? 0,
-                    percentage = gradeDetail?.Percentage ?? 0,
-                    activities = activitiesList
-                };
-
-                Console.WriteLine($"Returning student details: Profile={profileData.fullName}, Grades={gradesData.activities.Count} activities");
-
-                var result = new
-                {
-                    success = true,
-                    profile = profileData,
-                    grades = gradesData
-                };
-
-                return Json(result);
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"ERROR getting student details: {ex.Message}");
-                Console.WriteLine($"Stack Trace: {ex.StackTrace}");
-                return Json(new { success = false, message = $"Error loading student details: {ex.Message}" });
-            }
-        }
+ }
 
         /// <summary>
         /// Logs an admin activity to the audit_logs table
         /// </summary>
         /// <param name="actionType">Type of action (e.g., "CREATE_USER", "UPDATE_USER", "DELETE_USER", "CREATE_COURSE")</param>
         /// <param name="actionDescription">Human-readable description (e.g., "Admin created student John Doe")</param>
-        /// <param name="details">Optional JSON string with additional data</param>
+      /// <param name="details">Optional JSON string with additional data</param>
         private async Task LogAdminActivityAsync(string actionType, string actionDescription, string details = null)
         {
-            try
+    try
             {
                 // Get current admin user info from session/claims
-                var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? User.FindFirstValue("sub");
-                var currentUserName = User.FindFirstValue(ClaimTypes.Name) ?? User.Identity?.Name ?? "Admin";
+         var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? User.FindFirstValue("sub");
+        var currentUserName = User.FindFirstValue(ClaimTypes.Name) ?? User.Identity?.Name ?? "Admin";
 
-                if (string.IsNullOrWhiteSpace(currentUserId))
-                {
-                    Console.WriteLine("Warning: Could not log admin activity - no user ID found in session");
-                    return;
-                }
+        if (string.IsNullOrWhiteSpace(currentUserId))
+          {
+ Console.WriteLine("Warning: Could not log admin activity - no user ID found in session");
+           return;
+     }
 
-                await _auditLogService.LogActivityAsync(
-                    userId: currentUserId,
-                    userRole: "Admin",
-                    userName: currentUserName,
-                    actionType: actionType,
-                    actionDescription: actionDescription,
-                    details: details
-                );
+           await _auditLogService.LogActivityAsync(
+ userId: currentUserId,
+ userRole: "Admin",
+          userName: currentUserName,
+                  actionType: actionType,
+        actionDescription: actionDescription,
+  details: details
+      );
 
-                Console.WriteLine($"Admin activity logged: {actionType} - {actionDescription}");
+      Console.WriteLine($"Admin activity logged: {actionType} - {actionDescription}");
             }
             catch (Exception ex)
             {
-                // Don't throw - audit logging should not break the main flow
-                Console.WriteLine($"Error logging admin activity: {ex.Message}");
-            }
+     // Don't throw - audit logging should not break the main flow
+     Console.WriteLine($"Error logging admin activity: {ex.Message}");
+    }
         }
     }
 }
