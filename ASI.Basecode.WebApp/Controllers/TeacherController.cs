@@ -1261,6 +1261,78 @@ namespace ASI.Basecode.WebApp.Controllers
             }
         }
 
+        /// <summary>
+        /// Deletes an activity and all associated submissions
+        /// </summary>
+        [HttpPost]
+        [IgnoreAntiforgeryToken]
+        public async Task<IActionResult> DeleteActivity(int id, int activityId)
+        {
+            try
+            {
+                Console.WriteLine($"=== DeleteActivity Controller ===");
+                Console.WriteLine($"Course ID: {id}, Activity ID: {activityId}");
+
+                if (activityId <= 0)
+                {
+                    Console.WriteLine("Invalid activity ID");
+                    TempData["ErrorMessage"] = "Invalid activity ID.";
+                    return RedirectToAction("CourseActivities", new { id });
+                }
+
+                // Get activity details for audit log before deletion
+                var activity = await _activityService.GetActivityDetailsAsync(activityId);
+                var course = await _courseService.GetCourseByIdAsync(id);
+
+                // Delete the activity
+                Console.WriteLine($"Calling DeleteActivityAsync for activity {activityId}");
+                await _activityService.DeleteActivityAsync(activityId);
+                Console.WriteLine($"Activity {activityId} deleted successfully");
+
+                // Log audit activity
+                try
+                {
+                    var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? User.FindFirstValue("sub");
+                    var allUsers = await _userService.GetAllUsersAsync();
+                    var currentUser = allUsers.FirstOrDefault(u => u.UserTypeId == currentUserId);
+
+                    await _auditLogService.LogActivityAsync(
+                        userId: currentUserId,
+                        userRole: "Teacher",
+                        userName: $"{currentUser?.FirstName} {currentUser?.LastName}".Trim(),
+                        actionType: "DELETE_ACTIVITY",
+                        actionDescription: $"Deleted activity '{activity?.Title ?? "Unknown"}' from course '{course?.Code} - {course?.Name}'",
+                        courseId: id,
+                        courseCode: course?.Code,
+                        courseName: course?.Name,
+                        activityId: activityId,
+                        activityTitle: activity?.Title
+                    );
+                    Console.WriteLine("Audit log created successfully");
+                }
+                catch (Exception logEx)
+                {
+                    Console.WriteLine($"Error logging audit activity: {logEx.Message}");
+                }
+
+                Console.WriteLine($"Setting success message and redirecting");
+                TempData["SuccessMessage"] = "Activity deleted successfully.";
+                return RedirectToAction("CourseActivities", new { id });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"ERROR deleting activity: {ex.Message}");
+                Console.WriteLine($"Exception Type: {ex.GetType().Name}");
+                Console.WriteLine($"Stack Trace: {ex.StackTrace}");
+                if (ex.InnerException != null)
+                {
+                    Console.WriteLine($"Inner Exception: {ex.InnerException.Message}");
+                }
+                TempData["ErrorMessage"] = $"Failed to delete activity: {ex.Message}";
+                return RedirectToAction("CourseActivities", new { id });
+            }
+        }
+
         [HttpPost]
         [IgnoreAntiforgeryToken] // Temporarily disable for AJAX testing
         public async Task<IActionResult> GradeActivity(int id, ASI.Basecode.Services.ServiceModels.TeacherActivitySubmissionModel form)

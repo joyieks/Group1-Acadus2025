@@ -52,10 +52,42 @@ namespace ASI.Basecode.Data.Repositories
 
         public async Task DeleteActivityAsync(int activityId)
         {
-            var activity = await GetActivityByIdAsync(activityId);
-            if (activity != null)
+            try
             {
-                await activity.Delete<ActivityModel>();
+                Console.WriteLine($"=== DeleteActivityAsync: Starting deletion for activity {activityId} ===");
+                
+                // First, delete all submissions related to this activity
+                var submissionsResponse = await _client
+                    .From<ActivitySubmissionModel>()
+                    .Filter("activityId", Supabase.Postgrest.Constants.Operator.Equals, activityId)
+                    .Get();
+
+                var submissions = submissionsResponse?.Models ?? new List<ActivitySubmissionModel>();
+                Console.WriteLine($"Found {submissions.Count} submissions to delete");
+
+                foreach (var submission in submissions)
+                {
+                    await submission.Delete<ActivitySubmissionModel>();
+                    Console.WriteLine($"Deleted submission ID: {submission.Id}");
+                }
+
+                // Then delete the activity itself
+                var activity = await GetActivityByIdAsync(activityId);
+                if (activity != null)
+                {
+                    await activity.Delete<ActivityModel>();
+                    Console.WriteLine($"Activity {activityId} deleted successfully");
+                }
+                else
+                {
+                    Console.WriteLine($"Activity {activityId} not found");
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error in DeleteActivityAsync: {ex.Message}");
+                Console.WriteLine($"Stack Trace: {ex.StackTrace}");
+                throw;
             }
         }
 

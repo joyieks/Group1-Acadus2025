@@ -9,7 +9,7 @@
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Edit User</title>
-    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
         * {
             margin: 0;
@@ -21,24 +21,6 @@
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
         }
 
-        .modal-backdrop {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.5);
-            backdrop-filter: blur(8px);
-            -webkit-backdrop-filter: blur(8px);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 1000;
-            animation: fadeIn 0.3s ease;
-            overflow-y: auto;
-            padding: 20px;
-        }
-
         @@keyframes fadeIn {
             from { opacity: 0; }
             to { opacity: 1; }
@@ -48,104 +30,15 @@
             from { transform: translateY(30px); opacity: 0; }
             to { transform: translateY(0); opacity: 1; }
         }
-
-        .modal-content {
-            background: #ffffff;
-            border-radius: 16px;
-            width: 100%;
-            max-width: 900px;
-            max-height: 90vh;
-            overflow-y: auto;
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
-            animation: slideUp 0.3s ease;
-            margin: auto;
-        }
-
-        .section-white {
-            background: #ffffff;
-            border-radius: 12px;
-            padding: 32px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-            margin-bottom: 24px;
-        }
-
-        .section-green {
-            background: #E8F9E8;
-            border-radius: 12px;
-            padding: 32px;
-            margin-bottom: 24px;
-        }
-
-        .confirmation-modal {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.6);
-            backdrop-filter: blur(4px);
-            -webkit-backdrop-filter: blur(4px);
-            display: none;
-            align-items: center;
-            justify-content: center;
-            z-index: 2000;
-            animation: fadeIn 0.2s ease;
-        }
-
-        .confirmation-modal.show {
-            display: flex;
-        }
-
-        .confirmation-box {
-            background: white;
-            border-radius: 12px;
-            padding: 32px;
-            max-width: 400px;
-            width: 90%;
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2);
-            animation: slideUp 0.3s ease;
-            text-align: center;
-        }
-
-        .confirmation-icon {
-            width: 64px;
-            height: 64px;
-            background: #E8F9E8;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 0 auto 20px;
-            font-size: 32px;
-        }
-
-        .confirmation-title {
-            font-size: 20px;
-            font-weight: 800;
-            color: #111827;
-            margin-bottom: 12px;
-        }
-
-        .confirmation-message {
-            font-size: 14px;
-            color: #6b7280;
-            margin-bottom: 24px;
-        }
-
-        .confirmation-buttons {
-            display: flex;
-            gap: 12px;
-            justify-content: center;
-        }
     </style>
 </head>
 <body>
-    <div class="modal-backdrop" onclick="if(event.target === this) window.history.back()">
-        <div class="modal-content" onclick="event.stopPropagation()">
+    <div class="fixed top-0 left-0 w-full h-full bg-black/50 backdrop-blur-lg flex items-center justify-center z-[1000] animate-[fadeIn_0.3s_ease] overflow-y-auto p-5" onclick="if(event.target === this) window.history.back()">
+        <div class="bg-white rounded-2xl w-full max-w-[900px] max-h-[90vh] overflow-y-auto shadow-[0_20px_25px_-5px_rgba(0,0,0,0.1)] animate-[slideUp_0.3s_ease] my-auto" onclick="event.stopPropagation()">
             <!-- Header -->
-            <div style="background:#E8F9E8; padding:24px 32px; border-radius:16px 16px 0 0; display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #d1fae5;">
-                <h2 style="font-size:24px; font-weight:800; color:#111827; margin:0;">Edit User</h2>
-                <button type="button" onclick="window.history.back()" style="background:none; border:none; font-size:28px; color:#6b7280; cursor:pointer; width:32px; height:32px; border-radius:6px; transition:all 0.2s;">&times;</button>
+            <div class="bg-[#E8F9E8] py-6 px-8 rounded-t-2xl flex justify-between items-center border-b-2 border-emerald-200">
+                <h2 class="text-2xl font-extrabold text-gray-900 m-0">Edit User</h2>
+                <button type="button" onclick="window.history.back()" class="bg-transparent border-none text-[28px] text-gray-500 cursor-pointer w-8 h-8 rounded-md transition-all duration-200">&times;</button>
             </div>
 
             <!-- ✅ FORM TAG WITH PROPER BINDINGS -->
@@ -156,122 +49,122 @@
                 <input type="hidden" asp-for="Id" />
 
                 <!-- Body -->
-                <div style="padding:32px; background:#f9fafb;">
+                <div class="p-8 bg-gray-50">
                     
                     <!-- Section 1: Personal Information -->
-                    <div class="section-white">
-                        <h3 style="font-size:18px; font-weight:800; color:#111827; margin:0 0 24px 0;">Section 1: Personal Information</h3>
-                        <div style="display:grid; grid-template-columns:repeat(2,1fr); gap:20px;">
+                    <div class="bg-white rounded-xl p-8 shadow-[0_1px_3px_rgba(0,0,0,0.1)] mb-6">
+                        <h3 class="text-lg font-extrabold text-gray-900 m-0 mb-6">Section 1: Personal Information</h3>
+                        <div class="grid grid-cols-2 gap-5">
                             <div>
-                                <label style="display:block; margin-bottom:6px; font-size:14px; font-weight:600; color:#111827;">ID Number</label>
-                                <input asp-for="UserDisplayId" readonly style="width:100%; padding:10px 12px; border:1px solid #d1d5db; border-radius:6px; font-size:14px; background:#f3f4f6; color:#6b7280;">
+                                <label class="block mb-1.5 text-sm font-semibold text-gray-900">ID Number</label>
+                                <input asp-for="UserDisplayId" readonly class="w-full py-[10px] px-3 border border-gray-300 rounded-md text-sm bg-gray-100 text-gray-500">
                             </div>
                             <div>
-                                <label style="display:block; margin-bottom:6px; font-size:14px; font-weight:600; color:#111827;">Status <span style="color:#dc2626;">*</span></label>
-                                <select asp-for="IsActive" required style="width:100%; padding:10px 12px; border:1px solid #d1d5db; border-radius:6px; font-size:14px;">
+                                <label class="block mb-1.5 text-sm font-semibold text-gray-900">Status <span class="text-red-600">*</span></label>
+                                <select asp-for="IsActive" required class="w-full py-[10px] px-3 border border-gray-300 rounded-md text-sm">
                                     <option value="true">Active</option>
                                     <option value="false">Inactive</option>
                                 </select>
                             </div>
                             <div>
-                                <label style="display:block; margin-bottom:6px; font-size:14px; font-weight:600; color:#111827;">First name <span style="color:#dc2626;">*</span></label>
-                                <input asp-for="FirstName" required style="width:100%; padding:10px 12px; border:1px solid #d1d5db; border-radius:6px; font-size:14px;">
+                                <label class="block mb-1.5 text-sm font-semibold text-gray-900">First name <span class="text-red-600">*</span></label>
+                                <input asp-for="FirstName" required class="w-full py-[10px] px-3 border border-gray-300 rounded-md text-sm">
                             </div>
                             <div>
-                                <label style="display:block; margin-bottom:6px; font-size:14px; font-weight:600; color:#111827;">Last name <span style="color:#dc2626;">*</span></label>
-                                <input asp-for="LastName" required style="width:100%; padding:10px 12px; border:1px solid #d1d5db; border-radius:6px; font-size:14px;">
+                                <label class="block mb-1.5 text-sm font-semibold text-gray-900">Last name <span class="text-red-600">*</span></label>
+                                <input asp-for="LastName" required class="w-full py-[10px] px-3 border border-gray-300 rounded-md text-sm">
                             </div>
                             <div>
-                                <label style="display:block; margin-bottom:6px; font-size:14px; font-weight:600; color:#111827;">Middle name</label>
-                                <input asp-for="MiddleName" style="width:100%; padding:10px 12px; border:1px solid #d1d5db; border-radius:6px; font-size:14px;">
+                                <label class="block mb-1.5 text-sm font-semibold text-gray-900">Middle name</label>
+                                <input asp-for="MiddleName" class="w-full py-[10px] px-3 border border-gray-300 rounded-md text-sm">
                             </div>
                             <div>
-                                <label style="display:block; margin-bottom:6px; font-size:14px; font-weight:600; color:#111827;">Suffix</label>
-                                <input asp-for="Suffix" style="width:100%; padding:10px 12px; border:1px solid #d1d5db; border-radius:6px; font-size:14px;">
+                                <label class="block mb-1.5 text-sm font-semibold text-gray-900">Suffix</label>
+                                <input asp-for="Suffix" class="w-full py-[10px] px-3 border border-gray-300 rounded-md text-sm">
                             </div>
                             <div>
-                                <label style="display:block; margin-bottom:6px; font-size:14px; font-weight:600; color:#111827;">Role <span style="color:#dc2626;">*</span></label>
-                                <input type="text" value="@ViewBag.Role" readonly style="width:100%; padding:10px 12px; border:1px solid #d1d5db; border-radius:6px; font-size:14px; background:#f3f4f6; color:#6b7280;">
+                                <label class="block mb-1.5 text-sm font-semibold text-gray-900">Role <span class="text-red-600">*</span></label>
+                                <input type="text" value="@ViewBag.Role" readonly class="w-full py-[10px] px-3 border border-gray-300 rounded-md text-sm bg-gray-100 text-gray-500">
                             </div>
                             <div>
-                                <label style="display:block; margin-bottom:6px; font-size:14px; font-weight:600; color:#111827;">Department/Office</label>
-                                <input type="text" name="Department" value="@ViewBag.Department" style="width:100%; padding:10px 12px; border:1px solid #d1d5db; border-radius:6px; font-size:14px;">
+                                <label class="block mb-1.5 text-sm font-semibold text-gray-900">Department/Office</label>
+                                <input type="text" name="Department" value="@ViewBag.Department" class="w-full py-[10px] px-3 border border-gray-300 rounded-md text-sm">
                             </div>
                             <div>
-                                <label style="display:block; margin-bottom:6px; font-size:14px; font-weight:600; color:#111827;">Contact Number <span style="color:#dc2626;">*</span></label>
-                                <input asp-for="ContactNumber" required style="width:100%; padding:10px 12px; border:1px solid #d1d5db; border-radius:6px; font-size:14px;">
+                                <label class="block mb-1.5 text-sm font-semibold text-gray-900">Contact Number <span class="text-red-600">*</span></label>
+                                <input asp-for="ContactNumber" required class="w-full py-[10px] px-3 border border-gray-300 rounded-md text-sm">
                             </div>
                             <div>
-                                <label style="display:block; margin-bottom:6px; font-size:14px; font-weight:600; color:#111827;">Email <span style="color:#dc2626;">*</span></label>
-                                <input asp-for="Email" required style="width:100%; padding:10px 12px; border:1px solid #d1d5db; border-radius:6px; font-size:14px;">
+                                <label class="block mb-1.5 text-sm font-semibold text-gray-900">Email <span class="text-red-600">*</span></label>
+                                <input asp-for="Email" required class="w-full py-[10px] px-3 border border-gray-300 rounded-md text-sm">
                             </div>
                         </div>
                     </div>
 
                     <!-- Section 2: Address Information (Optional - not saved yet) -->
-                    <div class="section-green">
-                        <h3 style="font-size:18px; font-weight:800; color:#111827; margin:0 0 24px 0;">Section 2: Address Information</h3>
-                        <div style="display:grid; grid-template-columns:1fr; gap:20px;">
+                    <div class="bg-[#E8F9E8] rounded-xl p-8 mb-6">
+                        <h3 class="text-lg font-extrabold text-gray-900 m-0 mb-6">Section 2: Address Information</h3>
+                        <div class="grid grid-cols-1 gap-5">
                             <div>
-                                <label style="display:block; margin-bottom:6px; font-size:14px; font-weight:600; color:#111827;">House/Apt number</label>
-                                <input type="text" name="HouseNumber" style="width:100%; padding:10px 12px; border:1px solid #d1d5db; border-radius:6px; font-size:14px; background:#ffffff;">
+                                <label class="block mb-1.5 text-sm font-semibold text-gray-900">House/Apt number</label>
+                                <input type="text" name="HouseNumber" class="w-full py-[10px] px-3 border border-gray-300 rounded-md text-sm bg-white">
                             </div>
                             <div>
-                                <label style="display:block; margin-bottom:6px; font-size:14px; font-weight:600; color:#111827;">Street name</label>
-                                <input type="text" name="StreetName" style="width:100%; padding:10px 12px; border:1px solid #d1d5db; border-radius:6px; font-size:14px; background:#ffffff;">
+                                <label class="block mb-1.5 text-sm font-semibold text-gray-900">Street name</label>
+                                <input type="text" name="StreetName" class="w-full py-[10px] px-3 border border-gray-300 rounded-md text-sm bg-white">
                             </div>
                             <div>
-                                <label style="display:block; margin-bottom:6px; font-size:14px; font-weight:600; color:#111827;">Subdivision/Bldg.</label>
-                                <input type="text" name="Subdivision" style="width:100%; padding:10px 12px; border:1px solid #d1d5db; border-radius:6px; font-size:14px; background:#ffffff;">
+                                <label class="block mb-1.5 text-sm font-semibold text-gray-900">Subdivision/Bldg.</label>
+                                <input type="text" name="Subdivision" class="w-full py-[10px] px-3 border border-gray-300 rounded-md text-sm bg-white">
                             </div>
                         </div>
-                        <div style="display:grid; grid-template-columns:repeat(2,1fr); gap:20px; margin-top:20px;">
+                        <div class="grid grid-cols-2 gap-5 mt-5">
                             <div>
-                                <label style="display:block; margin-bottom:6px; font-size:14px; font-weight:600; color:#111827;">Barangay</label>
-                                <input type="text" name="Barangay" style="width:100%; padding:10px 12px; border:1px solid #d1d5db; border-radius:6px; font-size:14px; background:#ffffff;">
+                                <label class="block mb-1.5 text-sm font-semibold text-gray-900">Barangay</label>
+                                <input type="text" name="Barangay" class="w-full py-[10px] px-3 border border-gray-300 rounded-md text-sm bg-white">
                             </div>
                             <div>
-                                <label style="display:block; margin-bottom:6px; font-size:14px; font-weight:600; color:#111827;">City</label>
-                                <input type="text" name="City" style="width:100%; padding:10px 12px; border:1px solid #d1d5db; border-radius:6px; font-size:14px; background:#ffffff;">
+                                <label class="block mb-1.5 text-sm font-semibold text-gray-900">City</label>
+                                <input type="text" name="City" class="w-full py-[10px] px-3 border border-gray-300 rounded-md text-sm bg-white">
                             </div>
                             <div>
-                                <label style="display:block; margin-bottom:6px; font-size:14px; font-weight:600; color:#111827;">Province</label>
-                                <input type="text" name="Province" style="width:100%; padding:10px 12px; border:1px solid #d1d5db; border-radius:6px; font-size:14px; background:#ffffff;">
+                                <label class="block mb-1.5 text-sm font-semibold text-gray-900">Province</label>
+                                <input type="text" name="Province" class="w-full py-[10px] px-3 border border-gray-300 rounded-md text-sm bg-white">
                             </div>
                             <div>
-                                <label style="display:block; margin-bottom:6px; font-size:14px; font-weight:600; color:#111827;">Zip Code</label>
-                                <input type="text" name="ZipCode" style="width:100%; padding:10px 12px; border:1px solid #d1d5db; border-radius:6px; font-size:14px; background:#ffffff;">
+                                <label class="block mb-1.5 text-sm font-semibold text-gray-900">Zip Code</label>
+                                <input type="text" name="ZipCode" class="w-full py-[10px] px-3 border border-gray-300 rounded-md text-sm bg-white">
                             </div>
                         </div>
                     </div>
 
                     <!-- Section 3: Emergency Contact (Optional - not saved yet) -->
-                    <div class="section-white">
-                        <h3 style="font-size:18px; font-weight:800; color:#111827; margin:0 0 24px 0;">Section 3: Emergency Contact Information</h3>
-                        <div style="display:grid; grid-template-columns:repeat(2,1fr); gap:20px;">
+                    <div class="bg-white rounded-xl p-8 shadow-[0_1px_3px_rgba(0,0,0,0.1)] mb-6">
+                        <h3 class="text-lg font-extrabold text-gray-900 m-0 mb-6">Section 3: Emergency Contact Information</h3>
+                        <div class="grid grid-cols-2 gap-5">
                             <div>
-                                <label style="display:block; margin-bottom:6px; font-size:14px; font-weight:600; color:#111827;">First name</label>
-                                <input type="text" name="EmergencyFirstName" style="width:100%; padding:10px 12px; border:1px solid #d1d5db; border-radius:6px; font-size:14px;">
+                                <label class="block mb-1.5 text-sm font-semibold text-gray-900">First name</label>
+                                <input type="text" name="EmergencyFirstName" class="w-full py-[10px] px-3 border border-gray-300 rounded-md text-sm">
                             </div>
                             <div>
-                                <label style="display:block; margin-bottom:6px; font-size:14px; font-weight:600; color:#111827;">Last name</label>
-                                <input type="text" name="EmergencyLastName" style="width:100%; padding:10px 12px; border:1px solid #d1d5db; border-radius:6px; font-size:14px;">
+                                <label class="block mb-1.5 text-sm font-semibold text-gray-900">Last name</label>
+                                <input type="text" name="EmergencyLastName" class="w-full py-[10px] px-3 border border-gray-300 rounded-md text-sm">
                             </div>
                             <div>
-                                <label style="display:block; margin-bottom:6px; font-size:14px; font-weight:600; color:#111827;">Middle name</label>
-                                <input type="text" name="EmergencyMiddleName" style="width:100%; padding:10px 12px; border:1px solid #d1d5db; border-radius:6px; font-size:14px;">
+                                <label class="block mb-1.5 text-sm font-semibold text-gray-900">Middle name</label>
+                                <input type="text" name="EmergencyMiddleName" class="w-full py-[10px] px-3 border border-gray-300 rounded-md text-sm">
                             </div>
                             <div>
-                                <label style="display:block; margin-bottom:6px; font-size:14px; font-weight:600; color:#111827;">Suffix</label>
-                                <input type="text" name="EmergencySuffix" style="width:100%; padding:10px 12px; border:1px solid #d1d5db; border-radius:6px; font-size:14px;">
+                                <label class="block mb-1.5 text-sm font-semibold text-gray-900">Suffix</label>
+                                <input type="text" name="EmergencySuffix" class="w-full py-[10px] px-3 border border-gray-300 rounded-md text-sm">
                             </div>
                             <div>
-                                <label style="display:block; margin-bottom:6px; font-size:14px; font-weight:600; color:#111827;">Contact Number</label>
-                                <input type="text" name="EmergencyContactNumber" style="width:100%; padding:10px 12px; border:1px solid #d1d5db; border-radius:6px; font-size:14px;">
+                                <label class="block mb-1.5 text-sm font-semibold text-gray-900">Contact Number</label>
+                                <input type="text" name="EmergencyContactNumber" class="w-full py-[10px] px-3 border border-gray-300 rounded-md text-sm">
                             </div>
                             <div>
-                                <label style="display:block; margin-bottom:6px; font-size:14px; font-weight:600; color:#111827;">Relationship</label>
-                                <input type="text" name="Relationship" style="width:100%; padding:10px 12px; border:1px solid #d1d5db; border-radius:6px; font-size:14px;">
+                                <label class="block mb-1.5 text-sm font-semibold text-gray-900">Relationship</label>
+                                <input type="text" name="Relationship" class="w-full py-[10px] px-3 border border-gray-300 rounded-md text-sm">
                             </div>
                         </div>
                     </div>
@@ -279,34 +172,38 @@
                 </div>
 
                 <!-- Footer -->
-                <div style="padding:20px 32px; background:#f9fafb; border-top:1px solid #e5e7eb; border-radius:0 0 16px 16px; display:flex; justify-content:center; gap:16px;">
-                    <button type="button" onclick="window.history.back()" style="padding:12px 32px; border-radius:6px; font-size:14px; font-weight:600; cursor:pointer; background:#ffffff; color:#4b5563; border:1px solid #d1d5db;">Cancel</button>
-                    <button type="button" onclick="showConfirmation()" style="padding:12px 32px; border-radius:6px; font-size:14px; font-weight:600; cursor:pointer; background:#059669; color:#ffffff; border:none;">Save Changes</button>
+                <div class="py-5 px-8 bg-gray-50 border-t border-gray-200 rounded-b-2xl flex justify-center gap-4">
+                    <button type="button" onclick="window.history.back()" class="py-3 px-8 rounded-md text-sm font-semibold cursor-pointer bg-white text-gray-600 border border-gray-300">Cancel</button>
+                    <button type="button" onclick="showConfirmation()" class="py-3 px-8 rounded-md text-sm font-semibold cursor-pointer bg-emerald-600 text-white border-none">Save Changes</button>
                 </div>
             </form>
         </div>
     </div>
 
     <!-- Confirmation Modal -->
-    <div id="confirmationModal" class="confirmation-modal">
-        <div class="confirmation-box">
-            <div class="confirmation-icon">✓</div>
-            <h3 class="confirmation-title">Save Changes?</h3>
-            <p class="confirmation-message">Are you sure you want to save the changes to this user's information?</p>
-            <div class="confirmation-buttons">
-                <button onclick="closeConfirmation()" style="padding:10px 24px; border-radius:6px; font-size:14px; font-weight:600; cursor:pointer; background:#ffffff; color:#4b5563; border:1px solid #d1d5db;">Cancel</button>
-                <button onclick="confirmSave()" style="padding:10px 24px; border-radius:6px; font-size:14px; font-weight:600; cursor:pointer; background:#059669; color:#ffffff; border:none;">Yes, Save</button>
+    <div id="confirmationModal" class="hidden fixed top-0 left-0 w-full h-full bg-black/60 backdrop-blur-sm items-center justify-center z-[2000] animate-[fadeIn_0.2s_ease]">
+        <div class="bg-white rounded-xl p-8 max-w-[400px] w-[90%] shadow-[0_20px_25px_-5px_rgba(0,0,0,0.2)] animate-[slideUp_0.3s_ease] text-center">
+            <div class="w-16 h-16 bg-[#E8F9E8] rounded-full flex items-center justify-center mx-auto mb-5 text-[32px]">✓</div>
+            <h3 class="text-xl font-extrabold text-gray-900 mb-3">Save Changes?</h3>
+            <p class="text-sm text-gray-500 mb-6">Are you sure you want to save the changes to this user's information?</p>
+            <div class="flex gap-3 justify-center">
+                <button onclick="closeConfirmation()" class="py-[10px] px-6 rounded-md text-sm font-semibold cursor-pointer bg-white text-gray-600 border border-gray-300">Cancel</button>
+                <button onclick="confirmSave()" class="py-[10px] px-6 rounded-md text-sm font-semibold cursor-pointer bg-emerald-600 text-white border-none">Yes, Save</button>
             </div>
         </div>
     </div>
 
     <script>
         function showConfirmation() {
-            document.getElementById('confirmationModal').classList.add('show');
+            const modal = document.getElementById('confirmationModal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
         }
 
         function closeConfirmation() {
-            document.getElementById('confirmationModal').classList.remove('show');
+            const modal = document.getElementById('confirmationModal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
         }
 
         function confirmSave() {
@@ -318,7 +215,7 @@
         document.addEventListener('keydown', function(e) {
             if (e.key === 'Escape') {
                 const confirmModal = document.getElementById('confirmationModal');
-                if (confirmModal.classList.contains('show')) {
+                if (!confirmModal.classList.contains('hidden')) {
                     closeConfirmation();
                 } else {
                     window.history.back();
